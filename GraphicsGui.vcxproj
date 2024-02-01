@@ -78,9 +78,11 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -88,12 +90,12 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)External\GLEW\include;$(ProjectDir)External\GLEW\GL;$(ProjectDir)External\GLFW\include;$(ProjectDir)External\ImGui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)External\GLEW\include;$(ProjectDir)External\GLEW\GL;$(ProjectDir)External\GLFW\include;$(ProjectDir)External\ImGuiFileDialog;$(ProjectDir)External\ImGui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)External\GLEW\lib;$(ProjectDir)External\GLFW\lib-vc2019;opengl32.lib;$(ProjectDir)External\ImGui</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)External\ImGuiFileDialog;$(ProjectDir)External\GLEW\lib;$(ProjectDir)External\GLFW\lib-vc2019;opengl32.lib;$(ProjectDir)External\ImGui</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -105,14 +107,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)External\GLEW\include;$(ProjectDir)External\GLEW\GL;$(ProjectDir)External\GLFW\include;$(ProjectDir)External\ImGui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)External\GLEW\include;$(ProjectDir)External\GLEW\GL;$(ProjectDir)External\GLFW\include;$(ProjectDir)External\ImGuiFileDialog;$(ProjectDir)External\ImGui</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)External\GLEW\lib;$(ProjectDir)External\GLFW\lib-vc2019;opengl32.lib;$(ProjectDir)External\ImGui</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)External\ImGuiFileDialog;$(ProjectDir)External\GLEW\lib;$(ProjectDir)External\GLFW\lib-vc2019;opengl32.lib;$(ProjectDir)External\ImGui</AdditionalLibraryDirectories>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -151,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="CG_skel_w_imGUI.cpp" />
     <ClCompile Include="External\ImGui\imgui.cpp" />
     <ClCompile Include="External\ImGui\imgui_demo.cpp" />
     <ClCompile Include="External\ImGui\imgui_draw.cpp" />
@@ -158,13 +161,17 @@
     <ClCompile Include="External\ImGui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="External\ImGui\imgui_tables.cpp" />
     <ClCompile Include="External\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="InitShader.cpp" />
+    <ClCompile Include="MeshModel.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Scene.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CG_skel_w_imGUI.h" />
     <ClInclude Include="External\GLEW\include\GL\eglew.h" />
     <ClInclude Include="External\GLEW\include\GL\glew.h" />
     <ClInclude Include="External\GLEW\include\GL\glxew.h" />
-    <ClInclude Include="External\GLEW\include\GL\wglew.h" />
     <ClInclude Include="External\GLFW\include\GLFW\glfw3.h" />
     <ClInclude Include="External\GLFW\include\GLFW\glfw3native.h" />
     <ClInclude Include="External\ImGui\imconfig.h" />
@@ -175,6 +182,12 @@
     <ClInclude Include="External\ImGui\imstb_rectpack.h" />
     <ClInclude Include="External\ImGui\imstb_textedit.h" />
     <ClInclude Include="External\ImGui\imstb_truetype.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="InitShader.h" />
+    <ClInclude Include="mat.h" />
+    <ClInclude Include="MeshModel.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="vec.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="External\GLEW\lib\glew32s.lib" />

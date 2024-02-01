@@ -13,74 +13,116 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\glew">
+      <UniqueIdentifier>{b8f84d35-90f5-4736-b1f8-53ddd124f8f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\imgui">
+      <UniqueIdentifier>{df3706e9-c7ff-44e9-9d6b-ce8b5af7c760}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\imgui">
+      <UniqueIdentifier>{66efbdfa-cf6d-4e22-b191-a6aaf1e08595}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="External\ImGui\imgui.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="External\ImGui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="External\ImGui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="External\ImGui\imgui_impl_glfw.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="External\ImGui\imgui_impl_opengl3.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="External\ImGui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\imgui</Filter>
     </ClCompile>
     <ClCompile Include="External\ImGui\imgui_widgets.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="CG_skel_w_imGUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InitShader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshModel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="External\ImGui\imconfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\ImGui\imgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\ImGui\imgui_impl_glfw.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\ImGui\imgui_impl_opengl3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\ImGui\imgui_internal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\ImGui\imstb_rectpack.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\ImGui\imstb_textedit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\ImGui\imstb_truetype.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="External\GLEW\include\GL\eglew.h">
+      <Filter>Header Files\glew</Filter>
     </ClInclude>
     <ClInclude Include="External\GLEW\include\GL\glew.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\GLEW\include\GL\eglew.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\GLEW\include\GL\glxew.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="External\GLEW\include\GL\wglew.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\glew</Filter>
     </ClInclude>
     <ClInclude Include="External\GLFW\include\GLFW\glfw3.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\glew</Filter>
     </ClInclude>
     <ClInclude Include="External\GLFW\include\GLFW\glfw3native.h">
+      <Filter>Header Files\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="External\GLEW\include\GL\glxew.h">
+      <Filter>Header Files\glew</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imconfig.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imgui.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imgui_impl_glfw.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imgui_impl_opengl3.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imgui_internal.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imstb_rectpack.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imstb_textedit.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="External\ImGui\imstb_truetype.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="CG_skel_w_imGUI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InitShader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mat.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

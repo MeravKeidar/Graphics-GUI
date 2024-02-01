@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <iostream>
+//#include "CG_skel_w_imGUI.h"
 
 // Texture dimensions
 const int TEXTURE_WIDTH = 512;
@@ -27,8 +28,9 @@ int main() {
         return -1;
     }
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Drawing Canvas", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(512, 512, "CG", NULL, NULL);
     if (!window) {
+        fprintf(stderr, "Failed to create GLFW window\n");
         glfwTerminate();
         return -1;
     }
