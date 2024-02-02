@@ -17,11 +17,12 @@
 #include "Renderer.h"
 #include <string>
 #include <imgui.h>
-#include "ImGuiFileDialog.h"
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <vector>
 #include <iostream>
+#include <L2DFileDialog.h>
+
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
 #define FILE_OPEN 1
@@ -83,28 +84,72 @@ void motion(GLFWwindow* window, double xpos, double ypos) {
 	last_y = y;
 }
 
-std::string selectedFilePath;
+void filemenu() {
+	static std::string selectedFilePath;
+	static char buffer[500];
 
-//void OpenDialog()
-//{
-//	// Open a file dialog using GLFW
-//	GLFWwindow* tempWindow = glfwCreateWindow(200, 200, "Select File", nullptr, nullptr);
-//	glfwMakeContextCurrent(tempWindow);
-//
-//	const char* filePath = glfwGetOpenFilename();
-//
-//	glfwDestroyWindow(tempWindow);
-//
-//	if (filePath != nullptr)
-//	{
-//		selectedFilePath = filePath;
-//		// Handle the selected file path as needed
-//	}
-//}
-void RenderImGuiMenus()
-{
+	ImGui::TextUnformatted("Selected File: ");
+	ImGui::InputText("##file", buffer, sizeof(buffer));
+	ImGui::SameLine();
 
+	if (ImGui::Button("Load .obj File")) {
+		// Limit the assignment to the size of buffer
+		selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
+
+		FileDialog::file_dialog_open = true;
+		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
+	}
+
+	if (FileDialog::file_dialog_open) {
+		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, buffer, sizeof(buffer), FileDialog::file_dialog_open_type);
+
+		// Update the selected file path after choosing a file
+		selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
+		scene->loadOBJModel(selectedFilePath);
+	}
 }
+
+
+
+static char* file_dialog_buffer = nullptr;
+static bool open_file_dialog = false;
+
+
+void renderMainMenu() {
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("Load .obj File")) {
+				open_file_dialog = true;
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+
+	if (open_file_dialog) {
+		FileDialog::file_dialog_open = true;
+		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
+		open_file_dialog = false;
+	}
+
+	if (FileDialog::file_dialog_open) {
+		file_dialog_buffer = new char[500];
+		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
+		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, file_dialog_buffer, sizeof(file_dialog_buffer), FileDialog::file_dialog_open_type);
+		FileDialog::file_dialog_open = false; // Close the file dialog
+		//selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
+		//scene->loadOBJModel(selectedFilePath);
+		delete[] file_dialog_buffer;
+		file_dialog_buffer = nullptr;
+
+	}
+}
+
+//void renderimguimenus() {
+//	renderMainMenu();
+//
+//	 Your other menu rendering functions go here
+//}
 
 //
 //void fileMenu(int id)
@@ -154,49 +199,58 @@ int my_main() {
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1); // Enable vsync
 
-	glewInit();
-	GLenum err = glewInit();
-	if (GLEW_OK != err)
-	{
-		/* Problem: glewInit failed, something is seriously wrong. */
-		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-		/*		...*/
+	//glewInit();
+	//GLenum err = glewInit();
+	//if (GLEW_OK != err)
+	//{
+	//	/* Problem: glewInit failed, something is seriously wrong. */
+	//	fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+	//	/*		...*/
+	//}
+	//fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
+	// 
+	// Initialize GLEW
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK) {
+		std::cerr << "Failed to initialize GLEW\n";
+		return -1;
 	}
-	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui::StyleColorsDark();
-
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	renderer = new Renderer(512, 512);
-	scene = new Scene(renderer);
+
+	//renderer = new Renderer(512, 512);
+	//scene = new Scene(renderer);
 
 	// Set GLFW callbacks
-	glfwSetFramebufferSizeCallback(window, reshape);
+	/*glfwSetFramebufferSizeCallback(window, reshape);
 	glfwSetKeyCallback(window, keyboard);
 	glfwSetMouseButtonCallback(window, mouse);
-	glfwSetCursorPosCallback(window, motion);
+	glfwSetCursorPosCallback(window, motion);*/
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
-
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR) {
+			std::cerr << "OpenGL error: " << error << std::endl;
+		}
 		// Start the ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		display();
-
+		//display();
+		renderMainMenu();
 		// Rendering ImGUI 
 		// TODO: add an IMGUI Menu renderer function (file menu using ImGuiFileMenu
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
 		glfwSwapBuffers(window);
 	}
 
@@ -206,13 +260,18 @@ int my_main() {
 	ImGui::DestroyContext();
 	glfwDestroyWindow(window);
 	glfwTerminate();
-
-
-	delete scene;
-	delete renderer;
+	//delete scene;
+	//delete renderer;
 
 	return 0;
 }
+
+int main() {
+	return my_main();
+}
+
+
+
 
 
 //
