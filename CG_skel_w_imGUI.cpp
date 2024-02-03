@@ -152,13 +152,9 @@ void MainMenu() {
 
 }
 
-//void renderimguimenus() {
-//	renderMainMenu();
-//
-//	 Your other menu rendering functions go here
-//}
 
-//
+////////////////////Original skeleton funcs/////////////////////////////
+//Original skeleton funcs
 //void fileMenu(int id)
 //{
 //	switch (id)
@@ -188,7 +184,16 @@ void MainMenu() {
 //}
 
 
+/*
 
+void display()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDrawPixels(WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, PixelBuffer);
+	glFlush();
+}
+*/
+///////////////////////////////////////////////////////////////////////////
 
 int my_main() {
 	// Initialize GLFW
@@ -197,12 +202,23 @@ int my_main() {
 		return -1;
 	}
 
+	// Tell GLFW what version of OpenGL we are using 
+	// In this case we are using OpenGL 2.1 to support fixed-function pipeline
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	
+	// Create a GLFWwindow object of 512 by 512 pixels, naming it "CG"
+	
+	
+
 	GLFWwindow* window = glfwCreateWindow(512, 512, "CG", NULL, NULL);
 	if (!window) {
 		fprintf(stderr, "Failed to create GLFW window\n");
 		glfwTerminate();
 		return -1;
 	}
+	
+
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1); // Enable vsync
 
@@ -215,14 +231,16 @@ int my_main() {
 	//	/*		...*/
 	//}
 	//fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-	// 
+	
+
 	// Initialize GLEW
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) {
 		std::cerr << "Failed to initialize GLEW\n";
 		return -1;
 	}
-
+	
+	
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -232,8 +250,8 @@ int my_main() {
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 
-	//renderer = new Renderer(512, 512);
-	//scene = new Scene(renderer);
+	renderer = new Renderer(512, 512);
+	scene = new Scene(renderer);
 
 	// Set GLFW callbacks
 	/*glfwSetFramebufferSizeCallback(window, reshape);
@@ -241,38 +259,33 @@ int my_main() {
 	glfwSetMouseButtonCallback(window, mouse);
 	glfwSetCursorPosCallback(window, motion);*/
 
+	//glViewport(0, 0, 512, 512); // Set the viewport size to match the window size
+
 	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
+		
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR) {
 			std::cerr << "OpenGL error: " << error << std::endl;
 		}
-
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		
-		drawLine(100,100,200,200);
-
-		// OR, specify a custom color
-		GLubyte customColor[] = { 255, 0, 0, 255 };  // Red color
-		
-		drawPixel(255, 255);
-
-
 		// Start the ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		
+		//renderer->SetDemoBuffer();
+		renderer->DrawLine(1,400, 1, 400,1,0,1);
+		renderer->SwapBuffers();
 
 		//display();
-		//MainMenu();
-		// Rendering ImGUI 
 		// TODO: add an IMGUI Menu renderer function (file menu using ImGuiFileMenu
+		//MainMenu();
+	
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+		glfwPollEvents();
 		glfwSwapBuffers(window);
+		
 	}
 
 	// Cleanup
@@ -281,14 +294,14 @@ int my_main() {
 	ImGui::DestroyContext();
 	glfwDestroyWindow(window);
 	glfwTerminate();
-	//delete scene;
-	//delete renderer;
+	delete scene;
+	delete renderer;
 
 	return 0;
 }
 
-int main() {
-	return my_main();
+int main(int argc, char *argv[]) {
+		return my_main();
 }
 
 

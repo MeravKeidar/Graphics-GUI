@@ -71,6 +71,39 @@ void Renderer::SetDemoBuffer()
 	}
 }
 
+
+void Renderer::DrawPixel(int x, int y, float r, float g, float b) {
+	m_outBuffer[INDEX(m_width, x, y, 0)] = r;
+	m_outBuffer[INDEX(m_width, x, y, 1)] = g;
+	m_outBuffer[INDEX(m_width, x, y, 2)] = b;
+
+}
+
+void  Renderer::DrawLine(int x1, int x2, int y1, int y2, float r, float g, float b) {
+
+	int x = x1;
+	int y = y1;
+	int dx = x2 - x1;
+	int dy = y2 - y1;
+	int d = 2 * dy - dx;
+	int de = 2 * dy;
+	int dne = 2 * dy - 2 * dx;
+
+	DrawPixel(x, y,r,g,b);
+
+	while (x < x2) {
+		if (d <= 0) {
+			d += de;
+		}
+		else {
+			d += dne;
+			y++;
+		}
+		x++;
+		DrawPixel(x, y,r,g,b);
+	}
+}
+
 void Renderer::Reshape(int width, int height)
 {
 }

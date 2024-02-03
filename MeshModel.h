@@ -8,11 +8,6 @@
 using namespace std;
 
 
-void drawPixel(int x, int y, GLubyte color[4] = nullptr);
-
-
-void drawLine(int x1, int x2, int y1, int y2, GLubyte color[4] = nullptr);
-
 
 class MeshModel : public Model
 {

@@ -8,47 +8,6 @@
 
 using namespace std;
 
-void drawPixel(int x, int y, GLubyte color[4]) {
-	if (color == nullptr) {
-		GLubyte defaultColor[] = {0,0,0,0};  // white by default
-		color = defaultColor;
-	}
-	glRasterPos2i(x, y);
-	glDrawPixels(1, 1, GL_RGBA, GL_UNSIGNED_BYTE, color);
-}
-
-
-void drawLine(int x1, int x2, int y1, int y2, GLubyte color[4]) {
-	if (color == nullptr) {
-		GLubyte defaultColor[] = {0,0,0,0};  // white by default
-		color = defaultColor;
-	}
-
-	int x = x1;
-	int y =y1;
-	int dx = x2 -x1;
-	int dy = y2 - y1;
-	int d = 2*dy - dx;
-	int de = 2*dy;
-	int dne = 2*dy - 2*dx;
-
-	drawPixel(x, y);
-
-	while (x < x2) {
-		if (d <= 0) {
-			d += de;
-		}
-		else {
-			d += dne;
-			y++;
-		}
-		x++;
-		drawPixel(x, y);
-	}
-
-
-}
-
 struct FaceIdcs
 {
 	// vertices positions

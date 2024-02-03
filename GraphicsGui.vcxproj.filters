@@ -130,4 +130,8 @@
     <Library Include="External\GLEW\lib\glew32s.lib" />
     <Library Include="External\GLFW\lib-vc2019\glfw3.lib" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="vshader.glsl" />
+    <None Include="fshader.glsl" />
+  </ItemGroup>
 </Project>

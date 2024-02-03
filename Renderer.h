@@ -37,4 +37,6 @@ public:
 	void ClearDepthBuffer();
 	void SetDemoBuffer();
 	void Reshape(int width, int height);
+	void DrawPixel(int x, int y, float r = 1, float g = 1, float b = 1);
+	void DrawLine(int x1, int x2, int y1, int y2, float r = 1, float g = 1, float b = 1);
 };
