@@ -21,6 +21,26 @@ Renderer::~Renderer(void)
 {
 }
 
+void Renderer::Init()
+{
+}
+
+void Renderer::DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals)
+{
+}
+
+void Renderer::SetCameraTransform(const mat4& cTransform)
+{
+}
+
+void Renderer::SetProjection(const mat4& projection)
+{
+}
+
+void Renderer::SetObjectMatrices(const mat4& oTransform, const mat3& nTransform)
+{
+}
+
 
 
 void Renderer::CreateBuffers(int width, int height)
@@ -29,6 +49,10 @@ void Renderer::CreateBuffers(int width, int height)
 	m_height = height;
 	CreateOpenGLBuffer(); //Do not remove this line.
 	m_outBuffer = new float[3 * m_width * m_height];
+}
+
+void Renderer::CreateLocalBuffer()
+{
 }
 
 void Renderer::SetDemoBuffer()
@@ -131,4 +155,12 @@ void Renderer::SwapBuffers()
 	//glutSwapBuffers();
 	glfwSwapBuffers(glfwGetCurrentContext());
 	a = glGetError();
+}
+
+void Renderer::ClearColorBuffer()
+{
+}
+
+void Renderer::ClearDepthBuffer()
+{
 }

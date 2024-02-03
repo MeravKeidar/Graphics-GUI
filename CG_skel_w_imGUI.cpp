@@ -9,7 +9,7 @@
 
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
-
+#include "MeshModel.h"
 #include "vec.h"
 #include "mat.h"
 #include "InitShader.h"
@@ -111,38 +111,45 @@ void filemenu() {
 
 
 
+
+
+
+
+
 static char* file_dialog_buffer = nullptr;
+static char path[500] = "";
 static bool open_file_dialog = false;
 
 
-void renderMainMenu() {
+void MainMenu() {
 	if (ImGui::BeginMainMenuBar()) {
-		if (ImGui::BeginMenu("File")) {
-			if (ImGui::MenuItem("Load .obj File")) {
-				open_file_dialog = true;
+		if (ImGui::BeginMenu("Model")) {
+			if (ImGui::MenuItem("Load .obj model")) {
+				FileDialog::file_dialog_open = true;
+				FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
+	
 			}
-			ImGui::EndMenu();
+
+			if (FileDialog::file_dialog_open) {
+				file_dialog_buffer = path;
+				FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
+				FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, file_dialog_buffer, sizeof(file_dialog_buffer), FileDialog::file_dialog_open_type);
+			
+				//selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
+				//scene->loadOBJModel(selectedFilePath);
+				file_dialog_buffer = nullptr;
+				FileDialog::file_dialog_open = false; // Close the file dialog
+			}
+
+			if (ImGui::MenuItem("Load Primative")) {
+				
+			}
+			
+		ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
 	}
 
-	if (open_file_dialog) {
-		FileDialog::file_dialog_open = true;
-		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-		open_file_dialog = false;
-	}
-
-	if (FileDialog::file_dialog_open) {
-		file_dialog_buffer = new char[500];
-		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, file_dialog_buffer, sizeof(file_dialog_buffer), FileDialog::file_dialog_open_type);
-		FileDialog::file_dialog_open = false; // Close the file dialog
-		//selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
-		//scene->loadOBJModel(selectedFilePath);
-		delete[] file_dialog_buffer;
-		file_dialog_buffer = nullptr;
-
-	}
 }
 
 //void renderimguimenus() {
@@ -240,13 +247,27 @@ int my_main() {
 		if (error != GL_NO_ERROR) {
 			std::cerr << "OpenGL error: " << error << std::endl;
 		}
+
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		
+		drawLine(100,100,200,200);
+
+		// OR, specify a custom color
+		GLubyte customColor[] = { 255, 0, 0, 255 };  // Red color
+		
+		drawPixel(255, 255);
+
+
 		// Start the ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
+		
+
 		//display();
-		renderMainMenu();
+		//MainMenu();
 		// Rendering ImGUI 
 		// TODO: add an IMGUI Menu renderer function (file menu using ImGuiFileMenu
 		ImGui::Render();
