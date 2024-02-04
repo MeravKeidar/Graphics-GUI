@@ -439,6 +439,16 @@ struct vec4 {
         return *this;
     }
 
+   /* inline
+        GLfloat length(const vec4& v) {
+        return std::sqrt(dot(v, v));
+    }
+
+    inline
+        vec4 normalize(const vec4& v) {
+        return v / length(v);
+    }*/
+
     //
     //  --- Insertion and Extraction Operators ---
     //

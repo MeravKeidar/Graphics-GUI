@@ -60,7 +60,7 @@ static void MainMenuBar()
 	{
 		if (ImGui::BeginMenu("Load File"))
 		{
-			FileMenu();
+			//FileMenu();
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Load Primative"))
@@ -279,7 +279,7 @@ int my_main() {
 		//renderer->DrawLine(1,400, 1, 400,1,0,1);
 		//renderer->SwapBuffers();
 
-		//display();
+		//scene->draw();
 		MainMenuBar();
 	
 		ImGui::Render();

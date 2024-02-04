@@ -24,6 +24,7 @@ void Scene::draw()
 
 	//m_renderer->SetCameraTransform(cameras[activeCamera]->setTransformation)
 	//m_renderer->SetProjection(cameras[activeCamera]->)
+	m_renderer->DrawLine(0, 200, 0, 200);
 	m_renderer->SwapBuffers();
 }
 
@@ -40,14 +41,12 @@ void Camera::setTransformation(const mat4& transform)
 
 void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)
 {
-	vec4 n = eye - at;
-	vec4 u = cross(up, n);
-	vec4 v = cross(n, u);
-	vec4 i = vec4(0, 0, 0, 1);
-	//TODO:: check the whole lineqrow thing when creating a new mat4
-	mat4 *r = new mat4(u, v, v,i);
-	mat4* t = new mat4(i, i, i, eye);
-	cTransform = (*t)*(*r);
+	/*vec4 n = normalize(eye-at);
+	vec4 u = normalize(cross(up, n));
+	vec4 v = normalize(cross(n, u));
+	vec4 t = vec4(0.0, 0.0, 0.0, 1.0);
+	mat4 c = mat4(u, v, n, t);
+	cTransform = c * Translate(-eye);*/
 }
 
 void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
