@@ -160,6 +160,7 @@ PrimMeshModel::PrimMeshModel(string type)
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
 {
-	//TODO: figure out how to send that data to the rendere?? we dint have accss herer to the renderere..
+
+	//TODO: figure out how to send that data to the rendere?? we dont have accss herer to the renderere..
 	
 }

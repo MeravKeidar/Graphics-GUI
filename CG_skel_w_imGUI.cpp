@@ -28,6 +28,8 @@
 
 bool DISPLAY_VERTEX_NORMAL = false;
 bool DISPLAY_FACE_NORMAL = false;
+bool DISPLAY_CAMERAS = false;
+
 
 Scene* scene;
 Renderer* renderer;
@@ -55,9 +57,9 @@ void FileMenu() {
 
 static void MainMenuBar()
 {
-
 	if (ImGui::BeginMainMenuBar())
 	{
+
 		if (ImGui::BeginMenu("Load File"))
 		{
 			//FileMenu();
@@ -66,7 +68,7 @@ static void MainMenuBar()
 		if (ImGui::BeginMenu("Load Primative"))
 		{
 			if (ImGui::MenuItem("Pyramid")) {
-				scene->loadOBJModel("C:/Users/user/source/repo/GraphicsGui/obj_files/pyramid.obj");
+				//scene->loadOBJModel("C:/Users/user/source/repo/GraphicsGui/obj_files/pyramid.obj");
 				//scene->loadPrimModel("pyramid");
 			}
 			//TODO:  add more primatives 
@@ -92,11 +94,12 @@ static void MainMenuBar()
 		if (ImGui::BeginMenu("Camera"))
 		{
 			if (ImGui::MenuItem("Add Camera")) {
-				
+				// pop up 
+				//scene->addCamera(
 			}
 			ImGui::EndMenu();
 			if (ImGui::MenuItem("Look AT")) {
-				//scene->cameras[activeCamera]->LookAt;
+
 			}
 			ImGui::EndMenu();
 			if (ImGui::MenuItem("Change Active Camera")) {
@@ -152,7 +155,6 @@ void MainMenu() {
 
 }
 
-*/
 
 ////////////////////Original skeleton funcs/////////////////////////////
 //Original skeleton funcs
@@ -253,6 +255,10 @@ int my_main() {
 
 	renderer = new Renderer(512, 512);
 	scene = new Scene(renderer);
+	vec3 eye(0.0,0.0,0.0); 
+	vec3 at(0.0,0.0,-1.0);
+	vec3 up(0.0,1.0,0.0);
+	scene->addCamera(eye,at,up);//TODO: check about default perspective;
 
 	// Set GLFW callbacks
 	/*glfwSetFramebufferSizeCallback(window, reshape);

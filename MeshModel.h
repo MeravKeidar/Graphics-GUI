@@ -12,7 +12,7 @@ using namespace std;
 class MeshModel : public Model
 {
 protected:
-	MeshModel() {}
+	MeshModel() {};
 	vec3* vertex_positions;
 	vec3* vertex_normals;
 	vec3* vertex_textures;
