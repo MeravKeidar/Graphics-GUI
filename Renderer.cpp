@@ -17,20 +17,18 @@ Renderer::Renderer(int width, int height) : m_width(width), m_height(height)
 	CreateBuffers(width, height);
 }
 
-Renderer::~Renderer(void)
-{
-}
+Renderer::~Renderer(void){}
 
-void Renderer::Init()
-{
-}
+void Renderer::Init(){}
 
 void Renderer::DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals)
 {
+
 }
 
 void Renderer::SetCameraTransform(const mat4& cTransform)
 {
+
 }
 
 void Renderer::SetProjection(const mat4& projection)
@@ -104,8 +102,23 @@ void  Renderer::DrawLine(int x1, int x2, int y1, int y2, float r, float g, float
 	}
 }
 
+
+/*deletes the current m_outbuffer and creates a new one of shape Width*height*/
 void Renderer::Reshape(int width, int height)
 {
+	m_width = width;
+	m_height = height;
+	delete[] m_outBuffer;
+	CreateBuffers(m_width, m_height);
+}
+
+void Renderer::ClearColorBuffer()
+{
+}
+
+void Renderer::ClearDepthBuffer()
+{
+	// will be used on late stages, when we add depth 
 }
 
 
@@ -190,10 +203,3 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 }
 
-void Renderer::ClearColorBuffer()
-{
-}
-
-void Renderer::ClearDepthBuffer()
-{
-}

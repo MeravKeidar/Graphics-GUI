@@ -124,6 +124,7 @@ void MeshModel::loadFile(string fileName)
 
 	vertex_positions = new vec3[faces.size() * 3]; //TODO: check correctness
 
+	min_cordinates = max_cordinates = (vertices[0][0], vertices[0][1], vertices[0][2]);
 	// iterate through all stored faces and create triangles
 	int k = 0;
 	for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
@@ -135,6 +136,16 @@ void MeshModel::loadFile(string fileName)
 			vertex_textures[k] = (verticesText.at((*it).vt[i]));
 			vertex_positions[k++] = (vertices.at((*it).v[i]));
 
+			//uptade min/max coordinates
+			// x coordinates
+			min_cordinates[0] = (vertices[i][0] < min_cordinates[0]) ? vertices[i][0] : min_cordinates[0];
+			max_cordinates[0] = (vertices[i][0] > max_cordinates[0]) ? vertices[i][0] : max_cordinates[0];
+			// y coordinates
+			min_cordinates[1] = (vertices[i][1] < min_cordinates[1]) ? vertices[i][1] : min_cordinates[1];
+			max_cordinates[1] = (vertices[i][1] > max_cordinates[1]) ? vertices[i][1] : max_cordinates[1];
+			// z coordinates
+			min_cordinates[2] = (vertices[i][2] < min_cordinates[2]) ? vertices[i][2] : min_cordinates[2];
+			max_cordinates[2] = (vertices[i][2] > max_cordinates[2]) ? vertices[i][2] : max_cordinates[2];
 		}
 	}
 }
@@ -144,14 +155,11 @@ PrimMeshModel::PrimMeshModel(string type)
 	loadFile(type + ".obj");
 }
 
-bool isPrimType(string type)
-{
-	//TODO: add primative type for || 
-	return type == "pyramid";
-}
 
 
+//send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
 {
-
+	//TODO: figure out how to send that data to the rendere?? we dint have accss herer to the renderere..
+	
 }

@@ -14,7 +14,6 @@ protected:
 
 
 class Light {
-
 };
 
 class Camera {
@@ -36,7 +35,6 @@ public:
 };
 
 class Scene {
-
 	vector<Model*> models;
 	vector<Light*> lights;
 	vector<Camera*> cameras;
@@ -46,6 +44,7 @@ public:
 	Scene() {};
 	Scene(Renderer* renderer) : m_renderer(renderer) {};
 	void loadOBJModel(string fileName);
+	void loadPrimModel(string type);
 	void draw();
 	void drawDemo();
 

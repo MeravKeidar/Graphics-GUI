@@ -25,102 +25,97 @@
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
-#define FILE_OPEN 1
-#define MAIN_DEMO 1
-#define MAIN_ABOUT 2
+
+bool DISPLAY_VERTEX_NORMAL = false;
+bool DISPLAY_FACE_NORMAL = false;
 
 Scene* scene;
 Renderer* renderer;
-
-int last_x, last_y;
-bool lb_down, rb_down, mb_down;
-
-//----------------------------------------------------------------------------
-// Callbacks
-void display(void)
-{
-	scene->draw(); //TODO: implement
-}
-
-void reshape(GLFWwindow* window, int width, int height)
-{
-	renderer->Reshape(width, height); //TODO: implement
-}
-
-void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	switch (key) {
-	case GLFW_KEY_ESCAPE:
-		glfwSetWindowShouldClose(window, GLFW_TRUE);
-		break;
-	}
-}
-
-void mouse(GLFWwindow* window, int button, int state, int mods)
-{
-	switch (button) {
-	case GLFW_MOUSE_BUTTON_LEFT:
-		lb_down = (state == GLFW_RELEASE) ? false : true;
-		break;
-	case GLFW_MOUSE_BUTTON_RIGHT:
-		rb_down = (state == GLFW_RELEASE) ? false : true;
-		break;
-	case GLFW_MOUSE_BUTTON_MIDDLE:
-		mb_down = (state == GLFW_RELEASE) ? false : true;
-		break;
-	}
-
-}
-
-void motion(GLFWwindow* window, double xpos, double ypos) {
-	// mouse motion handling logic
-	int x = static_cast<int>(xpos);
-	int y = static_cast<int>(ypos);
-	// calc difference in mouse movement
-	int dx = x - last_x;
-	int dy = y - last_y;
-	// update last x,y
-	last_x = x;
-	last_y = y;
-}
-
-void filemenu() {
-	static std::string selectedFilePath;
-	static char buffer[500];
-
-	ImGui::TextUnformatted("Selected File: ");
-	ImGui::InputText("##file", buffer, sizeof(buffer));
-	ImGui::SameLine();
-
-	if (ImGui::Button("Load .obj File")) {
-		// Limit the assignment to the size of buffer
-		selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
-
-		FileDialog::file_dialog_open = true;
-		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-	}
-
-	if (FileDialog::file_dialog_open) {
-		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, buffer, sizeof(buffer), FileDialog::file_dialog_open_type);
-
-		// Update the selected file path after choosing a file
-		selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
-		scene->loadOBJModel(selectedFilePath);
-	}
-}
-
-
-
-
-
-
-
 
 static char* file_dialog_buffer = nullptr;
 static char path[500] = "";
 static bool open_file_dialog = false;
 
+void FileMenu() {
+	FileDialog::file_dialog_open = true;
+	FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
+	if (FileDialog::file_dialog_open) {
+		file_dialog_buffer = path;
+		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
+		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, file_dialog_buffer, sizeof(file_dialog_buffer), FileDialog::file_dialog_open_type);
+		//selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
+		//scene->loadOBJModel(selectedFilePath);
+		file_dialog_buffer = nullptr;
+		FileDialog::file_dialog_open = false; // Close the file dialog
+	}
+}
 
+
+
+
+static void MainMenuBar()
+{
+
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("Load File"))
+		{
+			FileMenu();
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Load Primative"))
+		{
+			if (ImGui::MenuItem("Pyramid")) {
+				scene->loadOBJModel("C:/Users/user/source/repo/GraphicsGui/obj_files/pyramid.obj");
+				//scene->loadPrimModel("pyramid");
+			}
+			//TODO:  add more primatives 
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Normal")) {
+			if (ImGui::MenuItem("Display Normal-per-vertex")) {
+				DISPLAY_VERTEX_NORMAL = true;
+			}
+			if (ImGui::MenuItem("Hide Normal-per-vertex")) {
+				DISPLAY_VERTEX_NORMAL = false;
+			}
+			if (ImGui::MenuItem("Display Normal-per-face")) {
+				DISPLAY_FACE_NORMAL = true;
+			}
+			if (ImGui::MenuItem("Hide Normal-per-face")) {
+				DISPLAY_FACE_NORMAL = false;
+			}
+			ImGui::EndMenu();
+			
+		}
+
+		if (ImGui::BeginMenu("Camera"))
+		{
+			if (ImGui::MenuItem("Add Camera")) {
+				
+			}
+			ImGui::EndMenu();
+			if (ImGui::MenuItem("Look AT")) {
+				//scene->cameras[activeCamera]->LookAt;
+			}
+			ImGui::EndMenu();
+			if (ImGui::MenuItem("Change Active Camera")) {
+
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+		
+	}
+}
+
+
+
+
+
+
+
+/*
 void MainMenu() {
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("Model")) {
@@ -147,11 +142,17 @@ void MainMenu() {
 			
 		ImGui::EndMenu();
 		}
-		ImGui::EndMainMenuBar();
+		if (ImGui::BeginMenu("Model")) {
+			if (ImGui::MenuItem("Load .obj model")) {
+
+		ImGui::EndMenu();
+		}
+	ImGui::EndMainMenuBar();
 	}
 
 }
 
+*/
 
 ////////////////////Original skeleton funcs/////////////////////////////
 //Original skeleton funcs
@@ -259,31 +260,30 @@ int my_main() {
 	glfwSetMouseButtonCallback(window, mouse);
 	glfwSetCursorPosCallback(window, motion);*/
 
-	//glViewport(0, 0, 512, 512); // Set the viewport size to match the window size
+	glViewport(0, 0, 512, 512); // Set the viewport size to match the window size
 
 	while (!glfwWindowShouldClose(window)) {
-		
+		glfwPollEvents();
+
 		GLenum error = glGetError();
 		if (error != GL_NO_ERROR) {
 			std::cerr << "OpenGL error: " << error << std::endl;
 		}
+
 		// Start the ImGui frame
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
 		//renderer->SetDemoBuffer();
-		renderer->DrawLine(1,400, 1, 400,1,0,1);
-		renderer->SwapBuffers();
+		//renderer->DrawLine(1,400, 1, 400,1,0,1);
+		//renderer->SwapBuffers();
 
 		//display();
-		// TODO: add an IMGUI Menu renderer function (file menu using ImGuiFileMenu
-		//MainMenu();
+		MainMenuBar();
 	
 		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-		glfwPollEvents();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); 
 		glfwSwapBuffers(window);
 		
 	}
@@ -307,7 +307,7 @@ int main(int argc, char *argv[]) {
 
 
 
-
+/*OLD CODE - Might be relevant (?)*/
 //
 //void initMenu()
 //{
@@ -387,4 +387,59 @@ int main(int argc, char *argv[]) {
 //	}
 //	
 //	return nRetCode;
+//}
+//
+//#define FILE_OPEN 1
+//#define MAIN_DEMO 1
+//#define MAIN_ABOUT 2
+//int last_x, last_y;
+//bool lb_down, rb_down, mb_down;
+//
+////----------------------------------------------------------------------------
+//// Callbacks
+//void display(void)
+//{
+//	scene->draw(); //TODO: implement
+//}
+//
+//void reshape(GLFWwindow* window, int width, int height)
+//{
+//	renderer->Reshape(width, height); //TODO: implement
+//}
+//
+//void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
+//{
+//	switch (key) {
+//	case GLFW_KEY_ESCAPE:
+//		glfwSetWindowShouldClose(window, GLFW_TRUE);
+//		break;
+//	}
+//}
+//
+//void mouse(GLFWwindow* window, int button, int state, int mods)
+//{
+//	switch (button) {
+//	case GLFW_MOUSE_BUTTON_LEFT:
+//		lb_down = (state == GLFW_RELEASE) ? false : true;
+//		break;
+//	case GLFW_MOUSE_BUTTON_RIGHT:
+//		rb_down = (state == GLFW_RELEASE) ? false : true;
+//		break;
+//	case GLFW_MOUSE_BUTTON_MIDDLE:
+//		mb_down = (state == GLFW_RELEASE) ? false : true;
+//		break;
+//	}
+//
+//}
+//
+//void motion(GLFWwindow* window, double xpos, double ypos) {
+//	// mouse motion handling logic
+//	int x = static_cast<int>(xpos);
+//	int y = static_cast<int>(ypos);
+//	// calc difference in mouse movement
+//	int dx = x - last_x;
+//	int dy = y - last_y;
+//	// update last x,y
+//	last_x = x;
+//	last_y = y;
 //}

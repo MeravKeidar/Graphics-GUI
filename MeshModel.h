@@ -14,11 +14,14 @@ class MeshModel : public Model
 protected:
 	MeshModel() {}
 	vec3* vertex_positions;
-	//add more attributes
 	vec3* vertex_normals;
 	vec3* vertex_textures;
 	mat4 _world_transform;
 	mat3 _normal_transform;
+
+	/// for calculating the bounding box /// 
+	vec3 min_cordinates;
+	vec3 max_cordinates;
 
 public:
 	MeshModel(string fileName);

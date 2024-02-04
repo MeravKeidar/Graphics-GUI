@@ -22,6 +22,9 @@
     <Filter Include="Source Files\imgui">
       <UniqueIdentifier>{66efbdfa-cf6d-4e22-b191-a6aaf1e08595}</UniqueIdentifier>
     </Filter>
+    <Filter Include="obj Files">
+      <UniqueIdentifier>{5c017086-f650-4e77-b3e8-d753686bfdba}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
