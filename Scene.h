@@ -12,9 +12,9 @@ protected:
 	void virtual draw() = 0;
 	mat4 _model_transform;
 public:
-	void T_transform(const GLfloat x, const GLfloat y, const GLfloat z);
-	void S_transform(const GLfloat x, const GLfloat y, const GLfloat z);
-	void R_transform(const char hinge, const GLfloat theta);
+	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
+	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
+	void Rotate(const char hinge, const GLfloat theta);
 
 };
 

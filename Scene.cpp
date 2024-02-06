@@ -6,21 +6,20 @@
 
 using namespace std;
 
-void Model::T_transform(const GLfloat x, const GLfloat y, const GLfloat z)
+void Model::Translate(const GLfloat x, const GLfloat y, const GLfloat z)
 {
-	mat4 t = Translate(x, y, z);
+	mat4 t = TranslationMat(x, y, z);
 	_model_transform = t * _model_transform;
 }
 
 
-
-void Model::S_transform(const GLfloat x, const GLfloat y, const GLfloat z)
+void Model::Scale(const GLfloat x, const GLfloat y, const GLfloat z)
 {
-	mat4 s = Scale(x, y, z);
+	mat4 s = ScalingMat(x, y, z);
 	_model_transform = s * _model_transform;
 }
 
-void Model::R_transform(const char hinge, const GLfloat theta)
+void Model::Rotate(const char hinge, const GLfloat theta)
 {
 	mat4 r;
 	if (hinge == 'x') {
@@ -74,7 +73,7 @@ void Scene::drawDemo()
 
 void Scene::zoom(GLfloat scale) 
 {
-	models[activeModel]->S_transform(scale,scale,scale);
+	models[activeModel]->Scale(scale,scale,scale);
 }
 
 void Camera::setTransformation(const mat4& transform)
@@ -89,7 +88,7 @@ void Camera::LookAt(const vec4& eye, const vec4& at, const vec4& up)
 	vec4 v = normalize(cross(n, u));
 	vec4 t = vec4(0.0, 0.0, 0.0, 1.0);
 	mat4 c = mat4(u, v, n, t);
-	cTransform = c * Translate(-eye);
+	cTransform = c * TranslationMat(-eye);
 }
 
 void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)

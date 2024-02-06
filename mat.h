@@ -604,7 +604,7 @@ vec4 mvmult(const mat4& a, const vec4& b)
 //
 
 inline
-mat4 RotateX(const GLfloat theta)
+mat4 RotationByX(const GLfloat theta)
 {
     GLfloat angle = (M_PI / 180.0) * theta;
 
@@ -616,13 +616,38 @@ mat4 RotateX(const GLfloat theta)
 }
 
 
+inline
+mat4 RotationByY(const GLfloat theta)
+{
+    GLfloat angle = (M_PI / 180.0) * theta;
+    mat4 c(1);
+    c[0][0] = cos(angle); c[0][2] = -sin(angle);
+
+    c[2][0] = sin(angle); c[2][2] = cos(angle);
+
+    return c;
+}
+
+inline
+mat4 RotationByZ(const GLfloat theta)
+{
+    GLfloat angle = (M_PI / 180.0) * theta;
+
+    mat4 c(1);
+    c[0][0] = cos(angle); c[0][1] = -sin(angle);
+
+    c[1][0] = sin(angle); c[1][1] = cos(angle);
+
+    return c;
+
+}
 //----------------------------------------------------------------------------
 //
 //  Translation matrix generators
 //
 
 inline
-mat4 Translate(const GLfloat x, const GLfloat y, const GLfloat z)
+mat4 TranslationMat(const GLfloat x, const GLfloat y, const GLfloat z)
 {
     mat4 c(1);
     c[0][3] = x;
@@ -632,15 +657,15 @@ mat4 Translate(const GLfloat x, const GLfloat y, const GLfloat z)
 }
 
 inline
-mat4 Translate(const vec3& v)
+mat4 TranslationMat(const vec3& v)
 {
-    return Translate(v.x, v.y, v.z);
+    return TranslationMat(v.x, v.y, v.z);
 }
 
 inline
-mat4 Translate(const vec4& v)
+mat4 TranslationMat(const vec4& v)
 {
-    return Translate(v.x, v.y, v.z);
+    return TranslationMat(v.x, v.y, v.z);
 }
 
 //----------------------------------------------------------------------------
@@ -649,7 +674,7 @@ mat4 Translate(const vec4& v)
 //
 
 inline
-mat4 Scale(const GLfloat x, const GLfloat y, const GLfloat z)
+mat4 ScalingMat(const GLfloat x, const GLfloat y, const GLfloat z)
 {
     mat4 c(1);
     c[0][0] = x;
@@ -660,51 +685,10 @@ mat4 Scale(const GLfloat x, const GLfloat y, const GLfloat z)
 }
 
 inline
-mat4 Scale(const vec3& v)
+mat4 ScalingMat(const vec3& v)
 {
-    return Scale(v.x, v.y, v.z);
+    return ScalingMat(v.x, v.y, v.z);
 }
 
-//----------------------------------------------------------------------------
-
-//----------------------------------------------------------------------------
-//
-//  Rotation matrix generators
-//
-
-inline
-mat4 RotationByX(const GLfloat theta)
-{
-    mat4 c(1);
-    c[1][1] = cos(theta); c[1][2] = sin(theta);
-
-    c[2][1] = -sin(theta); c[2][2] = cos(theta);
-
-
-    return c;
-}
-
-inline
-mat4 RotationByY(const GLfloat theta)
-{
-    mat4 c(1);
-    c[0][0] = cos(theta); c[0][2] = -sin(theta);
-
-    c[2][0] = sin(theta); c[2][2] = cos(theta);
-
-    return c;
-}
-
-inline
-mat4 RotationByZ(const GLfloat theta)
-{
-    mat4 c(1);
-    c[0][0] = cos(theta); c[0][1] = -sin(theta);
-
-    c[1][0] = sin(theta); c[1][1] = cos(theta);
-
-    return c;
-}
-
-
+//--------------------------------
 //----------------------------------------------------------------------------#pragma once

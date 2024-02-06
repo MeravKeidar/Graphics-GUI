@@ -34,6 +34,8 @@ bool DISPLAY_CAMERAS = false;
 Scene* scene;
 Renderer* renderer;
 
+
+/// ImGUI Menus 
 static char* file_dialog_buffer = nullptr;
 static char path[500] = "";
 static bool open_file_dialog = false;
@@ -51,8 +53,6 @@ void FileMenu() {
 		FileDialog::file_dialog_open = false; // Close the file dialog
 	}
 }
-
-
 
 
 static void MainMenuBar()
@@ -113,47 +113,99 @@ static void MainMenuBar()
 
 
 
-
-
-
-
-/*
-void MainMenu() {
-	if (ImGui::BeginMainMenuBar()) {
-		if (ImGui::BeginMenu("Model")) {
-			if (ImGui::MenuItem("Load .obj model")) {
-				FileDialog::file_dialog_open = true;
-				FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-	
-			}
-
-			if (FileDialog::file_dialog_open) {
-				file_dialog_buffer = path;
-				FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-				FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, file_dialog_buffer, sizeof(file_dialog_buffer), FileDialog::file_dialog_open_type);
-			
-				//selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
-				//scene->loadOBJModel(selectedFilePath);
-				file_dialog_buffer = nullptr;
-				FileDialog::file_dialog_open = false; // Close the file dialog
-			}
-
-			if (ImGui::MenuItem("Load Primative")) {
-				
-			}
-			
-		ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Model")) {
-			if (ImGui::MenuItem("Load .obj model")) {
-
-		ImGui::EndMenu();
-		}
-	ImGui::EndMainMenuBar();
+int my_main() {
+	// Initialize GLFW
+	if (!glfwInit()) {
+		std::cerr << "Failed to initialize GLFW\n";
+		return -1;
 	}
 
+	// Create a GLFWwindow of 512 by 512 pixels, named "CG"
+	GLFWwindow* window = glfwCreateWindow(512, 512, "CG", NULL, NULL);
+	if (!window) {
+		fprintf(stderr, "Failed to create GLFW window\n");
+		glfwTerminate();
+		return -1;
+	}
+	
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1); // Enable vsync
+
+
+	// Initialize GLEW
+	glewExperimental = GL_TRUE;
+	if (glewInit() != GLEW_OK) {
+		std::cerr << "Failed to initialize GLEW\n";
+		return -1;
+	}
+	
+	
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
+
+	// Setup scene 
+	renderer = new Renderer(512, 512);
+	scene = new Scene(renderer);
+	vec3 eye(0.0,0.0,0.0); 
+	vec3 at(0.0,0.0,-1.0);
+	vec3 up(0.0,1.0,0.0);
+	scene->addCamera(eye,at,up);//TODO: check about default perspective;
+
+	//Main loop
+	while (!glfwWindowShouldClose(window)) {
+		glfwPollEvents();
+
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR) {
+			std::cerr << "OpenGL error: " << error << std::endl;
+		}
+
+		// Start the ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+
+		//draw the scene 
+		scene->drawDemo();
+
+		MainMenuBar();
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); 
+		
+		glfwSwapBuffers(window);
+		
+	}
+
+	// Cleanup
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
+	glfwDestroyWindow(window);
+	glfwTerminate();
+	delete scene;
+	delete renderer;
+
+	return 0;
 }
 
+int main(int argc, char *argv[]) {
+		return my_main();
+}
+
+
+
+
+
+
+
+
+/*OLD SKEL CODE - Might be relevant (?)*/
 
 ////////////////////Original skeleton funcs/////////////////////////////
 //Original skeleton funcs
@@ -197,123 +249,8 @@ void display()
 */
 ///////////////////////////////////////////////////////////////////////////
 
-int my_main() {
-	// Initialize GLFW
-	if (!glfwInit()) {
-		std::cerr << "Failed to initialize GLFW\n";
-		return -1;
-	}
-
-	// Tell GLFW what version of OpenGL we are using 
-	// In this case we are using OpenGL 2.1 to support fixed-function pipeline
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-	//glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-	
-	// Create a GLFWwindow object of 512 by 512 pixels, naming it "CG"
-	
-	
-
-	GLFWwindow* window = glfwCreateWindow(512, 512, "CG", NULL, NULL);
-	if (!window) {
-		fprintf(stderr, "Failed to create GLFW window\n");
-		glfwTerminate();
-		return -1;
-	}
-	
-
-	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1); // Enable vsync
-
-	//glewInit();
-	//GLenum err = glewInit();
-	//if (GLEW_OK != err)
-	//{
-	//	/* Problem: glewInit failed, something is seriously wrong. */
-	//	fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-	//	/*		...*/
-	//}
-	//fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-	
-
-	// Initialize GLEW
-	glewExperimental = GL_TRUE;
-	if (glewInit() != GLEW_OK) {
-		std::cerr << "Failed to initialize GLEW\n";
-		return -1;
-	}
-	
-	
-	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
 
 
-	renderer = new Renderer(512, 512);
-	scene = new Scene(renderer);
-	vec3 eye(0.0,0.0,0.0); 
-	vec3 at(0.0,0.0,-1.0);
-	vec3 up(0.0,1.0,0.0);
-	scene->addCamera(eye,at,up);//TODO: check about default perspective;
-
-	// Set GLFW callbacks
-	/*glfwSetFramebufferSizeCallback(window, reshape);
-	glfwSetKeyCallback(window, keyboard);
-	glfwSetMouseButtonCallback(window, mouse);
-	glfwSetCursorPosCallback(window, motion);*/
-
-	glViewport(0, 0, 512, 512); // Set the viewport size to match the window size
-
-	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
-
-		GLenum error = glGetError();
-		if (error != GL_NO_ERROR) {
-			std::cerr << "OpenGL error: " << error << std::endl;
-		}
-
-		// Start the ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
-		//renderer->SetDemoBuffer();
-		//renderer->DrawLine(1,400, 1, 400,1,0,1);
-		//renderer->SwapBuffers();
-
-		scene->drawDemo();
-		MainMenuBar();
-	
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); 
-		
-		glfwSwapBuffers(window);
-		
-	}
-
-	// Cleanup
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-	glfwDestroyWindow(window);
-	glfwTerminate();
-	delete scene;
-	delete renderer;
-
-	return 0;
-}
-
-int main(int argc, char *argv[]) {
-		return my_main();
-}
-
-
-
-
-/*OLD CODE - Might be relevant (?)*/
 //
 //void initMenu()
 //{
