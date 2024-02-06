@@ -199,7 +199,7 @@ void Renderer::SwapBuffers()
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	a = glGetError();
 	//glutSwapBuffers();
-	glfwSwapBuffers(glfwGetCurrentContext());
+	//glfwSwapBuffers(glfwGetCurrentContext());
 	a = glGetError();
 }
 

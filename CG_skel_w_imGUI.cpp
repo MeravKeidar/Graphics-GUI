@@ -69,7 +69,7 @@ static void MainMenuBar()
 		{
 			if (ImGui::MenuItem("Pyramid")) {
 				//scene->loadOBJModel("C:/Users/user/source/repo/GraphicsGui/obj_files/pyramid.obj");
-				//scene->loadPrimModel("pyramid");
+				scene->loadPrimModel("pyramid");
 			}
 			//TODO:  add more primatives 
 			ImGui::EndMenu();
@@ -97,14 +97,13 @@ static void MainMenuBar()
 				// pop up 
 				//scene->addCamera(
 			}
-			ImGui::EndMenu();
 			if (ImGui::MenuItem("Look AT")) {
 
 			}
-			ImGui::EndMenu();
 			if (ImGui::MenuItem("Change Active Camera")) {
 
 			}
+
 			ImGui::EndMenu();
 		}
 		ImGui::EndMainMenuBar();
@@ -285,11 +284,12 @@ int my_main() {
 		//renderer->DrawLine(1,400, 1, 400,1,0,1);
 		//renderer->SwapBuffers();
 
-		//scene->draw();
+		scene->drawDemo();
 		MainMenuBar();
 	
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); 
+		
 		glfwSwapBuffers(window);
 		
 	}
