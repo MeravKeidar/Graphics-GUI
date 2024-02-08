@@ -122,7 +122,7 @@ void MeshModel::loadFile(string fileName)
 	//Then vertex_positions should contain:
 	//vertex_positions={v1,v2,v3,v1,v3,v4}
 
-	vertex_positions = new vec3[faces.size() * 3]; //TODO: check correctness
+	//vertex_positions = new vec4[faces.size() * 4]; //TODO: check correctness
 
 	min_cordinates = max_cordinates = (vertices[0][0], vertices[0][1], vertices[0][2]);
 	// iterate through all stored faces and create triangles
@@ -134,7 +134,7 @@ void MeshModel::loadFile(string fileName)
 			//TODO: check sanity for reading faces with no normals or\and textures 
 			vertex_normals[k] = (verticesNorm.at((*it).vn[i]));
 			vertex_textures[k] = (verticesText.at((*it).vt[i]));
-			vertex_positions[k++] = (vertices.at((*it).v[i]));
+			//vertex_positions[k++] = (vertices.at((*it).v[i]));
 
 			//uptade min/max coordinates
 			// x coordinates
@@ -163,4 +163,14 @@ void MeshModel::draw()
 
 	//TODO: figure out how to send that data to the rendere?? we dont have accss herer to the renderere..
 	
+}
+
+MeshModel::MeshModel()
+{
+	vertex_positions.push_back(vec4(0, 0, 0, 0));
+	vertex_positions.push_back(vec4(1, 0, 0, 0));
+	vertex_positions.push_back(vec4(0, 1, 0, 0));
+	modified_vertex.push_back(vec4(0));
+	modified_vertex.push_back(vec4(0));
+	modified_vertex.push_back(vec4(0));
 }

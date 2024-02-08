@@ -39,6 +39,14 @@ Renderer* renderer;
 static char* file_dialog_buffer = nullptr;
 static char path[500] = "";
 static bool open_file_dialog = false;
+void pushVec(vector<GLfloat>* triangle, vec4 vec)
+{
+	for (size_t i = 0; i < 4; i++)
+	{
+		triangle->push_back(vec[i]);
+	}
+
+}
 
 void FileMenu() {
 	FileDialog::file_dialog_open = true;
@@ -47,8 +55,7 @@ void FileMenu() {
 		file_dialog_buffer = path;
 		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
 		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, file_dialog_buffer, sizeof(file_dialog_buffer), FileDialog::file_dialog_open_type);
-		//selectedFilePath = std::string(buffer, strnlen_s(buffer, sizeof(buffer)));
-		//scene->loadOBJModel(selectedFilePath);
+	
 		file_dialog_buffer = nullptr;
 		FileDialog::file_dialog_open = false; // Close the file dialog
 	}
@@ -149,14 +156,14 @@ int my_main() {
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 
-	// Setup scene 
-	renderer = new Renderer(512, 512);
-	scene = new Scene(renderer);
-	vec3 eye(0.0,0.0,0.0); 
-	vec3 at(0.0,0.0,-1.0);
-	vec3 up(0.0,1.0,0.0);
-	scene->addCamera(eye,at,up);//TODO: check about default perspective;
+	// Setup scene
+	//TODO danger danger danger
+	
+	scene = new Scene();
+	MeshModel temp_model;
+	scene->addModel(&temp_model);
 
+	
 	//Main loop
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
@@ -170,10 +177,17 @@ int my_main() {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		//TODO: not sure this is the right approach to refresh buffers
+		//renderer->ClearColorBuffer();
+		
+		//std::cout << "window width " << ImGui::GetMainViewport()->Size.x << std::endl;
+		scene->draw();
 
-		//draw the scene 
-		scene->drawDemo();
 
+
+		//renderer->DrawTriangles(&post_viewport_mat);
+		
+		//renderer->SwapBuffers();
 		MainMenuBar();
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); 
@@ -194,195 +208,10 @@ int my_main() {
 	return 0;
 }
 
+
+
 int main(int argc, char *argv[]) {
 		return my_main();
 }
 
 
-
-
-
-
-
-
-/*OLD SKEL CODE - Might be relevant (?)*/
-
-////////////////////Original skeleton funcs/////////////////////////////
-//Original skeleton funcs
-//void fileMenu(int id)
-//{
-//	switch (id)
-//	{
-//	case FILE_OPEN:
-//		CFileDialog dlg(TRUE, _T(".obj"), NULL, NULL, _T("*.obj|*.*"));
-//		if (dlg.DoModal() == IDOK)
-//		{
-//			std::string s((LPCTSTR)dlg.GetPathName());
-//			scene->loadOBJModel((LPCTSTR)dlg.GetPathName());
-//		}
-//		break;
-//	}
-//}
-//
-//void mainMenu(int id)
-//{
-//	switch (id)
-//	{
-//	case MAIN_DEMO:
-//		scene->drawDemo();
-//		break;
-//	case MAIN_ABOUT:
-//		AfxMessageBox(_T("Computer Graphics"));
-//		break;
-//	}
-//}
-
-
-/*
-
-void display()
-{
-	glClear(GL_COLOR_BUFFER_BIT);
-	glDrawPixels(WIDTH, HEIGHT, GL_RGB, GL_UNSIGNED_BYTE, PixelBuffer);
-	glFlush();
-}
-*/
-///////////////////////////////////////////////////////////////////////////
-
-
-
-//
-//void initMenu()
-//{
-//
-//	int menuFile = glutCreateMenu(fileMenu);
-//	glutAddMenuEntry("Open..",FILE_OPEN);
-//	glutCreateMenu(mainMenu);
-//	glutAddSubMenu("File",menuFile);
-//	glutAddMenuEntry("Demo",MAIN_DEMO);
-//	glutAddMenuEntry("About",MAIN_ABOUT);
-//	glutAttachMenu(GLUT_RIGHT_BUTTON);
-//}
-////----------------------------------------------------------------------------
-//
-//
-//
-//int my_main( int argc, char **argv )
-//{
-//	//----------------------------------------------------------------------------
-//	// Initialize window
-//	glutInit( &argc, argv );
-//	glutInitDisplayMode( GLUT_RGBA| GLUT_DOUBLE);
-//	glutInitWindowSize( 512, 512 );
-//	glutInitContextVersion( 3, 2 );
-//	glutInitContextProfile( GLUT_CORE_PROFILE );
-//	glutCreateWindow( "CG" );
-//	glewExperimental = GL_TRUE;
-//	glewInit();
-//	GLenum err = glewInit();
-//	if (GLEW_OK != err)
-//	{
-//		/* Problem: glewInit failed, something is seriously wrong. */
-//		fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-//		/*		...*/
-//	}
-//	fprintf(stdout, "Status: Using GLEW %s\n", glewGetString(GLEW_VERSION));
-//
-//	
-//	
-//	renderer = new Renderer(512,512);
-//	scene = new Scene(renderer);
-//	//----------------------------------------------------------------------------
-//	// Initialize Callbacks
-//
-//	glutDisplayFunc( display );
-//	glutKeyboardFunc( keyboard );
-//	glutMouseFunc( mouse );
-//	glutMotionFunc ( motion );
-//	glutReshapeFunc( reshape );
-//	initMenu();
-//	
-//
-//	glutMainLoop();
-//	delete scene;
-//	delete renderer;
-//	return 0;
-//}
-//
-//CWinApp theApp;
-//
-//using namespace std;
-//
-//int main( int argc, char **argv )
-//{
-//	int nRetCode = 0;
-//	
-//	// initialize MFC and print and error on failure
-//	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))
-//	{
-//		// TODO: change error code to suit your needs
-//		_tprintf(_T("Fatal Error: MFC initialization failed\n"));
-//		nRetCode = 1;
-//	}
-//	else
-//	{
-//		my_main(argc, argv );
-//	}
-//	
-//	return nRetCode;
-//}
-//
-//#define FILE_OPEN 1
-//#define MAIN_DEMO 1
-//#define MAIN_ABOUT 2
-//int last_x, last_y;
-//bool lb_down, rb_down, mb_down;
-//
-////----------------------------------------------------------------------------
-//// Callbacks
-//void display(void)
-//{
-//	scene->draw(); //TODO: implement
-//}
-//
-//void reshape(GLFWwindow* window, int width, int height)
-//{
-//	renderer->Reshape(width, height); //TODO: implement
-//}
-//
-//void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods)
-//{
-//	switch (key) {
-//	case GLFW_KEY_ESCAPE:
-//		glfwSetWindowShouldClose(window, GLFW_TRUE);
-//		break;
-//	}
-//}
-//
-//void mouse(GLFWwindow* window, int button, int state, int mods)
-//{
-//	switch (button) {
-//	case GLFW_MOUSE_BUTTON_LEFT:
-//		lb_down = (state == GLFW_RELEASE) ? false : true;
-//		break;
-//	case GLFW_MOUSE_BUTTON_RIGHT:
-//		rb_down = (state == GLFW_RELEASE) ? false : true;
-//		break;
-//	case GLFW_MOUSE_BUTTON_MIDDLE:
-//		mb_down = (state == GLFW_RELEASE) ? false : true;
-//		break;
-//	}
-//
-//}
-//
-//void motion(GLFWwindow* window, double xpos, double ypos) {
-//	// mouse motion handling logic
-//	int x = static_cast<int>(xpos);
-//	int y = static_cast<int>(ypos);
-//	// calc difference in mouse movement
-//	int dx = x - last_x;
-//	int dy = y - last_y;
-//	// update last x,y
-//	last_x = x;
-//	last_y = y;
-//}

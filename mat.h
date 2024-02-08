@@ -378,8 +378,9 @@ mat3 transpose(const mat3& A) {
 //  mat4.h - 4D square matrix
 //
 
-class mat4 {
 
+class mat4 {
+    
     vec4  _m[4];
 
 public:
@@ -575,6 +576,7 @@ mat4 transpose(const mat4& A) {
         A[0][3], A[1][3], A[2][3], A[3][3]);
 }
 
+
 //////////////////////////////////////////////////////////////////////////////
 //
 //  Helpful Matrix Methods
@@ -688,6 +690,14 @@ inline
 mat4 ScalingMat(const vec3& v)
 {
     return ScalingMat(v.x, v.y, v.z);
+}
+
+inline
+mat4 ProjectionM()
+{
+    mat4 temp(1);
+    temp[2][2] = 0;
+    return temp;
 }
 
 //--------------------------------
