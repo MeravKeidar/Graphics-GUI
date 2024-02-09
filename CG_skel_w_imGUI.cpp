@@ -26,19 +26,13 @@
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
 
+Scene* scene;
+Renderer* renderer;
+
 bool DISPLAY_VERTEX_NORMAL = false;
 bool DISPLAY_FACE_NORMAL = false;
 bool DISPLAY_CAMERAS = false;
 
-
-Scene* scene;
-Renderer* renderer;
-
-
-/// ImGUI Menus 
-static char* file_dialog_buffer = nullptr;
-static char path[500] = "";
-static bool open_file_dialog = false;
 void pushVec(vector<GLfloat>* triangle, vec4 vec)
 {
 	for (size_t i = 0; i < 4; i++)
@@ -47,6 +41,32 @@ void pushVec(vector<GLfloat>* triangle, vec4 vec)
 	}
 
 }
+
+
+
+/// ImGUI Menus 
+
+// Callback function for keyboard input
+void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	if (action == GLFW_PRESS) {
+		if (key == GLFW_KEY_EQUAL && mods == GLFW_MOD_CONTROL) {
+			scene->zoom(1.5);
+			std::cout << "Zoom In" << std::endl;
+		}
+		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
+			// Call zoom out function
+			scene->zoom(1/ 1.5);
+			std::cout << "Zoom Out" << std::endl;
+		}
+	}
+}
+
+
+
+
+static char* file_dialog_buffer = nullptr;
+static char path[500] = "";
+static bool open_file_dialog = false;
 
 void FileMenu() {
 	FileDialog::file_dialog_open = true;
@@ -155,7 +175,7 @@ int my_main() {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-
+	glfwSetKeyCallback(window, keyboard);
 	// Setup scene
 	//TODO danger danger danger
 	
@@ -182,7 +202,6 @@ int my_main() {
 		
 		//std::cout << "window width " << ImGui::GetMainViewport()->Size.x << std::endl;
 		scene->draw();
-
 
 
 		//renderer->DrawTriangles(&post_viewport_mat);

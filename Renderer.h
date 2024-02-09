@@ -15,9 +15,6 @@ class Renderer
 	
 	void CreateLocalBuffer();
 
-	//TODO make sure mat is updated per loop iteration to fit current screen dimensions
-	mat4 to_cannonical_ortho;
-	
 	
 	//unnecessary way to force 2 formulas into a matrix
 	mat3 to_screen;
@@ -41,8 +38,8 @@ public:
 	//void DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals = NULL);
 	void CreateBuffers(int width, int height);
 	void DrawTriangles(const vector<vec4>* vertices, const vector<vec4>* normals = NULL);
-	void SetCameraTransform(const mat4& cTransform);
-	void SetProjection(const mat4& projection);
+	//void SetCameraTransform(const mat4& cTransform);
+	//void SetProjection(const mat4& projection);
 	//void SetObjectMatrices(const mat4& oTransform, const mat3& nTransform);
 	void SwapBuffers();
 	void ClearColorBuffer();
@@ -51,9 +48,7 @@ public:
 	void Reshape(int width, int height);
 	void DrawPixel(int x, int y, float r = 1, float g = 1, float b = 1);
 	void DrawLine(int x1, int x2, int y1, int y2, float r = 1, float g = 1, float b = 1);
-	void UpdateCannonicalOrthoMat(GLfloat left, GLfloat bottom, GLfloat near, GLfloat right, GLfloat top, GLfloat far);
-	void UpdateCannonicalProjMat(GLfloat left, GLfloat bottom, GLfloat near, GLfloat right, GLfloat top, GLfloat far);
-	void UpdateViewPort(GLfloat width, GLfloat height);
+		void UpdateViewPort(GLfloat width, GLfloat height);
 	vec4 viewPortVec(vec4 cannonial);
 	void UpdateToScreenMat(int width, int height);
 	void multVertex(const vector<GLfloat>* vertices, mat4 mat , vector<GLfloat>* modified);

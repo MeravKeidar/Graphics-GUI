@@ -9,6 +9,8 @@
 #include "Renderer.h"
 using namespace std;
 
+
+
 class Model {
 protected:
 
@@ -17,12 +19,12 @@ protected:
 
 public:
 	mat4 _model_transform;
-	vector<vec4> vertex_positions;
-	vector<vec4> vertex_normals;
-	vector<vec4> face_normals;
+	vector<vec3> vertex_positions;
+	vector<vec3> vertex_normals;
+	vector<vec3> face_normals;
 	vector<vec4> modified_vertex;
 	vector<vec4> modified_vertex_normals;
-	vector<vec4> modified_faces_normals;
+	vector<vec4> modified_face_normals;
 	vector<vec4> vertex_textures;
 
 	mat4 _world_transform;
@@ -68,7 +70,8 @@ class Scene {
 	vector<Camera*> cameras;
 	Renderer* m_renderer;
 	mat4 _world_transform;
-	void draw_model(Model* model);
+	void drawModel(Model* model);
+	void drawFaceNormals(Model* model);
 
 public:
 	Scene();

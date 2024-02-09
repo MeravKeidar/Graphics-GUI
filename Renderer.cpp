@@ -72,8 +72,6 @@ void Renderer::CreateBuffers(int width, int height)
 
 	}
 
-	
-
 }
 
 
@@ -100,9 +98,12 @@ void Renderer::SetDemoBuffer()
 
 
 void Renderer::DrawPixel(int x, int y, float r, float g, float b) {
-	m_outBuffer[INDEX(m_width, x, y, 0)] = r;
-	m_outBuffer[INDEX(m_width, x, y, 1)] = g;
-	m_outBuffer[INDEX(m_width, x, y, 2)] = b;
+	if ((x < m_width) & (y < m_height)) {
+		m_outBuffer[INDEX(m_width, x, y, 0)] = r;
+		m_outBuffer[INDEX(m_width, x, y, 1)] = g;
+		m_outBuffer[INDEX(m_width, x, y, 2)] = b;
+	}
+	
 
 }
 /**
@@ -152,7 +153,6 @@ void Renderer::DrawLine(int x1, int x2, int y1, int y2, float r, float g, float 
 
 
 
-/*deletes the current m_outbuffer and creates a new one of shape Width*height*/
 void Renderer::Reshape(int width, int height)
 {
 	m_width = width;
@@ -262,24 +262,12 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 }
 
-void Renderer::UpdateCannonicalOrthoMat(GLfloat left, GLfloat bottom, GLfloat near, GLfloat right, GLfloat top , GLfloat far)
+vec4 Renderer::viewPortVec(vec4 cannonial)
 {
-
-	to_cannonical_ortho = mat4(1);
-	to_cannonical_ortho[0][0] = 2 / (right - left);
-	to_cannonical_ortho[1][1] = 2 / (top - bottom);
-	to_cannonical_ortho[2][2] = 2 / -(far - near);
-	//[1][1] set at init to 1
-	to_cannonical_ortho[0][3] = - (left+right) / (right - left);
-	to_cannonical_ortho[1][3] = -(top + bottom) / (top - bottom);
-	to_cannonical_ortho[2][3] = -(far + near) / (far - near);
+	GLfloat factor = min(m_width, m_height);
+	return vec4((factor / 2) * (cannonial.x + 1), (factor / 2) * (cannonial.y + 1), 0, 0);
 }
 
-void Renderer::UpdateCannonicalProjMat(GLfloat left, GLfloat bottom, GLfloat near, GLfloat right, GLfloat top, GLfloat far)
-{
-
-	
-}
 
 void Renderer::UpdateToScreenMat(int width, int height)
 {
@@ -323,8 +311,3 @@ void Renderer::pipeLine(const vector<GLfloat>* vertices, vector<GLfloat>* modifi
 	multVertex(vertices, total_mat, modified);
 }
 
-vec4 Renderer::viewPortVec(vec4 cannonial)
-{
-	GLfloat factor = min(m_width, m_height);
-	return vec4((factor /2)*(cannonial.x+1), (factor / 2) * (cannonial.y + 1),0,0);
-}

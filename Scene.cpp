@@ -57,7 +57,7 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 void Scene::draw()
 {
 	m_renderer->ClearColorBuffer();
-	m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y);
+	m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y - 20 );
 	// 1. Send the renderer the current camera transform and the projection
 	// 2. Tell all models to draw themselves
 
@@ -66,39 +66,53 @@ void Scene::draw()
 	
 	for (vector<Model*>::iterator i = models.begin(); i != models.end(); i++)
 	{
-		draw_model(*i);
+		drawModel(*i);
+		//if (DISPLAY_FACE_NORMAL) { drawFaceNormals(*i); };
 	}
 
 	m_renderer->SwapBuffers();
 }
 
-void Scene::draw_model(Model* model)
+
+void Scene::drawModel(Model* model)
 {
 	int size = model->vertex_positions.size();
+	mat4 Tc = cameras.at(activeCamera)->cTransform;
+	mat4 P = cameras.at(activeCamera)->projection;
+
 	for (size_t i = 0; i < size; i++)
 	{
-		mat4 Tc = cameras.at(activeCamera)->cTransform;
 		//model view transform
-		model->modified_vertex.at(i) = (Tc*(_world_transform*(model->_model_transform * model->vertex_positions.at(i))));
-
-		mat4 P = cameras.at(activeCamera)->projection;
+		model->modified_vertex.at(i) = (Tc*(_world_transform*(model->_model_transform * model->modified_vertex.at(i))));
+		//Projection
 		model->modified_vertex.at(i) = (ProjectionM() *(P* (model->modified_vertex.at(i))));
+		//View-port
 		model->modified_vertex.at(i) = m_renderer->viewPortVec(model->modified_vertex.at(i));
 	}
 
 	m_renderer->DrawTriangles(&(model->modified_vertex));
 
-	/**
-	
-	
-	size = model->face_normals.size();
+}
+
+
+void Scene::drawFaceNormals(Model* model)
+{
+	int size = model->face_normals.size();
+	mat4 Tc = cameras.at(activeCamera)->cTransform;
+	mat4 P = cameras.at(activeCamera)->projection;
+
 	for (size_t i = 0; i < size; i++)
 	{
-		mat4 Tc = cameras.at(activeCamera)->cTransform;
 		//model view transform
-		model->modified_faces_normals.at(i) = (Tc * (_world_transform * (model->_normal_transform * model->vertex_positions.at(i))));
+		//TODO: check if we need to make a world normal transform
+		model->modified_face_normals.at(i) = (Tc * (_world_transform * (model->_normal_transform * model->face_normals.at(i))));
+		//Projection
+		model->modified_face_normals.at(i) = (ProjectionM() * (P * (model->modified_face_normals.at(i))));
+		//View-port
+		model->modified_face_normals.at(i) = m_renderer->viewPortVec(model->modified_face_normals.at(i));
 	}
-	*/
+		m_renderer->DrawTriangles(&(model->modified_face_normals));
+
 }
 
 void Scene::drawDemo()
@@ -109,7 +123,8 @@ void Scene::drawDemo()
 
 void Scene::zoom(GLfloat scale) 
 {
-	models[activeModel]->Scale(scale,scale,scale);
+	mat4 s = ScalingMat(scale);
+	_world_transform = s * _world_transform;
 }
 
 void Camera::setTransformation(const mat4& transform)
@@ -166,8 +181,8 @@ void Camera::Perspective(const float fovy, const float aspect, const float zNear
 Scene::Scene()
 {
 	_world_transform = mat4(1);
-	//m_renderer = new Renderer();
-	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height);
+	//m_renderer = new Renderer(512,512);
+	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
 	Camera* init_camera = new Camera();
 	addCamera(vec4(0, 0, -1, 0), vec4(0, 0, 0, 0), vec4(0, 1, 0, 0));
 }

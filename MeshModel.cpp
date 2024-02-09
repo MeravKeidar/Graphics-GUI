@@ -23,7 +23,6 @@ struct FaceIdcs
 			v[i] = vn[i] = vt[i] = 0;
 	}
 
-	//TODO: check if 4'th cell needs to be 1 (Homo purposes)
 	FaceIdcs(std::istream& aStream)
 	{
 		for (int i = 0; i < 4; i++)
@@ -67,6 +66,7 @@ vec2 vec2fFromStream(std::istream& aStream)
 MeshModel::MeshModel(string fileName)
 {
 	loadFile(fileName);
+	//calculateNormals();
 }
 
 MeshModel::~MeshModel(void)
@@ -80,9 +80,9 @@ void MeshModel::loadFile(string fileName)
 	vector<vec3> vertices;
 	vector<vec3> verticesNorm;
 	vector<vec3> verticesText;
-	vertices.push_back(vec3(0, 0, 0));
-	verticesNorm.push_back(vec3(0, 0, 0));
-	verticesText.push_back(vec3(0, 0, 0));
+	//vertices.push_back(vec3(0, 0, 0));
+	verticesNorm.push_back(vec3(0, 0, 0)); // if there is no vertex normal in the file, add 0
+	verticesText.push_back(vec3(0, 0, 0)); // if there is no vertex texture in the file, add 0
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -126,16 +126,18 @@ void MeshModel::loadFile(string fileName)
 
 	min_cordinates = max_cordinates = (vertices[0][0], vertices[0][1], vertices[0][2]);
 	// iterate through all stored faces and create triangles
-	int k = 0;
+	//int k = 0;
 	for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
 	{
 		for (int i = 0; i < 3; i++)
 		{
-			//TODO: check sanity for reading faces with no normals or\and textures 
-			vertex_normals[k] = (verticesNorm.at((*it).vn[i]));
-			vertex_textures[k] = (verticesText.at((*it).vt[i]));
-			//vertex_positions[k++] = (vertices.at((*it).v[i]));
+			vertex_positions.push_back(vertices.at((*it).v[i] - 1));
+			vertex_textures.push_back(verticesText.at((*it).vt[i]));
+			vertex_normals.push_back(verticesNorm.at((*it).vn[i]));
 
+			// create the modifed vertices
+			modified_vertex.push_back(vec4(vertex_positions.at(i)));
+			
 			//uptade min/max coordinates
 			// x coordinates
 			min_cordinates[0] = (vertices[i][0] < min_cordinates[0]) ? vertices[i][0] : min_cordinates[0];
@@ -147,7 +149,21 @@ void MeshModel::loadFile(string fileName)
 			min_cordinates[2] = (vertices[i][2] < min_cordinates[2]) ? vertices[i][2] : min_cordinates[2];
 			max_cordinates[2] = (vertices[i][2] > max_cordinates[2]) ? vertices[i][2] : max_cordinates[2];
 		}
+
+		//calculate face normals
+		vec3 xi, xj, xk, normal;
+		GLfloat norm;
+		xi = vertices.at((*it).v[0] - 1);
+		xj = vertices.at((*it).v[1] - 1);
+		xk = vertices.at((*it).v[2] - 1);
+		normal = cross((xj-xi),(xj-xk));
+		norm = length(normal);
+		face_normals.push_back(normal/norm);
+		modified_face_normals.push_back(vec4(normal/norm));
+
+		//calculate vertices normals - would be a nightmare 
 	}
+
 }
 
 PrimMeshModel::PrimMeshModel(string type)
@@ -155,22 +171,17 @@ PrimMeshModel::PrimMeshModel(string type)
 	loadFile(type + ".obj");
 }
 
-
-
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
 {
-
-	//TODO: figure out how to send that data to the rendere?? we dont have accss herer to the renderere..
 	
-}
+	}
+
 
 MeshModel::MeshModel()
 {
-	vertex_positions.push_back(vec4(0, 0, 0, 0));
-	vertex_positions.push_back(vec4(1, 0, 0, 0));
-	vertex_positions.push_back(vec4(0, 1, 0, 0));
-	modified_vertex.push_back(vec4(0));
-	modified_vertex.push_back(vec4(0));
-	modified_vertex.push_back(vec4(0));
+	modified_vertex.push_back(vec4(0, 0, 0, 0));
+	modified_vertex.push_back(vec4(1, 0, 0, 0));
+	modified_vertex.push_back(vec4(0, 1, 0, 0));
+	
 }

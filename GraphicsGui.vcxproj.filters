@@ -134,12 +134,12 @@
     <Library Include="External\GLFW\lib-vc2019\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="vshader.glsl" />
-    <None Include="fshader.glsl" />
-  </ItemGroup>
-  <ItemGroup>
     <Object Include="obj_files\pyramid.obj">
       <Filter>obj Files</Filter>
     </Object>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vshader.glsl" />
+    <None Include="fshader.glsl" />
   </ItemGroup>
 </Project>
