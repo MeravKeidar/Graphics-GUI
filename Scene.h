@@ -22,16 +22,17 @@ public:
 	vector<vec3> vertex_positions;
 	vector<vec3> vertex_normals;
 	vector<vec3> face_normals;
-	vector<vec4> modified_vertex;
+	vector<vec3> bounding_box;
+
+
+	/*vector<vec4> modified_vertex;
 	vector<vec4> modified_vertex_normals;
 	vector<vec4> modified_face_normals;
-	vector<vec4> vertex_textures;
+	vector<vec4> vertex_textures;*/
 
 	mat4 _world_transform;
 	mat4 _normal_transform;
-	/// for calculating the bounding box /// 
-	vec3 min_cordinates;
-	vec3 max_cordinates;
+
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const char hinge, const GLfloat theta);
@@ -72,6 +73,7 @@ class Scene {
 	mat4 _world_transform;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
+	void drawboundingBox(Model* model);
 
 public:
 	Scene();
@@ -82,6 +84,7 @@ public:
 	void draw();
 	void drawDemo();
 	void zoom(GLfloat scale);
+	void moveModel(const GLfloat x, const GLfloat y, const GLfloat z);
 	void addModel(Model* model);
 	int activeModel=0;
 	int activeLight=0;

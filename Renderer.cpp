@@ -21,7 +21,7 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<vec4>* vertices, const vector<vec4>* normals)
+void Renderer::DrawTriangles(const vector<vec4>* vertices, float r, float g , float b)
 {
 	//TODO make sure the vertices are in pairs and not triplets
 	// changed into 4's
@@ -36,18 +36,19 @@ void Renderer::DrawTriangles(const vector<vec4>* vertices, const vector<vec4>* n
 		DrawLine(vec1.x, vec3.x, vec1.y, vec3.y);
 		DrawLine(vec2.x, vec3.x, vec2.y, vec3.y);
 	}
-
 	
 }
 
-void Renderer::SetCameraTransform(const mat4& cTransform)
-{
 
-}
-
-void Renderer::SetProjection(const mat4& projection)
-{
-}
+//
+//void Renderer::SetCameraTransform(const mat4& cTransform)
+//{
+//
+//}
+//
+//void Renderer::SetProjection(const mat4& projection)
+//{
+//}
 
 
 

@@ -65,8 +65,10 @@ vec2 vec2fFromStream(std::istream& aStream)
 
 MeshModel::MeshModel(string fileName)
 {
+	//_world_transform = mat4(1.0);
+	_model_transform = mat4(1.0);
+	_normal_transform = mat4(1.0);
 	loadFile(fileName);
-	//calculateNormals();
 }
 
 MeshModel::~MeshModel(void)
@@ -78,12 +80,9 @@ void MeshModel::loadFile(string fileName)
 	ifstream ifile(fileName.c_str());
 	vector<FaceIdcs> faces;
 	vector<vec3> vertices;
-	vector<vec3> verticesNorm;
 	vector<vec3> verticesText;
-	//vertices.push_back(vec3(0, 0, 0));
-	verticesNorm.push_back(vec3(0, 0, 0)); // if there is no vertex normal in the file, add 0
-	verticesText.push_back(vec3(0, 0, 0)); // if there is no vertex texture in the file, add 0
-	// while not end of file
+	bool calculate_vnorm = false; 
+		// while not end of file
 	while (!ifile.eof())
 	{
 		// get line
@@ -100,7 +99,7 @@ void MeshModel::loadFile(string fileName)
 		if (lineType == "v")
 			vertices.push_back(vec3fFromStream(issLine));
 		else if (lineType == "vn")
-			verticesNorm.push_back(vec3fFromStream(issLine));
+			vertex_normals.push_back(vec3fFromStream(issLine));
 		else if (lineType == "vt")
 			verticesText.push_back(vec3fFromStream(issLine));
 		else if (lineType == "f")
@@ -115,41 +114,16 @@ void MeshModel::loadFile(string fileName)
 			cout << "Found unknown line Type \"" << lineType << "\"";
 		}
 	}
-	//Vertex_positions is an array of vec3. Every three elements define a triangle in 3D.
-	//If the face part of the obj is
-	//f 1 2 3
-	//f 1 3 4
-	//Then vertex_positions should contain:
-	//vertex_positions={v1,v2,v3,v1,v3,v4}
 
-	//vertex_positions = new vec4[faces.size() * 4]; //TODO: check correctness
+	//initilize all vertex vectors to be zero if none were given
+	if (vertex_normals.empty())
+	{
+		calculate_vnorm = true; 
+		vertex_normals = vector<vec3>(vertices.size(),vec3(0.0f));
+	}
 
-	min_cordinates = max_cordinates = (vertices[0][0], vertices[0][1], vertices[0][2]);
-	// iterate through all stored faces and create triangles
-	//int k = 0;
 	for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
 	{
-		for (int i = 0; i < 3; i++)
-		{
-			vertex_positions.push_back(vertices.at((*it).v[i] - 1));
-			vertex_textures.push_back(verticesText.at((*it).vt[i]));
-			vertex_normals.push_back(verticesNorm.at((*it).vn[i]));
-
-			// create the modifed vertices
-			modified_vertex.push_back(vec4(vertex_positions.at(i)));
-			
-			//uptade min/max coordinates
-			// x coordinates
-			min_cordinates[0] = (vertices[i][0] < min_cordinates[0]) ? vertices[i][0] : min_cordinates[0];
-			max_cordinates[0] = (vertices[i][0] > max_cordinates[0]) ? vertices[i][0] : max_cordinates[0];
-			// y coordinates
-			min_cordinates[1] = (vertices[i][1] < min_cordinates[1]) ? vertices[i][1] : min_cordinates[1];
-			max_cordinates[1] = (vertices[i][1] > max_cordinates[1]) ? vertices[i][1] : max_cordinates[1];
-			// z coordinates
-			min_cordinates[2] = (vertices[i][2] < min_cordinates[2]) ? vertices[i][2] : min_cordinates[2];
-			max_cordinates[2] = (vertices[i][2] > max_cordinates[2]) ? vertices[i][2] : max_cordinates[2];
-		}
-
 		//calculate face normals
 		vec3 xi, xj, xk, normal;
 		GLfloat norm;
@@ -157,12 +131,27 @@ void MeshModel::loadFile(string fileName)
 		xj = vertices.at((*it).v[1] - 1);
 		xk = vertices.at((*it).v[2] - 1);
 		normal = cross((xj-xi),(xj-xk));
-		norm = length(normal);
-		face_normals.push_back(normal/norm);
-		modified_face_normals.push_back(vec4(normal/norm));
-
-		//calculate vertices normals - would be a nightmare 
+		face_normals.push_back(normalize(normal));
+		for (int i = 0; i < 3; i++)
+		{
+			vertex_positions.push_back(vertices.at((*it).v[i] - 1));
+			//calculate vertices normals
+			if (calculate_vnorm)
+			{
+				vertex_normals.at((*it).v[i] - 1) += normal; 
+			}
+		}
 	}
+
+	//normalize all normals 
+	if (calculate_vnorm)
+	{
+		for (auto& v_normal : vertex_normals) {
+			v_normal = normalize(v_normal);
+		}
+	}
+
+	boundingBox(&vertices);
 
 }
 
@@ -174,14 +163,43 @@ PrimMeshModel::PrimMeshModel(string type)
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
 {
-	
-	}
+}
 
 
 MeshModel::MeshModel()
 {
-	modified_vertex.push_back(vec4(0, 0, 0, 0));
-	modified_vertex.push_back(vec4(1, 0, 0, 0));
-	modified_vertex.push_back(vec4(0, 1, 0, 0));
+	//_world_transform = mat4(1.0);
+	_model_transform = mat4(1.0);
+	_normal_transform = mat4(1.0);
+	vertex_positions.push_back(vec3(0, 0, 0));
+	vertex_positions.push_back(vec3(1, 0, 0));
+	vertex_positions.push_back(vec3(0, 1, 0));
 	
+}
+
+void MeshModel::boundingBox(vector<vec3>* vertices) 
+{
+	if (vertices->empty()){return;}
+	vec3 min_cordinates = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
+	vec3 max_cordinates = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
+	for (auto& vertex : *vertices)
+	{
+		min_cordinates.x = (vertex.x < min_cordinates.x) ? vertex.x : min_cordinates.x;
+		max_cordinates.x = (vertex.x > max_cordinates.x) ? vertex.x : max_cordinates.x;
+
+		min_cordinates.y = (vertex.y < min_cordinates.y) ? vertex.y : min_cordinates.y;
+		max_cordinates.y = (vertex.y > max_cordinates.y) ? vertex.y : max_cordinates.y;
+
+		min_cordinates.z = (vertex.z < min_cordinates.z) ? vertex.z : min_cordinates.z;
+		max_cordinates.z = (vertex.z > max_cordinates.z) ? vertex.z : max_cordinates.z;
+	}
+
+	bounding_box.push_back(vec3(min_cordinates.x, min_cordinates.y, min_cordinates.z));
+	bounding_box.push_back(vec3(min_cordinates.x, min_cordinates.y, max_cordinates.z));
+	bounding_box.push_back(vec3(min_cordinates.x, max_cordinates.y, min_cordinates.z));
+	bounding_box.push_back(vec3(min_cordinates.x, max_cordinates.y, max_cordinates.z));
+	bounding_box.push_back(vec3(max_cordinates.x, min_cordinates.y, min_cordinates.z));
+	bounding_box.push_back(vec3(max_cordinates.x, min_cordinates.y, max_cordinates.z));
+	bounding_box.push_back(vec3(max_cordinates.x, max_cordinates.y, min_cordinates.z));
+	bounding_box.push_back(vec3(max_cordinates.x, max_cordinates.y, max_cordinates.z));
 }

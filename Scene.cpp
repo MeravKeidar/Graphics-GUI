@@ -79,18 +79,40 @@ void Scene::drawModel(Model* model)
 	int size = model->vertex_positions.size();
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
-
+	vector<vec4> modified_vertex;
 	for (size_t i = 0; i < size; i++)
 	{
+		vec4 v(model->vertex_positions.at(i),1.0);
 		//model view transform
-		model->modified_vertex.at(i) = (Tc*(_world_transform*(model->_model_transform * model->modified_vertex.at(i))));
+		//v = (Tc * (_world_transform * (model->_model_transform * v)));
+		v = (_world_transform * (model->_world_transform*(model->_model_transform * v)));
 		//Projection
-		model->modified_vertex.at(i) = (ProjectionM() *(P* (model->modified_vertex.at(i))));
+		v = (ProjectionM()*(P*v));
 		//View-port
-		model->modified_vertex.at(i) = m_renderer->viewPortVec(model->modified_vertex.at(i));
+		v = m_renderer->viewPortVec(v);
+		modified_vertex.push_back(v); 
 	}
+	m_renderer->DrawTriangles(&(modified_vertex));
 
-	m_renderer->DrawTriangles(&(model->modified_vertex));
+}
+
+
+void Scene::drawboundingBox(Model* model)
+{
+	mat4 Tc = cameras.at(activeCamera)->cTransform;
+	mat4 P = cameras.at(activeCamera)->projection;
+	vector<vec4> modified_box;
+	for (size_t i = 0; i < 8; i++)
+	{
+		//model view transform
+		vec4 v = (Tc * (_world_transform * (model->_model_transform * model->bounding_box.at(i))));
+		//Projection
+		v = (ProjectionM() * (P * v));
+		//View-port
+		v = m_renderer->viewPortVec(v);
+		modified_box.push_back(v);
+	}
+	m_renderer->DrawTriangles(&(modified_box),0.5, 0.5, 0.5);
 
 }
 
@@ -100,18 +122,24 @@ void Scene::drawFaceNormals(Model* model)
 	int size = model->face_normals.size();
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
-
+	vector<vec4> modified_face_normals;
 	for (size_t i = 0; i < size; i++)
 	{
 		//model view transform
 		//TODO: check if we need to make a world normal transform
-		model->modified_face_normals.at(i) = (Tc * (_world_transform * (model->_normal_transform * model->face_normals.at(i))));
+		vec4 v = model->face_normals.at(i);
+		v = Tc * (_world_transform * (model->_normal_transform * model->face_normals.at(i)));
 		//Projection
-		model->modified_face_normals.at(i) = (ProjectionM() * (P * (model->modified_face_normals.at(i))));
+		v = (ProjectionM() * (P * v));
 		//View-port
-		model->modified_face_normals.at(i) = m_renderer->viewPortVec(model->modified_face_normals.at(i));
+		v = m_renderer->viewPortVec(v);
+		modified_face_normals.push_back(v);
+		//TODO: how do we draw normals? line starting ehre ending where ? 
+		///m_renderer -> DrawLine(v.x,x.y,0.0f, 0.0f, 0.2f)
 	}
-		m_renderer->DrawTriangles(&(model->modified_face_normals));
+
+
+	//m_renderer->DrawTriangles(&(modified_face_normals));
 
 }
 
@@ -126,6 +154,15 @@ void Scene::zoom(GLfloat scale)
 	mat4 s = ScalingMat(scale);
 	_world_transform = s * _world_transform;
 }
+
+
+void Scene::moveModel(const GLfloat x, const GLfloat y, const GLfloat z)
+{
+	mat4 t = TranslationMat(x, y, z);
+	models.at(activeModel)->_world_transform = t * models.at(activeModel)->_world_transform;
+}
+
+
 
 void Camera::setTransformation(const mat4& transform)
 {
@@ -180,7 +217,7 @@ void Camera::Perspective(const float fovy, const float aspect, const float zNear
 
 Scene::Scene()
 {
-	_world_transform = mat4(1);
+	_world_transform = mat4(1.0);
 	//m_renderer = new Renderer(512,512);
 	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
 	Camera* init_camera = new Camera();

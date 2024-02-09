@@ -54,9 +54,29 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {
 			std::cout << "Zoom In" << std::endl;
 		}
 		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
-			// Call zoom out function
 			scene->zoom(1/ 1.5);
 			std::cout << "Zoom Out" << std::endl;
+		}
+
+		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
+			scene->zoom(1 / 1.5);
+			std::cout << "Zoom Out" << std::endl;
+		}
+		else if (key == GLFW_KEY_RIGHT && mods == GLFW_MOD_CONTROL) {
+			scene->moveModel(10, 0, 0);
+			std::cout << "Move Right" << std::endl;
+		}
+		else if (key == GLFW_KEY_LEFT && mods == GLFW_MOD_CONTROL) {
+			scene->moveModel(-10, 0, 0);
+			std::cout << "Move left" << std::endl;
+		}
+		else if (key == GLFW_KEY_UP && mods == GLFW_MOD_CONTROL) {
+			scene->moveModel(0, 10, 0);
+			std::cout << "Move up" << std::endl;
+		}
+		else if (key == GLFW_KEY_DOWN && mods == GLFW_MOD_CONTROL) {
+			scene->moveModel(0, -10, 0);
+			std::cout << "Move down" << std::endl;
 		}
 	}
 }
