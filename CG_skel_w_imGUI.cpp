@@ -1,8 +1,7 @@
 // CG_skel_w_MFC.cpp : Defines the entry point for the console application.
 //
-
+//#include <L2DFileDialog.h>
 #include "CG_skel_w_imGUI.h"
-
 #ifdef _DEBUG
 //#define new DEBUG_NEW
 #endif
@@ -19,9 +18,10 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include  "imgui_main.h"
 #include <vector>
 #include <iostream>
-#include <L2DFileDialog.h>
+
 
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
@@ -29,9 +29,11 @@
 Scene* scene;
 Renderer* renderer;
 
-bool DISPLAY_VERTEX_NORMAL = false;
-bool DISPLAY_FACE_NORMAL = false;
-bool DISPLAY_CAMERAS = false;
+// keyboard callback
+void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	keyboard(window, key, scancode, action, mods, scene);
+	}
+
 
 void pushVec(vector<GLfloat>* triangle, vec4 vec)
 {
@@ -41,123 +43,6 @@ void pushVec(vector<GLfloat>* triangle, vec4 vec)
 	}
 
 }
-
-
-
-/// ImGUI Menus 
-
-// Callback function for keyboard input
-void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	if (action == GLFW_PRESS) {
-		if (key == GLFW_KEY_EQUAL && mods == GLFW_MOD_CONTROL) {
-			scene->zoom(1.5);
-			std::cout << "Zoom In" << std::endl;
-		}
-		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
-			scene->zoom(1/ 1.5);
-			std::cout << "Zoom Out" << std::endl;
-		}
-
-		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
-			scene->zoom(1 / 1.5);
-			std::cout << "Zoom Out" << std::endl;
-		}
-		else if (key == GLFW_KEY_RIGHT && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(10, 0, 0);
-			std::cout << "Move Right" << std::endl;
-		}
-		else if (key == GLFW_KEY_LEFT && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(-10, 0, 0);
-			std::cout << "Move left" << std::endl;
-		}
-		else if (key == GLFW_KEY_UP && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(0, 10, 0);
-			std::cout << "Move up" << std::endl;
-		}
-		else if (key == GLFW_KEY_DOWN && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(0, -10, 0);
-			std::cout << "Move down" << std::endl;
-		}
-	}
-}
-
-
-
-
-static char* file_dialog_buffer = nullptr;
-static char path[500] = "";
-static bool open_file_dialog = false;
-
-void FileMenu() {
-	FileDialog::file_dialog_open = true;
-	FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-	if (FileDialog::file_dialog_open) {
-		file_dialog_buffer = path;
-		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
-		FileDialog::ShowFileDialog(&FileDialog::file_dialog_open, file_dialog_buffer, sizeof(file_dialog_buffer), FileDialog::file_dialog_open_type);
-	
-		file_dialog_buffer = nullptr;
-		FileDialog::file_dialog_open = false; // Close the file dialog
-	}
-}
-
-
-static void MainMenuBar()
-{
-	if (ImGui::BeginMainMenuBar())
-	{
-
-		if (ImGui::BeginMenu("Load File"))
-		{
-			//FileMenu();
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Load Primative"))
-		{
-			if (ImGui::MenuItem("Pyramid")) {
-				//scene->loadOBJModel("C:/Users/user/source/repo/GraphicsGui/obj_files/pyramid.obj");
-				scene->loadPrimModel("pyramid");
-			}
-			//TODO:  add more primatives 
-			ImGui::EndMenu();
-		}
-		if (ImGui::BeginMenu("Normal")) {
-			if (ImGui::MenuItem("Display Normal-per-vertex")) {
-				DISPLAY_VERTEX_NORMAL = true;
-			}
-			if (ImGui::MenuItem("Hide Normal-per-vertex")) {
-				DISPLAY_VERTEX_NORMAL = false;
-			}
-			if (ImGui::MenuItem("Display Normal-per-face")) {
-				DISPLAY_FACE_NORMAL = true;
-			}
-			if (ImGui::MenuItem("Hide Normal-per-face")) {
-				DISPLAY_FACE_NORMAL = false;
-			}
-			ImGui::EndMenu();
-			
-		}
-
-		if (ImGui::BeginMenu("Camera"))
-		{
-			if (ImGui::MenuItem("Add Camera")) {
-				// pop up 
-				//scene->addCamera(
-			}
-			if (ImGui::MenuItem("Look AT")) {
-
-			}
-			if (ImGui::MenuItem("Change Active Camera")) {
-
-			}
-
-			ImGui::EndMenu();
-		}
-		ImGui::EndMainMenuBar();
-		
-	}
-}
-
 
 
 int my_main() {
@@ -188,21 +73,15 @@ int my_main() {
 	
 	
 	// Setup Dear ImGui context
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui::StyleColorsDark();
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
-
-	glfwSetKeyCallback(window, keyboard);
+	ImguiInit(window);
+	glfwSetKeyCallback(window, keyboardCallback);
 	// Setup scene
-	//TODO danger danger danger
-	
-	scene = new Scene();
-	MeshModel temp_model;
-	scene->addModel(&temp_model);
 
+	//TODO danger danger danger
+	scene = new Scene();
+	//MeshModel temp_model;
+	//scene->addModel(&temp_model);
+	//scene->loadOBJModel("obj_files/tetrahedron.obj");
 	
 	//Main loop
 	while (!glfwWindowShouldClose(window)) {
@@ -214,31 +93,26 @@ int my_main() {
 		}
 
 		// Start the ImGui frame
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		ImguiFrame();
+
 		//TODO: not sure this is the right approach to refresh buffers
 		//renderer->ClearColorBuffer();
-		
+	
 		//std::cout << "window width " << ImGui::GetMainViewport()->Size.x << std::endl;
 		scene->draw();
-
-
 		//renderer->DrawTriangles(&post_viewport_mat);
 		
 		//renderer->SwapBuffers();
-		MainMenuBar();
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData()); 
+		MainMenuBar(scene);
 		
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);
 		
 	}
 
 	// Cleanup
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
+	ImguiCleanUP();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	delete scene;

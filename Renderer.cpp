@@ -4,6 +4,8 @@
 #include "InitShader.h"
 #include "GLFW\glfw3.h"
 
+//using namespace Renderer;
+
 #define INDEX(width,x,y,c) (x+y*width)*3+c
 
 Renderer::Renderer() :m_width(512), m_height(512)
@@ -27,19 +29,37 @@ void Renderer::DrawTriangles(const vector<vec4>* vertices, float r, float g , fl
 	// changed into 4's
 
 	int size = vertices->size();
-	for (size_t i = 0; i < size; i+= 3)
+	for (size_t i = 0; i < size-3; i+= 3)
 	{
 		vec4 vec1 = vertices->at(i);
 		vec4 vec2 = vertices->at(i+1);
 		vec4 vec3 = vertices->at(i+2);
-		DrawLine(vec1.x, vec2.x,vec1.y,vec2.y);
-		DrawLine(vec1.x, vec3.x, vec1.y, vec3.y);
-		DrawLine(vec2.x, vec3.x, vec2.y, vec3.y);
+		DrawLine(vec1.x, vec2.x,vec1.y,vec2.y,r,g,b);
+		DrawLine(vec1.x, vec3.x, vec1.y, vec3.y,r,g,b);
+		DrawLine(vec2.x, vec3.x, vec2.y, vec3.y,r,g,b);
 	}
 	
 }
 
-
+void Renderer::DrawBox(const vector<vec4>* vertices, float r, float g, float b)
+{
+	//bottom
+	DrawLine(vertices->at(0).x, vertices->at(1).x, vertices->at(0).y, vertices->at(1).y, r, g, b);
+	DrawLine(vertices->at(1).x, vertices->at(2).x, vertices->at(1).y, vertices->at(2).y, r, g, b);
+	DrawLine(vertices->at(2).x, vertices->at(3).x, vertices->at(2).y, vertices->at(3).y, r, g, b);
+	DrawLine(vertices->at(2).x, vertices->at(0).x, vertices->at(2).y, vertices->at(0).y, r, g, b);
+	//top
+	DrawLine(vertices->at(4).x, vertices->at(5).x, vertices->at(4).y, vertices->at(5).y, r, g, b);
+	DrawLine(vertices->at(5).x, vertices->at(6).x, vertices->at(5).y, vertices->at(6).y, r, g, b);
+	DrawLine(vertices->at(6).x, vertices->at(7).x, vertices->at(6).y, vertices->at(7).y, r, g, b);
+	DrawLine(vertices->at(7).x, vertices->at(4).x, vertices->at(7).y, vertices->at(4).y, r, g, b);
+	//front
+	DrawLine(vertices->at(0).x, vertices->at(4).x, vertices->at(0).y, vertices->at(4).y, r, g, b);
+	DrawLine(vertices->at(1).x, vertices->at(5).x, vertices->at(1).y, vertices->at(5).y, r, g, b);
+	//back
+	DrawLine(vertices->at(3).x, vertices->at(7).x, vertices->at(3).y, vertices->at(7).y, r, g, b);
+	DrawLine(vertices->at(2).x, vertices->at(6).x, vertices->at(2).y, vertices->at(6).y, r, g, b);
+}
 //
 //void Renderer::SetCameraTransform(const mat4& cTransform)
 //{

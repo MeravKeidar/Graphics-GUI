@@ -66,6 +66,9 @@
     <ClCompile Include="Renderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imgui_main.cpp">
+      <Filter>Source Files\imgui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="External\GLEW\include\GL\eglew.h">
@@ -128,6 +131,9 @@
     <ClInclude Include="vec.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="imgui_main.h">
+      <Filter>Header Files\imgui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="External\GLEW\lib\glew32s.lib" />
@@ -135,6 +141,15 @@
   </ItemGroup>
   <ItemGroup>
     <Object Include="obj_files\pyramid.obj">
+      <Filter>obj Files</Filter>
+    </Object>
+    <Object Include="obj_files\tetrahedron.obj">
+      <Filter>obj Files</Filter>
+    </Object>
+    <Object Include="obj_files\cow.obj">
+      <Filter>obj Files</Filter>
+    </Object>
+    <Object Include="obj_files\pawn.obj">
       <Filter>obj Files</Filter>
     </Object>
   </ItemGroup>

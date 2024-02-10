@@ -34,6 +34,7 @@ void Model::Rotate(const char hinge, const GLfloat theta)
 	_model_transform = r * _model_transform;
 }
 
+
 void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName);
@@ -42,7 +43,7 @@ void Scene::loadOBJModel(string fileName)
 
 void Scene::loadPrimModel(string type)
 {
-	PrimMeshModel* model = new PrimMeshModel(type);
+	MeshModel* model = new MeshModel(type+"obj");
 	models.push_back(model);
 }
 
@@ -67,6 +68,9 @@ void Scene::draw()
 	for (vector<Model*>::iterator i = models.begin(); i != models.end(); i++)
 	{
 		drawModel(*i);
+		if (displayBoundingBox) {
+			drawboundingBox(*i);
+		}
 		//if (DISPLAY_FACE_NORMAL) { drawFaceNormals(*i); };
 	}
 
@@ -82,7 +86,7 @@ void Scene::drawModel(Model* model)
 	vector<vec4> modified_vertex;
 	for (size_t i = 0; i < size; i++)
 	{
-		vec4 v(model->vertex_positions.at(i),1.0);
+		vec4 v(model->vertex_positions.at(i));
 		//model view transform
 		//v = (Tc * (_world_transform * (model->_model_transform * v)));
 		v = (_world_transform * (model->_world_transform*(model->_model_transform * v)));
@@ -104,15 +108,17 @@ void Scene::drawboundingBox(Model* model)
 	vector<vec4> modified_box;
 	for (size_t i = 0; i < 8; i++)
 	{
+		vec4 v(model->bounding_box.at(i));
 		//model view transform
-		vec4 v = (Tc * (_world_transform * (model->_model_transform * model->bounding_box.at(i))));
+		//v = (Tc * (_world_transform * (model->_model_transform * v)));
+		v = (_world_transform * (model->_world_transform * (model->_model_transform * v)));
 		//Projection
 		v = (ProjectionM() * (P * v));
 		//View-port
 		v = m_renderer->viewPortVec(v);
 		modified_box.push_back(v);
 	}
-	m_renderer->DrawTriangles(&(modified_box),0.5, 0.5, 0.5);
+	m_renderer->DrawBox(&(modified_box),0.3, 0.3, 0.4);
 
 }
 
@@ -158,10 +164,14 @@ void Scene::zoom(GLfloat scale)
 
 void Scene::moveModel(const GLfloat x, const GLfloat y, const GLfloat z)
 {
-	mat4 t = TranslationMat(x, y, z);
-	models.at(activeModel)->_world_transform = t * models.at(activeModel)->_world_transform;
+	models.at(activeModel)->Translate(x,y,z);
+	
 }
 
+void Scene::RotateModel(const char hinge, const GLfloat theta)
+{
+	models.at(activeModel)->Rotate(hinge, theta);
+}
 
 
 void Camera::setTransformation(const mat4& transform)
@@ -221,10 +231,18 @@ Scene::Scene()
 	//m_renderer = new Renderer(512,512);
 	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
 	Camera* init_camera = new Camera();
-	addCamera(vec4(0, 0, -1, 0), vec4(0, 0, 0, 0), vec4(0, 1, 0, 0));
+	addCamera(vec4(0, 0, -1, 0), vec4(0, 0, 10, 0), vec4(0, 1, 0, 0));
 }
 
 void Scene::addModel(Model* model)
 {
 	models.push_back(model);
+}
+
+int Scene::nCameras() {
+	return cameras.size();
+}
+
+int Scene::nModels() {
+	return models.size();
 }

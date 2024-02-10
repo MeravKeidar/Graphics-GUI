@@ -65,7 +65,7 @@ vec2 vec2fFromStream(std::istream& aStream)
 
 MeshModel::MeshModel(string fileName)
 {
-	//_world_transform = mat4(1.0);
+	_world_transform = mat4(1.0);
 	_model_transform = mat4(1.0);
 	_normal_transform = mat4(1.0);
 	loadFile(fileName);
@@ -155,51 +155,87 @@ void MeshModel::loadFile(string fileName)
 
 }
 
-PrimMeshModel::PrimMeshModel(string type)
-{
-	loadFile(type + ".obj");
-}
 
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
 {
 }
 
-
-MeshModel::MeshModel()
-{
-	//_world_transform = mat4(1.0);
-	_model_transform = mat4(1.0);
-	_normal_transform = mat4(1.0);
-	vertex_positions.push_back(vec3(0, 0, 0));
-	vertex_positions.push_back(vec3(1, 0, 0));
-	vertex_positions.push_back(vec3(0, 1, 0));
-	
-}
+//
+//MeshModel::MeshModel()
+//{
+//	//_world_transform = mat4(1.0);
+//	_model_transform = mat4(1.0);
+//	_normal_transform = mat4(1.0);
+//	vertex_positions.push_back(vec3(0, 0, 0));
+//	vertex_positions.push_back(vec3(1, 0, 0));
+//	vertex_positions.push_back(vec3(0, 1, 0));
+//	
+//}
 
 void MeshModel::boundingBox(vector<vec3>* vertices) 
 {
 	if (vertices->empty()){return;}
-	vec3 min_cordinates = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
-	vec3 max_cordinates = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
+	vec3 min = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
+	vec3 max = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
 	for (auto& vertex : *vertices)
 	{
-		min_cordinates.x = (vertex.x < min_cordinates.x) ? vertex.x : min_cordinates.x;
-		max_cordinates.x = (vertex.x > max_cordinates.x) ? vertex.x : max_cordinates.x;
+		min.x = (vertex.x < min.x) ? vertex.x : min.x;
+		max.x = (vertex.x > max.x) ? vertex.x : max.x;
 
-		min_cordinates.y = (vertex.y < min_cordinates.y) ? vertex.y : min_cordinates.y;
-		max_cordinates.y = (vertex.y > max_cordinates.y) ? vertex.y : max_cordinates.y;
+		min.y = (vertex.y < min.y) ? vertex.y : min.y;
+		max.y = (vertex.y > max.y) ? vertex.y : max.y;
 
-		min_cordinates.z = (vertex.z < min_cordinates.z) ? vertex.z : min_cordinates.z;
-		max_cordinates.z = (vertex.z > max_cordinates.z) ? vertex.z : max_cordinates.z;
+		min.z = (vertex.z < min.z) ? vertex.z : min.z;
+		max.z = (vertex.z > max.z) ? vertex.z : max.z;
 	}
 
-	bounding_box.push_back(vec3(min_cordinates.x, min_cordinates.y, min_cordinates.z));
-	bounding_box.push_back(vec3(min_cordinates.x, min_cordinates.y, max_cordinates.z));
-	bounding_box.push_back(vec3(min_cordinates.x, max_cordinates.y, min_cordinates.z));
-	bounding_box.push_back(vec3(min_cordinates.x, max_cordinates.y, max_cordinates.z));
-	bounding_box.push_back(vec3(max_cordinates.x, min_cordinates.y, min_cordinates.z));
-	bounding_box.push_back(vec3(max_cordinates.x, min_cordinates.y, max_cordinates.z));
-	bounding_box.push_back(vec3(max_cordinates.x, max_cordinates.y, min_cordinates.z));
-	bounding_box.push_back(vec3(max_cordinates.x, max_cordinates.y, max_cordinates.z));
+	bounding_box.push_back(vec3(min.x, min.y, min.z));
+	bounding_box.push_back(vec3(max.x, min.y, min.z));
+	bounding_box.push_back(vec3(max.x, min.y, max.z));
+	bounding_box.push_back(vec3(min.x, min.y, max.z));
+	bounding_box.push_back(vec3(min.x, max.y, min.z));
+	bounding_box.push_back(vec3(max.x, max.y, min.z));
+	bounding_box.push_back(vec3(max.x, max.y, max.z));
+	bounding_box.push_back(vec3(min.x, max.y, max.z));
+
+	_model_transform[0][3] = (max.x - min.x) / 2;
+	_model_transform[1][3] = (max.y - min.y) / 2;
+	_model_transform[2][3] = (max.z - min.z) / 2;
+}
+
+
+
+
+MeshModel::MeshModel()
+{
+	_world_transform = mat4(1.0);
+	_model_transform = mat4(1.0);
+	_normal_transform = mat4(1.0);
+
+	vector<vec3> vertices;
+	vertices.push_back(vec3(1, 0, 0));
+	vertices.push_back(vec3(0, 1, 0));
+	vertices.push_back(vec3(0, 0, 1));
+	vertices.push_back(vec3(0, 0, 0)); 
+
+	vertex_positions.push_back(vertices.at(1));
+	vertex_positions.push_back(vertices.at(3));
+	vertex_positions.push_back(vertices.at(2));
+
+	vertex_positions.push_back(vertices.at(3));
+	vertex_positions.push_back(vertices.at(1));
+	vertex_positions.push_back(vertices.at(0));
+
+	vertex_positions.push_back(vertices.at(2));
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(1));
+
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(2));
+	vertex_positions.push_back(vertices.at(3));
+
+	boundingBox(&vertices);
+
+
 }

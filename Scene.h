@@ -11,6 +11,7 @@ using namespace std;
 
 
 
+
 class Model {
 protected:
 
@@ -85,8 +86,15 @@ public:
 	void drawDemo();
 	void zoom(GLfloat scale);
 	void moveModel(const GLfloat x, const GLfloat y, const GLfloat z);
-	void addModel(Model* model);
+	void RotateModel(const char hinge, const GLfloat theta);
+		void addModel(Model* model);
+	int nCameras(); //returns number of cameras
+	int nModels(); //returns number of models
 	int activeModel=0;
 	int activeLight=0;
 	int activeCamera=0;
+	bool displayVnormal = false;
+	bool displayFnormal = false;
+	bool displayCameras = false;
+	bool displayBoundingBox = false;
 };
