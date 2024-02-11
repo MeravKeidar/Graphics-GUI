@@ -27,9 +27,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="External\ImGui\imgui.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
@@ -140,9 +137,6 @@
     <Library Include="External\GLFW\lib-vc2019\glfw3.lib" />
   </ItemGroup>
   <ItemGroup>
-    <Object Include="obj_files\pyramid.obj">
-      <Filter>obj Files</Filter>
-    </Object>
     <Object Include="obj_files\tetrahedron.obj">
       <Filter>obj Files</Filter>
     </Object>

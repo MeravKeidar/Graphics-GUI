@@ -36,7 +36,7 @@ public:
 
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
-	void Rotate(const char hinge, const GLfloat theta);
+	void Rotate(const int hinge, const GLfloat theta);
 
 };
 
@@ -85,14 +85,15 @@ public:
 	void draw();
 	void drawDemo();
 	void zoom(GLfloat scale);
-	void moveModel(const GLfloat x, const GLfloat y, const GLfloat z);
-	void RotateModel(const char hinge, const GLfloat theta);
-		void addModel(Model* model);
-	int nCameras(); //returns number of cameras
-	int nModels(); //returns number of models
-	int activeModel=0;
-	int activeLight=0;
-	int activeCamera=0;
+	void moveModel(const GLfloat x, const GLfloat y, const GLfloat z, int mod=0);
+	void RotateModel(const int hinge, const GLfloat theta, int mod = 0);
+	void scaleModel(const GLfloat x, const GLfloat y, const GLfloat z);
+	void addModel(Model* model);
+	int activeModel=-1;
+	int activeLight=-1;
+	int activeCamera=-1;
+	int nModels = 0;
+	int nCameras = 0;
 	bool displayVnormal = false;
 	bool displayFnormal = false;
 	bool displayCameras = false;

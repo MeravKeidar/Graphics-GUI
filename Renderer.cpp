@@ -119,7 +119,7 @@ void Renderer::SetDemoBuffer()
 
 
 void Renderer::DrawPixel(int x, int y, float r, float g, float b) {
-	if ((x < m_width) & (y < m_height)) {
+	if ((x < m_width) && (y < m_height) && (0 < x) && ( 0 < y)) {
 		m_outBuffer[INDEX(m_width, x, y, 0)] = r;
 		m_outBuffer[INDEX(m_width, x, y, 1)] = g;
 		m_outBuffer[INDEX(m_width, x, y, 2)] = b;

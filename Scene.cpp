@@ -19,16 +19,16 @@ void Model::Scale(const GLfloat x, const GLfloat y, const GLfloat z)
 	_model_transform = s * _model_transform;
 }
 
-void Model::Rotate(const char hinge, const GLfloat theta)
+void Model::Rotate(const int hinge, const GLfloat theta)
 {
 	mat4 r;
-	if (hinge == 'x') {
+	if (hinge == '0') {
 		r = RotationByX(theta);
 	}
-	if (hinge == 'y') {
+	if (hinge == '1') {
 		r = RotationByY(theta);
 	}
-	if (hinge == 'z') {
+	if (hinge == '2') {
 		r = RotationByZ(theta);
 	}
 	_model_transform = r * _model_transform;
@@ -39,12 +39,16 @@ void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName);
 	models.push_back(model);
+	nModels++;
+	activeModel++;
 }
 
 void Scene::loadPrimModel(string type)
 {
 	MeshModel* model = new MeshModel(type+"obj");
 	models.push_back(model);
+	nModels++;
+	activeModel++;
 }
 
 void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
@@ -52,6 +56,8 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 	Camera* c = new Camera();
 	c->LookAt(eye, at, up);
 	cameras.push_back(c);
+	nCameras++;
+	activeCamera++;
 }
 
 
@@ -162,17 +168,44 @@ void Scene::zoom(GLfloat scale)
 }
 
 
-void Scene::moveModel(const GLfloat x, const GLfloat y, const GLfloat z)
+void Scene::moveModel(const GLfloat x, const GLfloat y, const GLfloat z,int mod)
 {
-	models.at(activeModel)->Translate(x,y,z);
-	
+	if (nModels == 0) { return; };
+	mat4 t = TranslationMat(x, y, z);
+	if (mod == 0) {
+		models.at(activeModel)->_model_transform = t * models.at(activeModel)->_model_transform;
+	}
+	else if(mod == 1)
+	{
+		models.at(activeModel)->_world_transform = t * models.at(activeModel)->_world_transform;
+	}
 }
 
-void Scene::RotateModel(const char hinge, const GLfloat theta)
+void Scene::RotateModel(const int hinge, const GLfloat theta, int mod)
 {
-	models.at(activeModel)->Rotate(hinge, theta);
+	if (nModels == 0) { return; };
+	mat4 r;
+	if (hinge == 0) {
+		r = RotationByX(theta);
+	}
+	if (hinge == 1) {
+		r = RotationByY(theta);
+	}
+	if (hinge == 2) {
+		r = RotationByZ(theta);
+	}
+	if (mod == 0) {
+		models.at(activeModel)->_model_transform = r * models.at(activeModel)->_model_transform;
+	}
+	else if (mod == 1)
+	{
+		models.at(activeModel)->_world_transform = r * models.at(activeModel)->_world_transform;
+	}
 }
 
+void Scene::scaleModel(const GLfloat x, const GLfloat y, const GLfloat z) {
+	models.at(activeModel)->Scale(x, y, z);
+}
 
 void Camera::setTransformation(const mat4& transform)
 {
@@ -237,12 +270,7 @@ Scene::Scene()
 void Scene::addModel(Model* model)
 {
 	models.push_back(model);
+	nModels++; 
+	activeModel++;
 }
 
-int Scene::nCameras() {
-	return cameras.size();
-}
-
-int Scene::nModels() {
-	return models.size();
-}

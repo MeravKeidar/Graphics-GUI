@@ -199,9 +199,12 @@ void MeshModel::boundingBox(vector<vec3>* vertices)
 	bounding_box.push_back(vec3(max.x, max.y, max.z));
 	bounding_box.push_back(vec3(min.x, max.y, max.z));
 
-	_model_transform[0][3] = (max.x - min.x) / 2;
-	_model_transform[1][3] = (max.y - min.y) / 2;
-	_model_transform[2][3] = (max.z - min.z) / 2;
+	_world_transform[0][3] = -(max.x - min.x) / 2;
+	_world_transform[1][3] = -(max.y - min.y) / 2;
+	_world_transform[2][3] = -(max.z - min.z) / 2;
+	//_model_transform[0][3] = (max.x - min.x) / 2;
+	//_model_transform[1][3] = (max.y - min.y) / 2;
+	//_model_transform[2][3] = (max.z - min.z) / 2;
 }
 
 

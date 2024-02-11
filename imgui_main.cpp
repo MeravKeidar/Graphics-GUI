@@ -26,11 +26,11 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, S
 			std::cout << "Move left" << std::endl;
 		}
 		else if (key == GLFW_KEY_UP && mods == GLFW_MOD_CONTROL) {
-			scene->RotateModel('y', 10);
+			scene->RotateModel(1, 10);
 			std::cout << "rotate by y" << std::endl;
 		}
 		else if (key == GLFW_KEY_DOWN && mods == GLFW_MOD_CONTROL) {
-			scene->RotateModel('z', 10);
+			scene->RotateModel(2, 10);
 			std::cout << "rotate by z" << std::endl;
 		}
 	}
@@ -54,6 +54,9 @@ void FileMenu(Scene* scene)
 	}
 	
 }
+
+
+bool transform_model = false;
 
 void MainMenuBar(Scene* scene)
 {
@@ -112,7 +115,7 @@ void MainMenuBar(Scene* scene)
 
 			}
 			if (ImGui::MenuItem("Change Active Camera")) {
-				if (scene->activeCamera < (scene->nCameras() - 1))
+				if (scene->activeCamera < (scene->nCameras - 1))
 				{
 					scene->activeCamera++;
 				}
@@ -129,13 +132,11 @@ void MainMenuBar(Scene* scene)
 
 		if (ImGui::BeginMenu("Model"))
 		{
-			if (ImGui::MenuItem("Transform Model")) {
-				// pop up 
-		
+			if (ImGui::MenuItem("Transforn Active Model")) {
+				transform_model = true;
 			}
-			
 			if (ImGui::MenuItem("Change Active Model")) {
-				if (scene->activeModel < (scene->nModels() - 1))
+				if (scene->activeModel < (scene->nModels - 1))
 				{
 					scene->activeModel++;
 				}
@@ -153,9 +154,95 @@ void MainMenuBar(Scene* scene)
 		}
 
 		ImGui::EndMainMenuBar();
-
 	}
 }
+
+void ImguiPopUps(Scene* scene) 
+{
+
+	if (transform_model)
+	{
+		ImGui::OpenPopup("Transform Active Model");
+		transform_model = false;
+	}
+
+	if (ImGui::BeginPopupModal("Transform Active Model", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		transformModel(scene);
+		ImGui::EndPopup();
+	}
+}
+
+void transformModel(Scene* scene)
+{
+	static GLfloat x_w = 0;
+	static GLfloat y_w = 0;
+	static GLfloat z_w = 0;
+	ImGui::Text("Translate in world frame");
+	ImGui::SliderFloat("X World", &x_w, -0.2, 0.2);
+	ImGui::SliderFloat("Y World", &y_w, -0.2, 0.2);
+	ImGui::SliderFloat("Z World", &z_w, -0.2, 0.2);
+
+	static GLfloat x_m = 0;
+	static GLfloat y_m = 0;
+	static GLfloat z_m = 0;
+	ImGui::Separator();
+	ImGui::Text("Translate in model frame ");
+	ImGui::SliderFloat("X Model", &x_m, -0.2, 0.2);
+	ImGui::SliderFloat("Y Model", &y_m, -0.2, 0.2);
+	ImGui::SliderFloat("Z Model", &z_m, -0.2, 0.2);
+
+	
+	static GLfloat theta_w = 0;
+	static int idx_w = 0;
+	const char* hinge[] = { "X", "Y", "Z" };
+	ImGui::Separator();
+	ImGui::Text("Rotate in world frame ");
+	ImGui::SliderFloat("Theta W", &theta_w, 0, 360);
+	ImGui::Combo("World Axis", &idx_w, hinge, 3);
+	static GLfloat theta_m = 0;
+	static int idx_m = 0;
+	ImGui::Separator();
+	ImGui::Text("Rotate in model frame ");
+	ImGui::SliderFloat("Theta M", &theta_m, -0, 360);
+	ImGui::Combo("Model Axis", &idx_m, hinge, 3);
+
+	static GLfloat s_x = 1;
+	static GLfloat s_y = 1;
+	static GLfloat s_z = 1;
+	static GLfloat s = 1;
+	ImGui::Text("Scale");
+	ImGui::SliderFloat("Scale x", &s_x, 0.2, 5);
+	ImGui::SliderFloat("Scale y", &s_y, 0.2, 5);
+	ImGui::SliderFloat("Scale z", &s_y, 0.2, 5);
+	ImGui::SliderFloat("Scale All", &s,0.2 ,5);
+	
+	if (ImGui::Button("OK"))
+	{
+		scene->moveModel(x_w, y_w, z_w, 1);
+		scene->moveModel(x_m, y_m, z_m, 0);
+		scene->RotateModel(idx_w, theta_w, 1);
+		scene->RotateModel(idx_m, theta_m,0);
+		scene->scaleModel(s_x, s_y, s_z);
+		scene->scaleModel(s,s,s);
+		x_w = 0;
+		y_w = 0;
+		z_w = 0;
+		x_m = 0;
+		y_m = 0;
+		z_m = 0;
+		theta_m = 0;
+		theta_w = 0;
+		idx_m = 0;
+		idx_w = 0;
+		s_x = 1;
+		s_y = 1;
+		s_z = 1;
+		s = 1;
+		ImGui::CloseCurrentPopup();
+	}
+}
+
 
 void ImguiInit(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
@@ -182,3 +269,4 @@ void ImguiCleanUP()
 	ImGui_ImplGlfw_Shutdown();
 	ImGui::DestroyContext();
 }
+

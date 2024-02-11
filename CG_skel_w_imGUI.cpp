@@ -1,7 +1,7 @@
 // CG_skel_w_MFC.cpp : Defines the entry point for the console application.
 //
 //#include <L2DFileDialog.h>
-#include "CG_skel_w_imGUI.h"
+//#include "CG_skel_w_imGUI.h"
 #ifdef _DEBUG
 //#define new DEBUG_NEW
 #endif
@@ -104,6 +104,7 @@ int my_main() {
 		
 		//renderer->SwapBuffers();
 		MainMenuBar(scene);
+		ImguiPopUps(scene);
 		
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
