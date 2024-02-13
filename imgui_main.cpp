@@ -18,11 +18,14 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, S
 			
 		}
 		else if (key == GLFW_KEY_UP && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(0, 0, -1);
+			scene->moveModel(0, 1, 0);
 
 		}
 		else if (key == GLFW_KEY_DOWN && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(0, 0, 1);
+			scene->moveModel(0, -1, 0);
+		}
+		else if (key == GLFW_KEY_L && mods == GLFW_MOD_CONTROL) {
+			scene->LookAtModel();
 		}
 	}
 }
@@ -71,7 +74,6 @@ void MainMenuBar(Scene* scene)
 				}
 			}
 			if (ImGui::MenuItem("Pawn")) {
-				std::cout << "Paw" << file_dialog_buffer << std::endl;
 				scene->loadOBJModel("obj_files/pawn.obj");
 			}
 			if (ImGui::MenuItem("Tetrahedron")) {
