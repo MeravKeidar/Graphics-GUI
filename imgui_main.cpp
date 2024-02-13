@@ -5,33 +5,24 @@
 void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, Scene* scene) {
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_EQUAL && mods == GLFW_MOD_CONTROL) {
-			scene->zoom(1.5);
-			std::cout << "Zoom In" << std::endl;
+			scene->cameras.at(scene->activeCamera)->Zoom(0.1);
 		}
 		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
-			scene->zoom(1 / 1.5);
-			std::cout << "Zoom Out" << std::endl;
-		}
-
-		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
-			scene->zoom(1 / 1.5);
-			std::cout << "Zoom Out" << std::endl;
+			scene->cameras.at(scene->activeCamera)->Zoom(-0.1);
 		}
 		else if (key == GLFW_KEY_RIGHT && mods == GLFW_MOD_CONTROL) {
 			scene->moveModel(1, 0, 0);
-			std::cout << "Move Right" << std::endl;
 		}
 		else if (key == GLFW_KEY_LEFT && mods == GLFW_MOD_CONTROL) {
 			scene->moveModel(-1, 0, 0);
-			std::cout << "Move left" << std::endl;
+			
 		}
 		else if (key == GLFW_KEY_UP && mods == GLFW_MOD_CONTROL) {
-			scene->RotateModel(1, 10);
-			std::cout << "rotate by y" << std::endl;
+			scene->moveModel(0, 0, -1);
+
 		}
 		else if (key == GLFW_KEY_DOWN && mods == GLFW_MOD_CONTROL) {
-			scene->RotateModel(2, 10);
-			std::cout << "rotate by z" << std::endl;
+			scene->moveModel(0, 0, 1);
 		}
 	}
 }
@@ -339,20 +330,25 @@ void transformCamera(Scene* scene)
 		{
 			if (perspective_type == 0)
 			{
-				scene->setCameraOrtho(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+				scene->cameras.at(scene->activeCamera)->Ortho(
+					left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+				//scene->setCameraOrtho(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
 			}
 			else
 			{
 				if (input_i == 0)
 				{
-					scene->setCameraFrustum(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+					scene->cameras.at(scene->activeCamera)->Frustum(
+						left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+					//scene->setCameraFrustum(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
 				}
 				else
 				{
-					scene->setCameraPerspective(fovy[0], fovy[1], near_far[0], near_far[1]);
+					scene->cameras.at(scene->activeCamera)->Perspective(fovy[0], fovy[1], near_far[0], near_far[1]);
+					//scene->setCameraPerspective(fovy[0], fovy[1], near_far[0], near_far[1]);
 				}
 			}
-		}
+		}/*
 		 left_right[0] =-1.0f;
 		 left_right[1] =  1.0f;
 		 bottom_top[0] = -1.0f ;
@@ -360,7 +356,7 @@ void transformCamera(Scene* scene)
 		 near_far[0] =  -1.0f;
 		 near_far[1] =  1.0f;
 		 fovy[0] =  90.0f;
-		 fovy[1] =  1.0f;
+		 fovy[1] =  1.0f;*/
 		ImGui::CloseCurrentPopup();
 	}
 

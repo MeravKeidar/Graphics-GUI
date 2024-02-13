@@ -43,7 +43,13 @@ class Light {
 };
 
 class Camera {
-	
+	GLfloat _left = -1;
+	GLfloat _right= 1;
+	GLfloat _bottom = -1;
+	GLfloat _top = 1;
+	GLfloat _zNear = 1;
+	GLfloat _zFar = -1;
+	int projection_type = 0; //ortho by deafult 
 public:
 	mat4 projection;
 	mat4 cTransform;
@@ -58,6 +64,7 @@ public:
 		const float zNear, const float zFar);
 	void Perspective(const float fovy, const float aspect,
 		const float zNear, const float zFar);
+	void Zoom(GLfloat scale);
 	vec4 eye;
 	vec4 at;
 	vec4 up;
@@ -70,7 +77,6 @@ class Scene {
 	vector<Light*> lights;
 	Renderer* m_renderer;
 	mat4 _world_transform;
-	mat4 _projection_m;
 	void drawModel(Model* model,float r = 1.0, float g  = 1.0, float b = 1.0);
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);
@@ -82,17 +88,16 @@ public:
 	void loadAxisModels();
 	void loadPrimModel(string type);
 	void addCamera(const vec4& eye, const vec4& at, const vec4& up);
-	void draw(bool draw_axis = false);
+	void draw();
 	void drawDemo();
 	void drawCameras();
 	void drawVertexNormals(Model* model);
-	void zoom(GLfloat scale);
 	void zoomOnModel(GLfloat scale);
 	void moveModel(const GLfloat x, const GLfloat y, const GLfloat z, int mod=0);
 	void RotateModel(const int hinge, const GLfloat theta, int mod = 0);
 	void scaleModel(const GLfloat x, const GLfloat y, const GLfloat z);
 	void moveCamera(const GLfloat x, const GLfloat y, const GLfloat z, int mod);
-	void RotateCamera(const int hinge, const GLfloat theta, int mod);, 
+	void RotateCamera(const int hinge, const GLfloat theta, int mod);
 	void LookAtCurrentCamera(const vec4& eye, const vec4& at, const vec4& up);
 	void LookAtModel();
 	void addModel(Model* model);
@@ -100,7 +105,7 @@ public:
 	mat4 getCurrentWorldTrasform();
 	mat4 getCurrentCameraTrasform();
 	mat4 getCurrentProjection();
-	vec4 getCurrentViewPort();
+	vec2 getCurrentViewPort();
 	vector<Camera*> cameras;
 	void setCameraOrtho(const float left, const float right,
 		const float bottom, const float top,

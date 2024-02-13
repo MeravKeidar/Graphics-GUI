@@ -23,25 +23,22 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<vec4>* vertices, float r, float g , float b)
+void Renderer::DrawTriangles(const vector<vec2>* vertices, float r, float g , float b)
 {
-	//TODO make sure the vertices are in pairs and not triplets
-	// changed into 4's
-
 	int size = vertices->size();
 	for (size_t i = 0; i < size-3; i+= 3)
 	{
-		vec4 vec1 = vertices->at(i);
-		vec4 vec2 = vertices->at(i+1);
-		vec4 vec3 = vertices->at(i+2);
-		DrawLine(vec1.x, vec2.x,vec1.y,vec2.y,r,g,b);
-		DrawLine(vec1.x, vec3.x, vec1.y, vec3.y,r,g,b);
-		DrawLine(vec2.x, vec3.x, vec2.y, vec3.y,r,g,b);
+		vec2 v1 = vertices->at(i);
+		vec2 v2 = vertices->at(i+1);
+		vec2 v3 = vertices->at(i+2);
+		DrawLine(v1.x, v2.x, v1.y, v2.y,r,g,b);
+		DrawLine(v1.x, v3.x, v1.y, v3.y,r,g,b);
+		DrawLine(v2.x, v3.x, v2.y, v3.y,r,g,b);
 	}
 	
 }
 
-void Renderer::DrawBox(const vector<vec4>* vertices, float r, float g, float b)
+void Renderer::DrawBox(const vector<vec2>* vertices, float r, float g, float b)
 {
 	//bottom
 	DrawLine(vertices->at(0).x, vertices->at(1).x, vertices->at(0).y, vertices->at(1).y, r, g, b);
@@ -283,12 +280,12 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 }
 
-vec4 Renderer::viewPortVec(vec4 cannonial)
+vec2 Renderer::viewPortVec(vec2 cannonial)
 {
 	GLfloat factor = min(m_width, m_height);
 	//to fix center
 	GLfloat max_fix = max(m_width, m_height);
-	return vec4((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2, 0, 0);
+	return vec2((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2);
 }
 
 
