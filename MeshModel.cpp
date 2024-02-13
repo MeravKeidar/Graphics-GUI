@@ -325,6 +325,8 @@ void PrimMeshModel::Cube()
 	vertex_positions.push_back(vertices.at(5));
 
 
+	
+
 	boundingBox();
 
 }

@@ -6,12 +6,10 @@
 
 using namespace std;
 
-/////////////////////////// Model Functions /////////////////////////////
 void Model::Translate(const GLfloat x, const GLfloat y, const GLfloat z)
 {
 	mat4 t = TranslationMat(x, y, z);
 	_model_transform = t * _model_transform;
-	_normal_world_transform = t * _normal_world_transform;
 	_normal_model_transform = t * _normal_model_transform;
 }
 
@@ -21,7 +19,6 @@ void Model::Scale(const GLfloat x, const GLfloat y, const GLfloat z)
 	mat4 s = ScalingMat(x, y, z);
 	_model_transform = s * _model_transform;
 	mat4 n = ScalingMat(1 / x, 1 / y, 1 / z);
-	_normal_world_transform = n * _normal_world_transform;
 	_normal_model_transform = n * _normal_model_transform;
 }
 
@@ -37,10 +34,10 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 	if (hinge == '2') {
 		r = RotationByZ(theta);
 	}
-	_normal_world_transform = r * _normal_world_transform;
+
+	_model_transform = r * _model_transform;
 	_normal_model_transform = r * _normal_model_transform;
 }
-////////////////////////////////////////////////////////////////////////
 
 void Scene::loadOBJModel(string fileName)
 {
@@ -82,9 +79,9 @@ void Scene::draw()
 	int size = models.size();
 	for (size_t i = 0; i < size; i++)
 	{
-		if (i == activeModel) 
+		if (i != activeModel) 
 		{
-			drawModel(models.at(i),1,0.9,0.8);
+			drawModel(models.at(i),0.6,0.6,0.6);
 		}
 		else
 		{
@@ -122,6 +119,7 @@ void Scene::drawModel(Model* model, float r, float g ,float b)
 		vec4 v(model->vertex_positions.at(i));
 		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
 		v = P * v; // projection
+		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
 		vec2 v_2d(v.x / v.w, v.y / v.w);
 		v_2d = m_renderer->viewPortVec(v_2d); // view-port
 		modified_vertex.push_back(v_2d);
@@ -157,21 +155,23 @@ void Scene::drawFaceNormals(Model* model)
 	int size = model->face_normals.size();
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
-	
+
 	for (size_t i = 0; i < size; i++)
 	{
-		vec4 v_dest = model->face_normals_origin.at(i) + model->face_normals.at(i);
-		v_dest = (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * v_dest)))) ; //model-view
-		v_dest = P * v_dest; //Projection
+		vec4 normal = model->face_normals.at(i);
+		normal[3] = 0;
+		vec4 v_origin = model->face_normals_origin.at(i);
+		normal = Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * normal))); //model-view
+		v_origin = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v_origin))); //model-view
+		vec4 v_dest = v_origin + normal;
+		v_dest = (P * v_dest); //View-port
+		v_origin = (P * v_origin); //View-port
 		vec2 v_2d_dest(v_dest.x / v_dest.w, v_dest.y / v_dest.w);
 		v_2d_dest = m_renderer->viewPortVec(v_2d_dest); //View-port
-
-		vec4 v_origin = model->face_normals_origin.at(i);
-		v_origin = Tc * (_world_transform * (model->_world_transform*(model->_model_transform * v_origin))); //Projection
-		v_origin = P * v_origin; //View-port
 		vec2 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
 		v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
-		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.0f, 1, 0.2f);
+		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.0f, 0.8, 0.9f);
+
 	}
 }
 
@@ -183,17 +183,19 @@ void Scene::drawVertexNormals(Model* model)
 
 	for (size_t i = 0; i < size; i++)
 	{
-		vec4 v_dest = model->vertices.at(i) + normalize(model->vertex_normals.at(i));
-		v_dest = (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * v_dest)))); //model-view
-		v_dest = P * v_dest; //Projection
+		vec4 normal = model->vertex_normals.at(i);
+		normal[3] = 0;
+		vec4 v_origin = model->vertices.at(i);
+		normal =  Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * normal))); //model-view
+		v_origin = Tc *  ( _world_transform * (model->_world_transform * (model->_model_transform * v_origin))); //model-view
+		vec4 v_dest = v_origin + normal; 
+		v_dest = (P * v_dest); //View-port
+		v_origin = (P * v_origin); //View-port
 		vec2 v_2d_dest(v_dest.x / v_dest.w, v_dest.y / v_dest.w);
 		v_2d_dest = m_renderer->viewPortVec(v_2d_dest); //View-port
-		vec4 v_origin = model->vertices.at(i);
-		v_origin = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v_origin))); //Projection
-		v_origin = P * v_origin; //View-port
 		vec2 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
 		v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
-		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.0f, 1, 0.2f);
+		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.0f, 0.8, 0.9f);
 	}
 
 }
@@ -364,15 +366,13 @@ void Camera::Ortho(const float left, const float right, const float bottom, cons
 	projection = mat4(1);
 	projection[0][0] = 2 / (right - left);
 	projection[1][1] = 2 / (top - bottom);
-	projection[2][2] = -2 / (zFar - zNear)
-		;
+	projection[2][2] = -2 / (zFar - zNear);
 	projection[0][3] = -((left + right) / (right - left));
 	projection[1][3] = -((top + bottom) / (top - bottom));
 	projection[2][3] = -((zFar + zNear) / (zFar - zNear));
 	/*mat4 _projection_m(1.0);
 	_projection_m[2][2] = 0;
 	projection = _projection_m * projection;*/
-
 }
 
 void Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
@@ -415,7 +415,8 @@ Scene::Scene()
 	
 	//m_renderer = new Renderer(512,512);
 	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
-	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
+	addCamera(vec4(0, 0, 2, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
+
 
 }
 

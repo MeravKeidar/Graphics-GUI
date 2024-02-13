@@ -32,8 +32,10 @@ void Renderer::DrawTriangles(const vector<vec2>* vertices, float r, float g , fl
 		vec2 v2 = vertices->at(i+1);
 		vec2 v3 = vertices->at(i+2);
 		DrawLine(v1.x, v2.x, v1.y, v2.y,r,g,b);
+		std::cout << "yay one Line drawn" << std::endl;
 		DrawLine(v1.x, v3.x, v1.y, v3.y,r,g,b);
 		DrawLine(v2.x, v3.x, v2.y, v3.y,r,g,b);
+		std::cout << "yay one triangle drawn" << std::endl;
 	}
 	
 }
@@ -153,23 +155,28 @@ void Renderer::DrawPixel(int x, int y, float r, float g, float b) {
 
 
 void Renderer::DrawLine(int x1, int x2, int y1, int y2, float r, float g, float b) {
-	// Consider adding logic here to handle steep lines and lines where x1 > x2 or y1 > y2
 
 	int dx = abs(x2 - x1), sx = x1 < x2 ? 1 : -1;
 	int dy = -abs(y2 - y1), sy = y1 < y2 ? 1 : -1;
-	int err = dx + dy, e2; /* error value e_xy */
+	int err = dx + dy, e2;
 
 	while (true) {
 		DrawPixel(x1, y1, r, g, b);
 		if (x1 == x2 && y1 == y2) break;
 		e2 = 2 * err;
-		if (e2 >= dy) { err += dy; x1 += sx; } /* e_xy+e_x > 0 */
-		if (e2 <= dx) { err += dx; y1 += sy; } /* e_xy+e_y < 0 */
+		if (e2 >= dy)
+		{
+			err += dy;
+			x1 += sx;
+		}
+		if (e2 <= dx)
+		{
+			err += dx;
+			y1 += sy;
+		}
+
 	}
 }
-
-
-
 
 void Renderer::Reshape(int width, int height)
 {
