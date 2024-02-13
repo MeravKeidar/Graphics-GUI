@@ -12,9 +12,9 @@ using namespace std;
 class MeshModel : public Model
 {
 protected:
-	void boundingBox(vector<vec3>* vertices);
 	//void Normals(vector<FaceIdcs> faces, vector<vec3> vertices, vector<vec3> verticesNorm);
 public:
+	void boundingBox();
 	MeshModel();
 	MeshModel(string fileName);
 	~MeshModel(void);
@@ -25,6 +25,8 @@ public:
 
 class PrimMeshModel : public MeshModel
 {
+	void Cube();
+	void Tetrahedron();
 public:
 	PrimMeshModel(string type);
 

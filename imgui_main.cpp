@@ -84,7 +84,7 @@ void MainMenuBar(Scene* scene)
 				scene->loadOBJModel("obj_files/pawn.obj");
 			}
 			if (ImGui::MenuItem("Tetrahedron")) {
-				scene->loadOBJModel("obj_files/tetrahedron.obj");
+				scene->loadPrimModel("tetrahedron");
 			}
 			if (ImGui::MenuItem("Cow")) {
 				scene->loadOBJModel("obj_files/cow.obj");
@@ -98,17 +98,17 @@ void MainMenuBar(Scene* scene)
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Normal")) {
-			if (ImGui::MenuItem("Display Normal-per-vertex")) {
-				scene->displayVnormal = true;
-			}
-			if (ImGui::MenuItem("Hide Normal-per-vertex")) {
-				scene->displayVnormal = false;
+			if (ImGui::MenuItem("Normal-per-vertex")) {
+				if (scene->displayVnormal)
+					scene->displayVnormal = false;
+				else
+					scene->displayVnormal = true;
 			}
 			if (ImGui::MenuItem("Display Normal-per-face")) {
-				scene->displayFnormal = true;
-			}
-			if (ImGui::MenuItem("Hide Normal-per-face")) {
-				scene->displayFnormal = false;
+				if (scene->displayFnormal)
+					scene->displayFnormal = false;
+				else
+					scene->displayFnormal = true;
 			}
 			ImGui::EndMenu();
 
@@ -163,9 +163,11 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Display Bounding box")) {
 				scene->displayBoundingBox = true;
 			}
+			if (ImGui::MenuItem("Look at active model")) {
+				scene->LookAtModel();
+			}
 			ImGui::EndMenu();
 			
-
 		}
 		if (ImGui::BeginMenu("Show Mat Values"))
 		{
@@ -521,12 +523,16 @@ void showMatriceValues(Scene* scene)
 	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[3][0], m[3][1], m[3][2], m[3][3]);
 
 	ImGui::Text("Current Projection Mat");
-	m = scene->getCurrentCameraTrasform();
+	m = scene->getCurrentProjection();
 	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[0][0], m[0][1], m[0][2], m[0][3]);
 	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[1][0], m[1][1], m[1][2], m[1][3]);
 	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[2][0], m[2][1], m[2][2], m[2][3]);
 	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[3][0], m[3][1], m[3][2], m[3][3]);
 
+	ImGui::Text("Current eye, at , up");
+	ImGui::Text("eye: %4.2f ,%4.2f,%4.2f,%4.2f", scene->cameras.at(scene->activeCamera)->eye.x, scene->cameras.at(scene->activeCamera)->eye.y, scene->cameras.at(scene->activeCamera)->eye.z);
+	ImGui::Text("at: %4.2f,%4.2f,%4.2f,%4.2f", scene->cameras.at(scene->activeCamera)->at.x, scene->cameras.at(scene->activeCamera)->at.y, scene->cameras.at(scene->activeCamera)->at.z);
+	ImGui::Text("up: %4.2f,%4.2f,%4.2f,%4.2f", scene->cameras.at(scene->activeCamera)->up.x, scene->cameras.at(scene->activeCamera)->up.y, scene->cameras.at(scene->activeCamera)->up.z);
 	if (ImGui::Button("OK"))
 	{
 		ImGui::CloseCurrentPopup();

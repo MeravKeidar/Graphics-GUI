@@ -67,7 +67,8 @@ MeshModel::MeshModel(string fileName)
 {
 	_world_transform = mat4(1.0);
 	_model_transform = mat4(1.0);
-	_normal_transform = mat4(1.0);
+	_normal_world_transform = mat4(1.0);
+	_normal_model_transform = mat4(1.0);
 	loadFile(fileName);
 }
 
@@ -152,7 +153,7 @@ void MeshModel::loadFile(string fileName)
 		}
 	}
 
-	boundingBox(&vertices);
+	boundingBox();
 
 }
 
@@ -162,24 +163,22 @@ void MeshModel::draw()
 {
 }
 
-//
-//MeshModel::MeshModel()
-//{
-//	//_world_transform = mat4(1.0);
-//	_model_transform = mat4(1.0);
-//	_normal_transform = mat4(1.0);
-//	vertex_positions.push_back(vec3(0, 0, 0));
-//	vertex_positions.push_back(vec3(1, 0, 0));
-//	vertex_positions.push_back(vec3(0, 1, 0));
-//	
-//}
 
-void MeshModel::boundingBox(vector<vec3>* vertices) 
+MeshModel::MeshModel()
 {
-	if (vertices->empty()){return;}
-	vec3 min = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
-	vec3 max = ((*vertices)[0].x, (*vertices)[0].y, (*vertices)[0].y);
-	for (auto& vertex : *vertices)
+	_world_transform = mat4(1.0);
+	_model_transform = mat4(1.0);
+	_normal_world_transform = mat4(1.0);
+	_normal_model_transform = mat4(1.0);
+	
+}
+
+void MeshModel::boundingBox() 
+{
+	if (vertices.empty()){return;}
+	vec3 min = (vertices[0].x, vertices[0].y, vertices[0].y);
+	vec3 max = (vertices[0].x, vertices[0].y, vertices[0].y);
+	for (auto& vertex : vertices)
 	{
 		min.x = (vertex.x < min.x) ? vertex.x : min.x;
 		max.x = (vertex.x > max.x) ? vertex.x : max.x;
@@ -189,7 +188,11 @@ void MeshModel::boundingBox(vector<vec3>* vertices)
 
 		min.z = (vertex.z < min.z) ? vertex.z : min.z;
 		max.z = (vertex.z > max.z) ? vertex.z : max.z;
+
+		_center_of_mass += vertex;
 	}
+
+	_center_of_mass = _center_of_mass / vertices.size(); 
 
 	bounding_box.push_back(vec3(min.x, min.y, min.z));
 	bounding_box.push_back(vec3(max.x, min.y, min.z));
@@ -199,47 +202,142 @@ void MeshModel::boundingBox(vector<vec3>* vertices)
 	bounding_box.push_back(vec3(max.x, max.y, min.z));
 	bounding_box.push_back(vec3(max.x, max.y, max.z));
 	bounding_box.push_back(vec3(min.x, max.y, max.z));
+	vec3 model_center((max.x + min.x) / 2, (max.y + min.y) / 2, (max.z + min.z) / 2);
 
-	_world_transform[0][3] = -(max.x + min.x) / 2;
-	_world_transform[1][3] = -(max.y + min.y) / 2;
-	_world_transform[2][3] = -(max.z + min.z) / 2;
-	//_model_transform[0][3] = (max.x - min.x) / 2;
-	//_model_transform[1][3] = (max.y - min.y) / 2;
-	//_model_transform[2][3] = (max.z - min.z) / 2;
+	_world_transform = TranslationMat(-model_center) * _world_transform;
+	_normal_world_transform = TranslationMat(-model_center) * _normal_world_transform;
 }
 
 
 
 
-MeshModel::MeshModel()
+void PrimMeshModel::Tetrahedron()
 {
-	_world_transform = mat4(1.0);
-	_model_transform = mat4(1.0);
-	_normal_transform = mat4(1.0);
 
-	vector<vec3> vertices;
 	vertices.push_back(vec3(1, 0, 0));
 	vertices.push_back(vec3(0, 1, 0));
 	vertices.push_back(vec3(0, 0, 1));
 	vertices.push_back(vec3(0, 0, 0)); 
 
-	vertex_positions.push_back(vertices.at(1));
+	// 0->z->y
 	vertex_positions.push_back(vertices.at(3));
 	vertex_positions.push_back(vertices.at(2));
-
+	vertex_positions.push_back(vertices.at(1));
+	// 0->y->x
 	vertex_positions.push_back(vertices.at(3));
 	vertex_positions.push_back(vertices.at(1));
 	vertex_positions.push_back(vertices.at(0));
-
+	// 0->x->z
+	vertex_positions.push_back(vertices.at(3));
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(2));
+	// z->x->y
 	vertex_positions.push_back(vertices.at(2));
 	vertex_positions.push_back(vertices.at(0));
 	vertex_positions.push_back(vertices.at(1));
+	
+
+	face_normals.push_back(vec3(-1, 0, 0));
+	face_normals.push_back(vec3(0, 0, -1));
+	face_normals.push_back(vec3(0, -1, 0));
+	face_normals.push_back(normalize(vec3(1, 1, 1)));
+
+	face_normals_origin.push_back(vec3(0, 0.33333333, 0.33333333));
+	face_normals_origin.push_back(vec3(0.33333333, 0.33333333,0));
+	face_normals_origin.push_back(vec3(0.33333333, 0, 0.33333333));
+	face_normals_origin.push_back(vec3(0.33333333, 0.33333333, 0.33333333));
+
+	vertex_normals.push_back(normalize(face_normals.at(1)+ face_normals.at(2)+ face_normals.at(3)));
+	vertex_normals.push_back(normalize(face_normals.at(0) + face_normals.at(1) + face_normals.at(3)));
+	vertex_normals.push_back(normalize(face_normals.at(0) + face_normals.at(2) + face_normals.at(3)));
+	vertex_normals.push_back(normalize(face_normals.at(1) + face_normals.at(2) + face_normals.at(0)));
+
+	boundingBox();
+
+}
+
+void PrimMeshModel::Cube()
+{
+
+	vertices.push_back(vec3(1.0f, 1.0f, 1.0f)); // Vertex 0
+	vertices.push_back(vec3(-1.0f, 1.0f, 1.0f)); // Vertex 1
+	vertices.push_back(vec3(-1.0f, -1.0f, 1.0f)); // Vertex 2
+	vertices.push_back(vec3(1.0f, -1.0f, 1.0f)); // Vertex 3
+	vertices.push_back(vec3(1.0f, -1.0f, -1.0f)); // Vertex 4
+	vertices.push_back(vec3(1.0f, 1.0f, -1.0f)); // Vertex 5
+	vertices.push_back(vec3(-1.0f, 1.0f, -1.0f)); // Vertex 6
+	vertices.push_back(vec3(-1.0f, -1.0f, -1.0f)); // Vertex 7
+	vertices.push_back(vec3(0.0f, 0.0f, 0.0f)); // Vertex 8
+
+	vector<vec3> vertex_positions;
+	// Front face
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(1));
+	vertex_positions.push_back(vertices.at(2));
 
 	vertex_positions.push_back(vertices.at(0));
 	vertex_positions.push_back(vertices.at(2));
 	vertex_positions.push_back(vertices.at(3));
 
-	boundingBox(&vertices);
+	// Right face
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(3));
+	vertex_positions.push_back(vertices.at(4));
+
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(4));
+	vertex_positions.push_back(vertices.at(5));
+
+	// Back face
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(5));
+	vertex_positions.push_back(vertices.at(6));
+
+	vertex_positions.push_back(vertices.at(0));
+	vertex_positions.push_back(vertices.at(6));
+	vertex_positions.push_back(vertices.at(1));
+
+	// Left face
+	vertex_positions.push_back(vertices.at(1));
+	vertex_positions.push_back(vertices.at(6));
+	vertex_positions.push_back(vertices.at(7));
+
+	vertex_positions.push_back(vertices.at(1));
+	vertex_positions.push_back(vertices.at(7));
+	vertex_positions.push_back(vertices.at(2));
+
+	// Bottom face
+	vertex_positions.push_back(vertices.at(7));
+	vertex_positions.push_back(vertices.at(4));
+	vertex_positions.push_back(vertices.at(3));
+
+	vertex_positions.push_back(vertices.at(7));
+	vertex_positions.push_back(vertices.at(3));
+	vertex_positions.push_back(vertices.at(2));
+
+	// Top face
+	vertex_positions.push_back(vertices.at(4));
+	vertex_positions.push_back(vertices.at(7));
+	vertex_positions.push_back(vertices.at(6));
+
+	vertex_positions.push_back(vertices.at(4));
+	vertex_positions.push_back(vertices.at(6));
+	vertex_positions.push_back(vertices.at(5));
 
 
+	boundingBox();
+
+}
+
+
+PrimMeshModel::PrimMeshModel(string type)
+{
+	if (type == "tetrahedron")
+	{
+		Tetrahedron();
+	}
+	else if (type == "cube")
+	{
+		Cube();
+	}
 }

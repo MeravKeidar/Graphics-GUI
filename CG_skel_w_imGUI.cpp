@@ -76,15 +76,9 @@ int my_main() {
 	ImguiInit(window);
 	glfwSetKeyCallback(window, keyboardCallback);
 	// Setup scene
-
-	//TODO danger danger danger
 	scene = new Scene();
-	//MeshModel temp_model;
-	//scene->addModel(&temp_model);
-	//scene->loadOBJModel("obj_files/tetrahedron.obj");
-	
+
 	//Main loop
-	
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -95,11 +89,6 @@ int my_main() {
 
 		// Start the ImGui frame
 		ImguiFrame();
-
-		//TODO: not sure this is the right approach to refresh buffers
-		//renderer->ClearColorBuffer();
-	
-		//std::cout << "window width " << ImGui::GetMainViewport()->Size.x << std::endl;
 		scene->draw();
 		//renderer->DrawTriangles(&post_viewport_mat);
 		

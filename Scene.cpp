@@ -6,11 +6,13 @@
 
 using namespace std;
 
+/////////////////////////// Model Functions /////////////////////////////
 void Model::Translate(const GLfloat x, const GLfloat y, const GLfloat z)
 {
 	mat4 t = TranslationMat(x, y, z);
 	_model_transform = t * _model_transform;
-	_normal_transform = t * _normal_transform;
+	_normal_world_transform = t * _normal_world_transform;
+	_normal_model_transform = t * _normal_model_transform;
 }
 
 
@@ -19,7 +21,8 @@ void Model::Scale(const GLfloat x, const GLfloat y, const GLfloat z)
 	mat4 s = ScalingMat(x, y, z);
 	_model_transform = s * _model_transform;
 	mat4 n = ScalingMat(1 / x, 1 / y, 1 / z);
-	_normal_transform = n * _normal_transform;
+	_normal_world_transform = n * _normal_world_transform;
+	_normal_model_transform = n * _normal_model_transform;
 }
 
 void Model::Rotate(const int hinge, const GLfloat theta)
@@ -34,10 +37,10 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 	if (hinge == '2') {
 		r = RotationByZ(theta);
 	}
-	_model_transform = r * _model_transform;
-	_normal_transform = r * _model_transform;
+	_normal_world_transform = r * _normal_world_transform;
+	_normal_model_transform = r * _normal_model_transform;
 }
-
+////////////////////////////////////////////////////////////////////////
 
 void Scene::loadOBJModel(string fileName)
 {
@@ -47,19 +50,10 @@ void Scene::loadOBJModel(string fileName)
 	activeModel++;
 }
 
-void Scene::loadAxisModels()
-{
-	MeshModel* model = new MeshModel("obj_files/x_axis_arrow.obj");
-	axis_models.push_back(model);
-	model = new MeshModel("obj_files/y_axis_arrow.obj");
-	axis_models.push_back(model);
-	model = new MeshModel("obj_files/z_axis_arrow.obj");
-	axis_models.push_back(model);
-}
 
 void Scene::loadPrimModel(string type)
 {
-	MeshModel* model = new MeshModel(type+"obj");
+	PrimMeshModel* model = new PrimMeshModel(type);
 	models.push_back(model);
 	nModels++;
 	activeModel++;
@@ -68,8 +62,10 @@ void Scene::loadPrimModel(string type)
 void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 {
 	Camera* c = new Camera();
-	//c->Frustum(-1, 1, -1, 1, -1, 1);
-	//c->LookAt(eye, at, up);
+	c->LookAt(eye, at, up);
+	c->eye = eye;
+	c-> at = at;
+	c->up = up; 
 	cameras.push_back(c);
 	nCameras++;
 	activeCamera++;
@@ -80,35 +76,31 @@ void Scene::draw(bool draw_axis)
 {
 	m_renderer->ClearColorBuffer();
 	m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y - 20 );
-	// 1. Send the renderer the current camera transform and the projection
-	// 2. Tell all models to draw themselves
 
-	//m_renderer->SetCameraTransform(cameras[activeCamera]->setTransformation)
-	//m_renderer->SetProjection(cameras[activeCamera]->)
 	if (displayCameras)
 		drawCameras();
-	if (draw_axis)
+	int size = models.size();
+	for (size_t i = 0; i < size; i++)
 	{
+		if (i == activeModel) 
+		{
+			drawModel(models.at(i),1,0.9,0.8);
+		}
+		else
+		{
+			drawModel(models.at(i));
+		}
 		
-			drawModel(axis_models.at(0),1,0,0);
-			drawModel(axis_models.at(1), 0, 1, 0);
-			drawModel(axis_models.at(2), 0, 0, 1);
-		
-	}
-
-	for (vector<Model*>::iterator i = models.begin(); i != models.end(); i++)
-	{
-		drawModel(*i);
 		if (displayBoundingBox) {
-			drawboundingBox(*i);
+			drawboundingBox(models.at(i));
 		}
 		if (displayFnormal) 
 		{
-			drawFaceNormals(*i);
+			drawFaceNormals(models.at(i));
 		}
 		if (displayVnormal)
 		{
-			drawVertexNormals(*i);
+			drawVertexNormals(models.at(i));
 		}
 
 	}
@@ -128,33 +120,26 @@ void Scene::drawModel(Model* model, float r, float g ,float b)
 	for (size_t i = 0; i < size; i++)
 	{
 		vec4 v(model->vertex_positions.at(i));
-		//model view transform
-		//v = (Tc * (_world_transform * (model->_model_transform * v)));
-		//v = Tc * (_world_transform * (model->_world_transform*(model->_model_transform * v)));
-		// v = (ProjectionM()*(P*v));
-		// v = m_renderer->viewPortVec(v);
+		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
+		v = _projection_m * (P * v); // projection
+		v = m_renderer->viewPortVec(v); // view-port
+		modified_vertex.push_back(v);
+	
 		// splitting for debugging
-		vec4 post_model_transform = model->_model_transform * v;
+		/*vec4 post_model_transform = model->_model_transform * v;
 		vec4 post_model_world = (model->_world_transform * post_model_transform);
 		vec4 post_world_transform = _world_transform * post_model_world;
 		vec4 post_camera = Tc * post_world_transform;
 		vec4 post_projection = P * post_camera;
-		vec4 post_proj_M = ProjectionM() * post_projection;
+		vec4 post_proj_M = _projection_m * post_projection;
 		vec4 post_view_port = m_renderer->viewPortVec(post_proj_M);
-		//Projection
-		
-		//View-port
-		
-		modified_vertex.push_back(post_view_port); 
+		modified_vertex.push_back(post_view_port); */
+
 	}
 	m_renderer->DrawTriangles(&(modified_vertex),r,g,b);
 
 }
 
-void Scene::drawAxis()
-{
-	Model* model = new MeshModel();
-}
 
 
 void Scene::drawboundingBox(Model* model)
@@ -165,13 +150,9 @@ void Scene::drawboundingBox(Model* model)
 	for (size_t i = 0; i < 8; i++)
 	{
 		vec4 v(model->bounding_box.at(i));
-		//model view transform
-		//v = (Tc * (_world_transform * (model->_model_transform * v)));
-		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v)));
-		//Projection
-		v = (ProjectionM() * (P * v));
-		//View-port
-		v = m_renderer->viewPortVec(v);
+		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
+		v = (_projection_m * (P * v)); //Projection
+		v = m_renderer->viewPortVec(v); //View-port
 		modified_box.push_back(v);
 	}
 	m_renderer->DrawBox(&(modified_box),0.3, 0.3, 0.4);
@@ -187,30 +168,16 @@ void Scene::drawFaceNormals(Model* model)
 	
 	for (size_t i = 0; i < size; i++)
 	{
-		//model view transform
-		//TODO: check if we need to make a world normal transform
-		vec4 v1 = model->face_normals.at(i);
-		v1 = Tc * (_world_transform * (model->_normal_transform * v1));
-		//Projection
-		v1 = (ProjectionM() * (P * v1));
-		//View-port
-		v1 = m_renderer->viewPortVec(v1);
-
-		vec4 v2 = model->face_normals_origin.at(i);
-		v2 = Tc * (_world_transform * (model->_world_transform*(model->_model_transform * v2)));
-		//Projection
-		v2 = (ProjectionM() * (P * v2));
-		//View-port
-		v2 = m_renderer->viewPortVec(v2);
-		
-
-		vec4 v_dest = v1 + v2;
-		m_renderer->DrawLine(v2.x, v_dest.x, v2.y, v_dest.y, 0.0f, 1, 0.2f);
+		vec4 v_dest = model->face_normals_origin.at(i) + model->face_normals.at(i);
+		v_dest = (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * v_dest)))) ; //model-view
+		v_dest = (_projection_m * (P * v_dest)); //Projection
+		v_dest = m_renderer->viewPortVec(v_dest); //View-port
+		vec4 v_origin = model->face_normals_origin.at(i);
+		v_origin = Tc * (_world_transform * (model->_world_transform*(model->_model_transform * v_origin))); //Projection
+		v_origin = (_projection_m * (P * v_origin)); //View-port
+		v_origin = m_renderer->viewPortVec(v_origin);
+		m_renderer->DrawLine(v_origin.x, v_dest.x, v_origin.y, v_dest.y, 0.0f, 1, 0.2f);
 	}
-
-
-	//m_renderer->DrawTriangles(&(modified_face_normals));
-
 }
 
 void Scene::drawVertexNormals(Model* model)
@@ -221,29 +188,16 @@ void Scene::drawVertexNormals(Model* model)
 
 	for (size_t i = 0; i < size; i++)
 	{
-		//model view transform
-		//TODO: check if we need to make a world normal transform
-		vec4 v1 = model->vertex_normals.at(i);
-		v1 = Tc * (_world_transform * (model->_normal_transform * v1));
-		//Projection
-		v1 = (ProjectionM() * (P * v1));
-		//View-port
-		v1 = m_renderer->viewPortVec(v1);
-
-		vec4 v2 = model->vertices.at(i);
-		v2 = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v2)));
-		//Projection
-		v2 = (ProjectionM() * (P * v2));
-		//View-port
-		v2 = m_renderer->viewPortVec(v2);
-
-
-		vec4 v_dest = v1 + v2;
-		m_renderer->DrawLine(v2.x, v_dest.x, v2.y, v_dest.y, 1, 0, 0.2f);
+		vec4 v_dest = model->vertices.at(i) + normalize(model->vertex_normals.at(i));
+		v_dest = (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * v_dest)))); //model-view
+		v_dest = (_projection_m * (P * v_dest)); //Projection
+		v_dest = m_renderer->viewPortVec(v_dest); //View-port
+		vec4 v_origin = model->vertices.at(i);
+		v_origin = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v_origin))); //Projection
+		v_origin = (_projection_m * (P * v_origin)); //View-port
+		v_origin = m_renderer->viewPortVec(v_origin);
+		m_renderer->DrawLine(v_origin.x, v_dest.x, v_origin.y, v_dest.y, 0.0f, 1, 0.2f);
 	}
-
-
-	//m_renderer->DrawTriangles(&(modified_face_normals));
 
 }
 
@@ -255,28 +209,31 @@ void Scene::drawDemo()
 
 void Scene::zoom(GLfloat scale) 
 {
-	//mat4 s = ScalingMat(scale);
-	//_world_transform = s * _world_transform;
 	if (nCameras == 0) { return; };
 	mat4 s = ScalingMat(scale);
 	Camera* camera = cameras.at(activeCamera);
 	camera->setTransformation(s);
-	
 }
 
+void Scene::zoomOnModel(GLfloat scale)
+{
+	LookAtModel(); 
+	zoom(scale); 
+}
 
 void Scene::moveModel(const GLfloat x, const GLfloat y, const GLfloat z,int mod)
 {
 	if (nModels == 0) { return; };
 	mat4 t = TranslationMat(x, y, z);
-	models.at(activeModel)->_normal_transform = t * models.at(activeModel)->_normal_transform;
 	if (mod == 0) {
 		models.at(activeModel)->_model_transform = t * models.at(activeModel)->_model_transform;
+		models.at(activeModel)->_normal_model_transform = t * models.at(activeModel)->_normal_model_transform;
 		
 	}
 	else if(mod == 1)
 	{
 		models.at(activeModel)->_world_transform = t * models.at(activeModel)->_world_transform;
+		models.at(activeModel)->_normal_world_transform = t * models.at(activeModel)->_normal_world_transform;
 	}
 }
 
@@ -295,12 +252,14 @@ void Scene::RotateModel(const int hinge, const GLfloat theta, int mod)
 	}
 	if (mod == 0) {
 		models.at(activeModel)->_model_transform = r * models.at(activeModel)->_model_transform;
+		models.at(activeModel)->_normal_model_transform = r * models.at(activeModel)->_normal_model_transform;
 	}
 	else if (mod == 1)
 	{
 		models.at(activeModel)->_world_transform = r * models.at(activeModel)->_world_transform;
+		models.at(activeModel)->_normal_world_transform = r * models.at(activeModel)->_normal_world_transform;
 	}
-	models.at(activeModel)->_normal_transform = r * models.at(activeModel)->_normal_transform;
+	
 }
 
 void Scene::scaleModel(const GLfloat x, const GLfloat y, const GLfloat z) {
@@ -342,16 +301,20 @@ void Camera::setTransformation(const mat4& transform)
 	cTransform = cTransform * transform;
 }
 
-void Camera::LookAt(const vec4& new_eye, const vec4& at, const vec4& up)
+void Camera::LookAt(const vec4& new_eye, const vec4& new_at, const vec4& new_up)
 {
 	eye = new_eye;
-
+	at = new_at; 
+	up = new_up; 
 	//notice its the Tc^-1
-	vec4 n = normalize(new_eye -at);
-	vec4 u = normalize(cross(up, n));
+	vec4 n = normalize(new_eye -new_at);
+	vec4 u = normalize(cross(new_up, n));
 	vec4 v = normalize(cross(n, u));
 	vec4 t = vec4(0.0, 0.0, 0.0, 1.0);
-	mat4 c = mat4(u, v, n, t);
+	mat4 c = mat4(u, v, n, t); // (rotation)^-1
+	c[0][3] = 0;
+	c[1][3] = 0;
+	c[2][3] = 0;
 	cTransform = c * TranslationMat(-new_eye);
 }
 
@@ -393,10 +356,11 @@ void Camera::Perspective(const float fovy, const float aspect, const float zNear
 Scene::Scene()
 {
 	_world_transform = mat4(1.0);
+	_projection_m = mat4(1.0);
+	_projection_m[2][2] = 0;
 	//m_renderer = new Renderer(512,512);
 	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
-	addCamera(vec4(0, 0, -1, 0), vec4(0, 0, 0, 0), vec4(0, 1, 0, 0));
-	loadAxisModels();
+	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
 
 }
 
@@ -412,8 +376,17 @@ void Scene::LookAtCurrentCamera(const vec4& eye, const vec4& at, const vec4& up)
 	if (nCameras == 0)
 		return;
 	cameras.at(activeCamera)->LookAt(eye, at, up);
-
 }
+
+void Scene::LookAtModel()
+{
+	if (nModels == 0)
+		return;
+	//mat4 Tc = cameras.at(activeCamera)->cTransform;
+	vec4 v = _world_transform * (models.at(activeModel)->_normal_world_transform * (models.at(activeModel)->_normal_model_transform * models.at(activeModel)->_center_of_mass)); //model-view 
+	cameras.at(activeCamera)->LookAt(cameras.at(activeCamera)->eye, v, cameras.at(activeCamera)->up);
+}
+
 
 void Scene::drawCameras()
 {
