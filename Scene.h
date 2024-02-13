@@ -91,8 +91,8 @@ public:
 	void moveModel(const GLfloat x, const GLfloat y, const GLfloat z, int mod=0);
 	void RotateModel(const int hinge, const GLfloat theta, int mod = 0);
 	void scaleModel(const GLfloat x, const GLfloat y, const GLfloat z);
-	void moveCamera(const GLfloat x, const GLfloat y, const GLfloat z);
-	void RotateCamera(const int hinge, const GLfloat theta);
+	void moveCamera(const GLfloat x, const GLfloat y, const GLfloat z, int mod);
+	void RotateCamera(const int hinge, const GLfloat theta, int mod);, 
 	void LookAtCurrentCamera(const vec4& eye, const vec4& at, const vec4& up);
 	void LookAtModel();
 	void addModel(Model* model);

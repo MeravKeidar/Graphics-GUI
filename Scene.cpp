@@ -266,7 +266,7 @@ void Scene::scaleModel(const GLfloat x, const GLfloat y, const GLfloat z) {
 	models.at(activeModel)->Scale(x, y, z);
 }
 
-void Scene::moveCamera(const GLfloat x, const GLfloat y, const GLfloat z)
+void Scene::moveCamera(const GLfloat x, const GLfloat y, const GLfloat z, int mod)
 {
 	if (nCameras == 0) { return; };
 	mat4 t = TranslationMat(-x, -y, -z);
@@ -277,22 +277,63 @@ void Scene::moveCamera(const GLfloat x, const GLfloat y, const GLfloat z)
 	camera->eye[2] += z;
 }
 
-void Scene::RotateCamera(const int hinge, const GLfloat theta)
+
+void Scene::moveCamera(const GLfloat x, const GLfloat y, const GLfloat z, int mod)
+{
+	if (nCameras == 0) { return; };	
+	Camera* camera = cameras.at(activeCamera);
+	if (mod == 0) // view frame 
+	{
+		mat4 t = TranslationMat(x, y, z);
+		camera->cTransform = t * camera->cTransform;
+		camera->eye[0] -= x;
+		camera->eye[1] -= y;
+		camera->eye[2] -= z;
+	}
+	else if (mod == 1) // world frame 
+	{
+		mat4 t = TranslationMat(-x, -y, -z);
+		camera->setTransformation(t);
+		camera->eye[0] += x;
+		camera->eye[1] += y;
+		camera->eye[2] += z;
+	}
+}
+
+void Scene::RotateCamera(const int hinge, const GLfloat theta, int mod)
 {
 
 	if (nCameras == 0) { return; };
 	mat4 r;
-	if (hinge == 0) {
-		r = RotationByX(-theta);
+	Camera* camera = cameras.at(activeCamera);
+	if (mod == 0) // view frame 
+	{
+		if (hinge == 0) {
+			r = RotationByX(theta);
+		}
+		if (hinge == 1) {
+			r = RotationByY(theta);
+		}
+		if (hinge == 2) {
+			r = RotationByZ(theta);
+		}
+		camera->cTransform = r * camera->cTransform;
 	}
-	if (hinge == 1) {
-		r = RotationByY(-theta);
+	else if (mod == 1) // world frame 
+	{
+		if (hinge == 0) {
+			r = RotationByX(-theta);
+		}
+		if (hinge == 1) {
+			r = RotationByY(-theta);
+		}
+		if (hinge == 2) {
+			r = RotationByZ(-theta);
+		}
+		cameras.at(activeCamera)->setTransformation(r);
 	}
-	if (hinge == 2) {
-		r = RotationByZ(-theta);
-	}
-	cameras.at(activeCamera)->setTransformation(r);
 }
+	
 
 
 void Camera::setTransformation(const mat4& transform)
@@ -371,12 +412,6 @@ void Scene::addModel(Model* model)
 	activeModel++;
 }
 
-void Scene::LookAtCurrentCamera(const vec4& eye, const vec4& at, const vec4& up)
-{
-	if (nCameras == 0)
-		return;
-	cameras.at(activeCamera)->LookAt(eye, at, up);
-}
 
 void Scene::LookAtModel()
 {

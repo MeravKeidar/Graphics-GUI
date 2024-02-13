@@ -119,9 +119,6 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Transform Active Camera")) {
 				transform_camera = true;
 			}
-			if (ImGui::MenuItem("Look AT")) {
-
-			}
 			if (ImGui::MenuItem("Change Active Camera")) {
 				if (scene->activeCamera < (scene->nCameras - 1))
 				{
@@ -230,21 +227,37 @@ void ImguiPopUps(Scene* scene)
 
 void transformCamera(Scene* scene)
 {
-	static GLfloat x = 0;
-	static GLfloat y = 0;
-	static GLfloat z = 0;
-	ImGui::Text("Translate camera");
-	ImGui::SliderFloat("X", &x, -0.2, 0.2);
-	ImGui::SliderFloat("Y", &y, -0.2, 0.2);
-	ImGui::SliderFloat("Z", &z, -0.2, 0.2);
+	static GLfloat x_w = 0;
+	static GLfloat y_w = 0;
+	static GLfloat z_w = 0;
+	ImGui::Text("Translate in world frame");
+	ImGui::SliderFloat("X World", &x_w, -0.5, 0.5);
+	ImGui::SliderFloat("Y World", &y_w, -0.5, 0.5);
+	ImGui::SliderFloat("Z World", &z_w, -0.5, 0.5);
 
-	static GLfloat theta = 0;
-	static int idx = 0;
+	static GLfloat x_v = 0;
+	static GLfloat y_v = 0;
+	static GLfloat z_v = 0;
+	ImGui::Separator();
+	ImGui::Text("Translate in view frame ");
+	ImGui::SliderFloat("X view", &x_v, -0.5, 0.5);
+	ImGui::SliderFloat("Y view", &y_v, -0.5, 0.5);
+	ImGui::SliderFloat("Z view", &z_v, -0.5, 0.5);
+
+
+	static GLfloat theta_w = 0;
+	static int idx_w = 0;
 	const char* hinge[] = { "X", "Y", "Z" };
 	ImGui::Separator();
-	ImGui::Text("Rotate");
-	ImGui::SliderFloat("Theta W", &theta, 0, 360);
-	ImGui::Combo("Axis", &idx, hinge, 3);
+	ImGui::Text("Rotate in world frame ");
+	ImGui::SliderFloat("Theta W", &theta_w, 0, 360);
+	ImGui::Combo("World Axis", &idx_w, hinge, 3);
+	static GLfloat theta_v = 0;
+	static int idx_v = 0;
+	ImGui::Separator();
+	ImGui::Text("Rotate in view frame ");
+	ImGui::SliderFloat("Theta V", &theta_v, -0, 360);
+	ImGui::Combo("View Axis", &idx_v, hinge, 3);
 
 	ImGui::Separator();
 	ImGui::Text("Camera Position and Orientation");
@@ -310,13 +323,17 @@ void transformCamera(Scene* scene)
 	{
 		
 		if (useLookAt) { // Only call LookAtCurrentCamera if the checkbox was checked
-			scene->LookAtCurrentCamera(vec4(eye[0], eye[1], eye[2], 0),
-				vec4(at[0], at[1], at[2], 0),
-				vec4(up[0], up[1], up[2], 0));
+			vec4 new_eye(eye[0], eye[1], eye[2], 0);
+			vec4 new_at(at[0], at[1], at[2], 0);
+			vec4 new_up(up[0], up[1], up[2], 0);
+			scene->cameras.at(scene->activeCamera)->LookAt(new_eye,new_at,new_up);
 		}
-		scene->moveCamera(x, y, z);
-		scene->RotateCamera(idx, theta);
-		x = 0; y = 0; z = 0; theta = 0; idx = 0; // Reset transformations
+		scene->moveCamera(x_v, y_v, z_v, 0);
+		scene->moveCamera(x_w, y_w, z_w, 1);
+		scene->RotateCamera(idx_v, theta_v, 0);
+		scene->RotateCamera(idx_w, theta_w, 1);
+		x_v = 0; y_v = 0; z_v = 0; theta_v = 0; idx_v = 0; // Reset transformations
+		x_w = 0; y_w = 0; z_w = 0; theta_w = 0; idx_w = 0; // Reset transformations
 
 		if (changePerspective)
 		{
@@ -435,18 +452,18 @@ void transformModel(Scene* scene)
 	static GLfloat y_w = 0;
 	static GLfloat z_w = 0;
 	ImGui::Text("Translate in world frame");
-	ImGui::SliderFloat("X World", &x_w, -0.2, 0.2);
-	ImGui::SliderFloat("Y World", &y_w, -0.2, 0.2);
-	ImGui::SliderFloat("Z World", &z_w, -0.2, 0.2);
+	ImGui::SliderFloat("X World", &x_w, -0.5, 0.5);
+	ImGui::SliderFloat("Y World", &y_w, -0.5, 0.5);
+	ImGui::SliderFloat("Z World", &z_w, -0.5, 0.5);
 
 	static GLfloat x_m = 0;
 	static GLfloat y_m = 0;
 	static GLfloat z_m = 0;
 	ImGui::Separator();
 	ImGui::Text("Translate in model frame ");
-	ImGui::SliderFloat("X Model", &x_m, -0.2, 0.2);
-	ImGui::SliderFloat("Y Model", &y_m, -0.2, 0.2);
-	ImGui::SliderFloat("Z Model", &z_m, -0.2, 0.2);
+	ImGui::SliderFloat("X Model", &x_m, -0.5, 0.5);
+	ImGui::SliderFloat("Y Model", &y_m, -0.5, 0.5);
+	ImGui::SliderFloat("Z Model", &z_m, -0.5, 0.5);
 
 	
 	static GLfloat theta_w = 0;
