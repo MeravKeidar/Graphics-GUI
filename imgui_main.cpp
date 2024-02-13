@@ -116,7 +116,7 @@ void MainMenuBar(Scene* scene)
 				transform_camera = true;
 			}
 			if (ImGui::MenuItem("Change Active Camera")) {
-				if (scene->activeCamera < (scene->nCameras - 1))
+				if (scene->activeCamera < (scene->nCameras -1))
 				{
 					scene->activeCamera++;
 				}
@@ -144,7 +144,7 @@ void MainMenuBar(Scene* scene)
 				transform_model = true;
 			}
 			if (ImGui::MenuItem("Change Active Model")) {
-				if (scene->activeModel < (scene->nModels - 1))
+				if (scene->activeModel < (scene->nModels-1))
 				{
 					scene->activeModel++;
 				}
@@ -154,7 +154,11 @@ void MainMenuBar(Scene* scene)
 				}
 			}
 			if (ImGui::MenuItem("Display Bounding box")) {
-				scene->displayBoundingBox = true;
+				if (scene->displayBoundingBox)
+					scene->displayBoundingBox = false;
+				else
+					scene->displayBoundingBox = true;
+				
 			}
 			if (ImGui::MenuItem("Look at active model")) {
 				scene->LookAtModel();
@@ -261,7 +265,7 @@ void transformCamera(Scene* scene)
 	static bool useLookAt = false; // Checkbox state
 	ImGui::Checkbox("Use LookAt", &useLookAt); // Checkbox for enabling LookAt
 
-	static GLfloat eye[3] = { 0.0f, 0.0f, 0.0f };
+	static GLfloat eye[3] = { 0.0f, 0.0f, 0.2f };
 	static GLfloat at[3] = { 0.0f, 0.0f, -1.0f }; // Adjusted default looking towards -Z
 	static GLfloat up[3] = { 0.0f, 1.0f, 0.0f };  // Adjusted default up direction
 	if (useLookAt) { // Only display these inputs if the checkbox is checked
@@ -423,9 +427,9 @@ void addCamera(Scene* scene)
 	if (ImGui::Button("OK"))
 	{
 		//scene->addCamera(eye, at, up);
-		scene->addCamera(vec4(eye[0], eye[1], eye[2], 0),
-		vec4(at[0], at[1], at[2], 0),
-		vec4(up[0], up[1], up[2], 0));
+		scene->addCamera(vec4(eye[0], eye[1], eye[2], 1),
+		vec4(at[0], at[1], at[2], 1),
+		vec4(up[0], up[1], up[2], 1));
 		//ortho
 		if (idx == 0)
 		{

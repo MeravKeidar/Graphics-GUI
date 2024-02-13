@@ -111,7 +111,7 @@ void Scene::draw()
 void Scene::drawModel(Model* model, float r, float g ,float b)
 {
 	int size = model->vertex_positions.size();
-	mat4 Tc = cameras.at(activeCamera)->cTransform;
+	mat4 Tc = cameras.at(activeCamera)->cTransform;\
 	mat4 P = cameras.at(activeCamera)->projection;
 	vector<vec2> modified_vertex;
 	for (size_t i = 0; i < size; i++)
