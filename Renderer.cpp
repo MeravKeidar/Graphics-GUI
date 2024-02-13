@@ -32,10 +32,8 @@ void Renderer::DrawTriangles(const vector<vec2>* vertices, float r, float g , fl
 		vec2 v2 = vertices->at(i+1);
 		vec2 v3 = vertices->at(i+2);
 		DrawLine(v1.x, v2.x, v1.y, v2.y,r,g,b);
-		std::cout << "yay one Line drawn" << std::endl;
 		DrawLine(v1.x, v3.x, v1.y, v3.y,r,g,b);
 		DrawLine(v2.x, v3.x, v2.y, v3.y,r,g,b);
-		std::cout << "yay one triangle drawn" << std::endl;
 	}
 	
 }
@@ -80,18 +78,6 @@ void Renderer::CreateBuffers(int width, int height)
 	m_height = height;
 	CreateOpenGLBuffer(); //Do not remove this line.
 	m_outBuffer = new float[3 * m_width * m_height];
-
-	//injecting dots to debug resizing behavior
-	for (size_t i = 0; i < m_height; i+= m_height / 10)
-	{
-		for (size_t j = 0; j < m_width; j+= m_width / 10)
-		{
-			std::cout << i << " , " << j << std::endl;
-			m_outBuffer[(i * m_width + j) * 3] = 1;
-		}
-
-	}
-
 }
 
 

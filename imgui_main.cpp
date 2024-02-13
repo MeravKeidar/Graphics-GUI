@@ -33,7 +33,7 @@ static char* file_dialog_buffer = new char[500];
 static char path[500] = "";
 void FileMenu(Scene* scene)
 {
-	if (ImGui::Button("browse file")) {
+	if (ImGui::Button("Upload file")) {
 		file_dialog_buffer = path;
 		FileDialog::file_dialog_open = true;
 		FileDialog::file_dialog_open_type = FileDialog::FileDialogType::OpenFile;
@@ -62,12 +62,12 @@ void MainMenuBar(Scene* scene)
 		if (ImGui::BeginMenu("Load model"))
 		{
 			FileMenu(scene);
-			if (ImGui::MenuItem("file")) {
+			if (ImGui::MenuItem("Add uploaded model")) {
 				if (file_uploaded) {
 					scene->loadOBJModel(string(file_dialog_buffer));
 				}
 				else {
-					std::cout << "please browse file first" << file_dialog_buffer << std::endl;
+					std::cout << "please load file first" << file_dialog_buffer << std::endl;
 				}
 			}
 			if (ImGui::MenuItem("Pawn")) {
@@ -83,24 +83,27 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Box")) {
 				scene->loadOBJModel("obj_files/box.obj");
 			}
-			if (ImGui::MenuItem("Dumb lines")) {
-				scene->loadOBJModel("obj_files/lines.obj");
-			}
+
 			ImGui::EndMenu();
 		}
-		if (ImGui::BeginMenu("Normal")) {
+		if (ImGui::BeginMenu("Scene")) {
 			if (ImGui::MenuItem("Normal-per-vertex")) {
 				if (scene->displayVnormal)
 					scene->displayVnormal = false;
 				else
 					scene->displayVnormal = true;
 			}
-			if (ImGui::MenuItem("Display Normal-per-face")) {
+			if (ImGui::MenuItem("Normal-per-face")) {
 				if (scene->displayFnormal)
 					scene->displayFnormal = false;
 				else
 					scene->displayFnormal = true;
 			}
+			if (ImGui::MenuItem("Reset scene"))
+			{
+				scene->Reset(); 
+			}
+
 			ImGui::EndMenu();
 
 		}

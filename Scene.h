@@ -14,11 +14,11 @@ using namespace std;
 
 class Model {
 protected:
-
-	virtual ~Model() {}
+	
 	void virtual draw() = 0;
 
 public:
+	virtual ~Model() {}
 	mat4 _model_transform;
 	vector<vec3> vertex_positions;
 	vector<vec3> face_normals;
@@ -101,6 +101,7 @@ public:
 	void LookAtCurrentCamera(const vec4& eye, const vec4& at, const vec4& up);
 	void LookAtModel();
 	void addModel(Model* model);
+	void Reset();
 	mat4 getCurrentModelTrasform();
 	mat4 getCurrentWorldTrasform();
 	mat4 getCurrentCameraTrasform();

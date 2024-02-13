@@ -343,11 +343,17 @@ void Camera::LookAt(const vec4& new_eye, const vec4& new_at, const vec4& new_up)
 	eye = new_eye;
 	at = new_at; 
 	up = new_up; 
+	eye[3] = 1;
+	at[3] = 1;
+	up[3] = 1;
 	//notice its the Tc^-1
 	vec4 n = normalize(new_eye -new_at);
 	vec4 u = normalize(cross(new_up, n));
 	vec4 v = normalize(cross(n, u));
 	vec4 t = vec4(0.0, 0.0, 0.0, 1.0);
+	u[3] = 0;
+	v[3] = 0;
+	n[3] = 0;
 	mat4 c = mat4(u, v, n, t); // (rotation)^-1
 	c[0][3] = 0;
 	c[1][3] = 0;
@@ -420,6 +426,28 @@ Scene::Scene()
 
 }
 
+void Scene::Reset()
+{
+	int size = models.size();
+	for (size_t i = 0; i < size; ++i) {
+		Model* curr_m = models.at(i);
+		delete curr_m;
+	}
+	models.clear();
+	size = cameras.size();
+	for (size_t i = 0; i < size; ++i) {
+		Camera* curr_c = cameras.at(i);
+		delete curr_c;
+	}
+	cameras.clear();
+	activeModel = -1;
+	activeCamera = -1;
+	int nModels = 0;
+	int nCameras = 0;
+	addCamera(vec4(0, 0, 2, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
+}
+
+
 void Scene::addModel(Model* model)
 {
 	models.push_back(model);
@@ -448,7 +476,7 @@ void Scene::drawCameras()
 		if (i == activeCamera)
 			continue;
 		modified_eye = P * (Tc * cameras.at(i)->eye);  //Projection
-		modified_eye_2d = (modified_eye.x / modified_eye.w, modified_eye.y / modified_eye.w);
+		modified_eye_2d = (modified_eye.x, modified_eye.y);
 		modified_eye_2d = m_renderer->viewPortVec(modified_eye_2d);//View-port
 		m_renderer->DrawLine(modified_eye_2d[0] - 10, modified_eye_2d[0] + 10, modified_eye_2d[1], modified_eye_2d[1], 0.6, 0.8, 0.9);
 		m_renderer->DrawLine(modified_eye_2d[0], modified_eye_2d[0], modified_eye_2d[1] - 10, modified_eye_2d[1] + 10, 0.6, 0.8, 0.9);
