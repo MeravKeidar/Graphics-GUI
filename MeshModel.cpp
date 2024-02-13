@@ -79,7 +79,7 @@ void MeshModel::loadFile(string fileName)
 {
 	ifstream ifile(fileName.c_str());
 	vector<FaceIdcs> faces;
-	vector<vec3> vertices;
+	
 	vector<vec3> verticesText;
 	bool calculate_vnorm = false; 
 		// while not end of file
@@ -132,6 +132,7 @@ void MeshModel::loadFile(string fileName)
 		xk = vertices.at((*it).v[2] - 1);
 		normal = cross((xj-xi),(xj-xk));
 		face_normals.push_back(normalize(normal));
+		face_normals_origin.push_back((xi + xj + xk) / 3);
 		for (int i = 0; i < 3; i++)
 		{
 			vertex_positions.push_back(vertices.at((*it).v[i] - 1));
@@ -199,9 +200,9 @@ void MeshModel::boundingBox(vector<vec3>* vertices)
 	bounding_box.push_back(vec3(max.x, max.y, max.z));
 	bounding_box.push_back(vec3(min.x, max.y, max.z));
 
-	_world_transform[0][3] = -(max.x - min.x) / 2;
-	_world_transform[1][3] = -(max.y - min.y) / 2;
-	_world_transform[2][3] = -(max.z - min.z) / 2;
+	_world_transform[0][3] = -(max.x + min.x) / 2;
+	_world_transform[1][3] = -(max.y + min.y) / 2;
+	_world_transform[2][3] = -(max.z + min.z) / 2;
 	//_model_transform[0][3] = (max.x - min.x) / 2;
 	//_model_transform[1][3] = (max.y - min.y) / 2;
 	//_model_transform[2][3] = (max.z - min.z) / 2;

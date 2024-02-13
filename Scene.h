@@ -21,9 +21,11 @@ protected:
 public:
 	mat4 _model_transform;
 	vector<vec3> vertex_positions;
-	vector<vec3> vertex_normals;
 	vector<vec3> face_normals;
+	vector<vec3> face_normals_origin;
 	vector<vec3> bounding_box;
+	vector<vec3> vertices;
+	vector<vec3> vertex_normals;
 
 
 	/*vector<vec4> modified_vertex;
@@ -63,16 +65,21 @@ public:
 		const float zNear, const float zFar);
 	void Perspective(const float fovy, const float aspect,
 		const float zNear, const float zFar);
+	vec4 eye;
+
 
 };
 
 class Scene {
+	//X Y Z models
+	vector<Model*> axis_models;
 	vector<Model*> models;
 	vector<Light*> lights;
 	vector<Camera*> cameras;
 	Renderer* m_renderer;
 	mat4 _world_transform;
-	void drawModel(Model* model);
+	void drawModel(Model* model,float r = 1.0, float g  = 1.0, float b = 1.0);
+	void drawAxis();
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);
 
@@ -80,15 +87,34 @@ public:
 	Scene();
 	Scene(Renderer* renderer) : m_renderer(renderer) {};
 	void loadOBJModel(string fileName);
+	void loadAxisModels();
 	void loadPrimModel(string type);
 	void addCamera(const vec4& eye, const vec4& at, const vec4& up);
-	void draw();
+	void draw(bool draw_axis = false);
 	void drawDemo();
+	void drawCameras();
+	void drawVertexNormals(Model* model);
 	void zoom(GLfloat scale);
 	void moveModel(const GLfloat x, const GLfloat y, const GLfloat z, int mod=0);
 	void RotateModel(const int hinge, const GLfloat theta, int mod = 0);
 	void scaleModel(const GLfloat x, const GLfloat y, const GLfloat z);
+	void moveCamera(const GLfloat x, const GLfloat y, const GLfloat z);
+	void RotateCamera(const int hinge, const GLfloat theta);
+	void LookAtCurrentCamera(const vec4& eye, const vec4& at, const vec4& up);
 	void addModel(Model* model);
+	mat4 getCurrentModelTrasform();
+	mat4 getCurrentWorldTrasform();
+	mat4 getCurrentCameraTrasform();
+	mat4 getCurrentProjection();
+	vec4 getCurrentViewPort();
+	void setCameraOrtho(const float left, const float right,
+		const float bottom, const float top,
+		const float zNear, const float zFar);
+	void setCameraFrustum(const float left, const float right,
+		const float bottom, const float top,
+		const float zNear, const float zFar);
+	void setCameraPerspective(const float fovy, const float aspect,
+		const float zNear, const float zFar);
 	int activeModel=-1;
 	int activeLight=-1;
 	int activeCamera=-1;

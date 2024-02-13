@@ -286,7 +286,9 @@ void Renderer::SwapBuffers()
 vec4 Renderer::viewPortVec(vec4 cannonial)
 {
 	GLfloat factor = min(m_width, m_height);
-	return vec4((factor / 2) * (cannonial.x + 1), (factor / 2) * (cannonial.y + 1), 0, 0);
+	//to fix center
+	GLfloat max_fix = max(m_width, m_height);
+	return vec4((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2, 0, 0);
 }
 
 

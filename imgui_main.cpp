@@ -57,6 +57,9 @@ void FileMenu(Scene* scene)
 
 
 bool transform_model = false;
+bool transform_camera = false;
+bool add_camera = false;
+bool show_matrices = false;
 
 void MainMenuBar(Scene* scene)
 {
@@ -86,6 +89,12 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Cow")) {
 				scene->loadOBJModel("obj_files/cow.obj");
 			}
+			if (ImGui::MenuItem("Box")) {
+				scene->loadOBJModel("obj_files/box.obj");
+			}
+			if (ImGui::MenuItem("Dumb lines")) {
+				scene->loadOBJModel("obj_files/lines.obj");
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Normal")) {
@@ -107,9 +116,8 @@ void MainMenuBar(Scene* scene)
 
 		if (ImGui::BeginMenu("Camera"))
 		{
-			if (ImGui::MenuItem("Add Camera")) {
-				// pop up 
-				//scene->addCamera(
+			if (ImGui::MenuItem("Transform Active Camera")) {
+				transform_camera = true;
 			}
 			if (ImGui::MenuItem("Look AT")) {
 
@@ -125,7 +133,14 @@ void MainMenuBar(Scene* scene)
 				}
 			}
 			if (ImGui::MenuItem("Display cameras")) {
-				scene->displayCameras;
+				if(scene->displayCameras)
+					scene->displayCameras = false;
+				else
+					scene->displayCameras = true;
+				
+			}
+			if (ImGui::MenuItem("Add Camera")) {
+				add_camera = true;
 			}
 			ImGui::EndMenu();
 		}
@@ -152,6 +167,11 @@ void MainMenuBar(Scene* scene)
 			
 
 		}
+		if (ImGui::BeginMenu("Show Mat Values"))
+		{
+			show_matrices = true;
+			ImGui::EndMenu();
+		}
 
 		ImGui::EndMainMenuBar();
 	}
@@ -171,7 +191,241 @@ void ImguiPopUps(Scene* scene)
 		transformModel(scene);
 		ImGui::EndPopup();
 	}
+
+	if (transform_camera)
+	{
+		ImGui::OpenPopup("Transform Active Camera");
+		transform_camera = false;
+	}
+
+	if (ImGui::BeginPopupModal("Transform Active Camera", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		transformCamera(scene);
+		ImGui::EndPopup();
+	}
+
+	if (add_camera)
+	{
+		ImGui::OpenPopup("Add Camera");
+		add_camera = false;
+	}
+	if (ImGui::BeginPopupModal("Add Camera", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		addCamera(scene);
+		ImGui::EndPopup();
+	}
+	if (show_matrices)
+	{
+		ImGui::OpenPopup("Show Mat Values");
+		show_matrices = false;
+	}
+	if (ImGui::BeginPopupModal("Show Mat Values", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		showMatriceValues(scene);
+		ImGui::EndPopup();
+	}
 }
+
+void transformCamera(Scene* scene)
+{
+	static GLfloat x = 0;
+	static GLfloat y = 0;
+	static GLfloat z = 0;
+	ImGui::Text("Translate camera");
+	ImGui::SliderFloat("X", &x, -0.2, 0.2);
+	ImGui::SliderFloat("Y", &y, -0.2, 0.2);
+	ImGui::SliderFloat("Z", &z, -0.2, 0.2);
+
+	static GLfloat theta = 0;
+	static int idx = 0;
+	const char* hinge[] = { "X", "Y", "Z" };
+	ImGui::Separator();
+	ImGui::Text("Rotate");
+	ImGui::SliderFloat("Theta W", &theta, 0, 360);
+	ImGui::Combo("Axis", &idx, hinge, 3);
+
+	ImGui::Separator();
+	ImGui::Text("Camera Position and Orientation");
+
+	static bool useLookAt = false; // Checkbox state
+	ImGui::Checkbox("Use LookAt", &useLookAt); // Checkbox for enabling LookAt
+
+	static GLfloat eye[3] = { 0.0f, 0.0f, 0.0f };
+	static GLfloat at[3] = { 0.0f, 0.0f, -1.0f }; // Adjusted default looking towards -Z
+	static GLfloat up[3] = { 0.0f, 1.0f, 0.0f };  // Adjusted default up direction
+	if (useLookAt) { // Only display these inputs if the checkbox is checked
+		ImGui::InputFloat3("Eye", eye);
+		ImGui::InputFloat3("At", at);
+		ImGui::InputFloat3("Up", up);
+	}
+	static GLfloat left_right[2] = { -1.0f, 1.0f };
+	static GLfloat bottom_top[2] = { -1.0f, 1.0f };
+	static GLfloat near_far[2] = { 1.0f, -1.0f };
+	static GLfloat fovy[2] = { 90.0f, 1.0f };
+	static int perspective_type = 0;
+	static int input_i = 0;
+	static bool changePerspective = false; // Checkbox state
+	ImGui::Checkbox("Change Perspective", &changePerspective); // Checkbox for enabling LookAt
+	if (changePerspective)
+	{
+		ImGui::Text("Camera Perspective");
+
+		
+		const char* input_type[] = { "Coordinal", "FOV" };
+		const char* perspective[] = { "Ortho", "Frustum" };
+		ImGui::Combo("Perspective type", &perspective_type, perspective, 2);
+		
+		
+		if (perspective_type == 0)
+		{
+			ImGui::InputFloat2("left/right", left_right);
+			ImGui::InputFloat2("bottom/top", bottom_top);
+			ImGui::InputFloat2("znear/zfar", near_far);
+		}
+		else
+		{
+
+
+			ImGui::Combo("Input Type", &input_i, input_type, 2);
+			if (input_i == 0)
+			{
+				ImGui::InputFloat2("left/right", left_right);
+				ImGui::InputFloat2("bottom/top", bottom_top);
+				ImGui::InputFloat2("znear/zfar", near_far);
+			}
+			else
+			{
+				ImGui::InputFloat2("fovy/aspect", fovy);
+				ImGui::InputFloat2("znear/zfar", near_far);
+			}
+
+
+		}
+	}
+	
+
+	if (ImGui::Button("OK"))
+	{
+		
+		if (useLookAt) { // Only call LookAtCurrentCamera if the checkbox was checked
+			scene->LookAtCurrentCamera(vec4(eye[0], eye[1], eye[2], 0),
+				vec4(at[0], at[1], at[2], 0),
+				vec4(up[0], up[1], up[2], 0));
+		}
+		scene->moveCamera(x, y, z);
+		scene->RotateCamera(idx, theta);
+		x = 0; y = 0; z = 0; theta = 0; idx = 0; // Reset transformations
+
+		if (changePerspective)
+		{
+			if (perspective_type == 0)
+			{
+				scene->setCameraOrtho(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+			}
+			else
+			{
+				if (input_i == 0)
+				{
+					scene->setCameraFrustum(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+				}
+				else
+				{
+					scene->setCameraPerspective(fovy[0], fovy[1], near_far[0], near_far[1]);
+				}
+			}
+		}
+		 left_right[0] =-1.0f;
+		 left_right[1] =  1.0f;
+		 bottom_top[0] = -1.0f ;
+		 bottom_top[1] =  1.0f ;
+		 near_far[0] =  -1.0f;
+		 near_far[1] =  1.0f;
+		 fovy[0] =  90.0f;
+		 fovy[1] =  1.0f;
+		ImGui::CloseCurrentPopup();
+	}
+
+
+
+}
+
+void addCamera(Scene* scene)
+{
+
+	ImGui::Text("Camera Perspective");
+
+
+	static int idx = 0;
+	static int input_i = 0;
+	const char* input_type[] = { "Coordinal", "FOV" };
+	const char* perspective[] = { "Ortho", "Frustum"};
+	ImGui::Combo("Perspective type", &idx, perspective, 2);
+	static GLfloat left_right[2] = {-1.0f, 1.0f};
+	static GLfloat bottom_top[2] = { -1.0f, 1.0f};
+	static GLfloat near_far[2] = { -1.0f, 1.0f};
+	static GLfloat fovy[2] = {90.0f, 1.0f };
+	if (idx == 0)
+	{
+		ImGui::InputFloat2("left/right", left_right);
+		ImGui::InputFloat2("bottom/top", bottom_top);
+		ImGui::InputFloat2("znear/zfar", near_far);
+	}
+	else
+	{
+		
+		
+		ImGui::Combo("Input Type", &input_i, input_type, 2);
+		if (input_i == 0)
+		{
+			ImGui::InputFloat2("left/right", left_right);
+			ImGui::InputFloat2("bottom/top", bottom_top);
+			ImGui::InputFloat2("znear/zfar", near_far);
+		}
+		else
+		{
+			ImGui::InputFloat2("fovy/aspect", fovy);
+			ImGui::InputFloat2("znear/zfar", near_far);
+		}
+
+
+	}
+		
+
+	static GLfloat eye[3] = { 0.0f, 0.0f, 0.0f };
+	static GLfloat at[3] = { 0.0f, 0.0f, -1.0f }; // Adjusted default looking towards -Z
+	static GLfloat up[3] = { 0.0f, 1.0f, 0.0f };  // Adjusted default up direction
+	
+	ImGui::InputFloat3("Eye", eye);
+	ImGui::InputFloat3("At", at);
+	ImGui::InputFloat3("Up", up);
+
+
+	if (ImGui::Button("OK"))
+	{
+		//scene->addCamera(eye, at, up);
+		scene->addCamera(vec4(eye[0], eye[1], eye[2], 0),
+		vec4(at[0], at[1], at[2], 0),
+		vec4(up[0], up[1], up[2], 0));
+		//ortho
+		if (idx == 0)
+		{
+			scene->setCameraOrtho(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+		}
+		else
+		{
+			if (input_i == 0)
+			{
+				scene->setCameraFrustum(left_right[0], left_right[1], bottom_top[0], bottom_top[1], near_far[0], near_far[1]);
+			}
+			else
+			{
+				scene->setCameraPerspective(fovy[0], fovy[1], near_far[0], near_far[1]);
+			}
+		}
+		ImGui::CloseCurrentPopup();
+	}
+}
+
 
 void transformModel(Scene* scene)
 {
@@ -214,7 +468,7 @@ void transformModel(Scene* scene)
 	ImGui::Text("Scale");
 	ImGui::SliderFloat("Scale x", &s_x, 0.2, 5);
 	ImGui::SliderFloat("Scale y", &s_y, 0.2, 5);
-	ImGui::SliderFloat("Scale z", &s_y, 0.2, 5);
+	ImGui::SliderFloat("Scale z", &s_z, 0.2, 5);
 	ImGui::SliderFloat("Scale All", &s,0.2 ,5);
 	
 	if (ImGui::Button("OK"))
@@ -239,6 +493,42 @@ void transformModel(Scene* scene)
 		s_y = 1;
 		s_z = 1;
 		s = 1;
+		ImGui::CloseCurrentPopup();
+	}
+}
+
+void showMatriceValues(Scene* scene)
+{
+	ImGui::Text("Current Model Transform Mat");
+	mat4 m = scene->getCurrentModelTrasform();
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[0][0], m[0][1], m[0][2], m[0][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[1][0], m[1][1], m[1][2], m[1][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[2][0], m[2][1], m[2][2], m[2][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[3][0], m[3][1], m[3][2], m[3][3]);
+
+	ImGui::Text("Current World Transform Mat");
+	 m = scene->getCurrentWorldTrasform();
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[0][0], m[0][1], m[0][2], m[0][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[1][0], m[1][1], m[1][2], m[1][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[2][0], m[2][1], m[2][2], m[2][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[3][0], m[3][1], m[3][2], m[3][3]);
+
+	ImGui::Text("Current Camera Transform Mat");
+	 m = scene->getCurrentCameraTrasform();
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[0][0], m[0][1], m[0][2], m[0][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[1][0], m[1][1], m[1][2], m[1][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[2][0], m[2][1], m[2][2], m[2][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[3][0], m[3][1], m[3][2], m[3][3]);
+
+	ImGui::Text("Current Projection Mat");
+	m = scene->getCurrentCameraTrasform();
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[0][0], m[0][1], m[0][2], m[0][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[1][0], m[1][1], m[1][2], m[1][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[2][0], m[2][1], m[2][2], m[2][3]);
+	ImGui::Text("%4.2f,%4.2f,%4.2f,%4.2f", m[3][0], m[3][1], m[3][2], m[3][3]);
+
+	if (ImGui::Button("OK"))
+	{
 		ImGui::CloseCurrentPopup();
 	}
 }
