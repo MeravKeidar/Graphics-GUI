@@ -21,3 +21,6 @@ void MainMenuBar(Scene* scene);
 void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, Scene* scene);
 void ImguiPopUps(Scene* scene);
 void transformModel(Scene* scene);
+void transformCamera(Scene* scene);
+void addCamera(Scene* scene);
+void showMatriceValues(Scene* scene);

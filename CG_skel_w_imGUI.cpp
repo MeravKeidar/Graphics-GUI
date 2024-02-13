@@ -84,6 +84,7 @@ int my_main() {
 	//scene->loadOBJModel("obj_files/tetrahedron.obj");
 	
 	//Main loop
+	
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
