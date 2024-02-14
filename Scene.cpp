@@ -141,6 +141,7 @@ void Scene::drawboundingBox(Model* model)
 		vec4 v(model->bounding_box.at(i));
 		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
 		v = P * v; //Projection
+		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
 		vec2 v_2d(v.x / v.w, v.y / v.w);
 		v_2d = m_renderer->viewPortVec(v_2d); // view-port
 		modified_box.push_back(v_2d);
@@ -166,11 +167,12 @@ void Scene::drawFaceNormals(Model* model)
 		vec4 v_dest = v_origin + normal;
 		v_dest = (P * v_dest); //View-port
 		v_origin = (P * v_origin); //View-port
+		if ((v_origin.w < 0.00001) && (v_origin.w > -0.00001)) continue;
 		vec2 v_2d_dest(v_dest.x / v_dest.w, v_dest.y / v_dest.w);
 		v_2d_dest = m_renderer->viewPortVec(v_2d_dest); //View-port
 		vec2 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
 		v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
-		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.0f, 0.8, 0.9f);
+		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.686f, 0, 1.0f);
 
 	}
 }

@@ -24,3 +24,5 @@ void transformModel(Scene* scene);
 void transformCamera(Scene* scene);
 void addCamera(Scene* scene);
 void showMatriceValues(Scene* scene);
+void showInstructions();
+void showManual();

@@ -54,6 +54,8 @@ bool transform_model = false;
 bool transform_camera = false;
 bool add_camera = false;
 bool show_matrices = false;
+bool show_instructions = false;
+bool display_manual = true;
 
 void MainMenuBar(Scene* scene)
 {
@@ -172,12 +174,28 @@ void MainMenuBar(Scene* scene)
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Keyboard Shortcuts"))
+		{
+			show_instructions = true;
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
 }
 
 void ImguiPopUps(Scene* scene) 
 {
+	if (display_manual)
+	{
+		ImGui::OpenPopup("Welcome Manual");
+		display_manual = false;
+	}
+	if (ImGui::BeginPopupModal("Welcome Manual", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		showManual();
+		ImGui::EndPopup();
+	}
 
 	if (transform_model)
 	{
@@ -221,6 +239,16 @@ void ImguiPopUps(Scene* scene)
 	if (ImGui::BeginPopupModal("Show Mat Values", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		showMatriceValues(scene);
+		ImGui::EndPopup();
+	}
+	if (show_instructions)
+	{
+		ImGui::OpenPopup("Keyboard Shortcuts");
+		show_instructions = false;
+	}
+	if (ImGui::BeginPopupModal("Keyboard Shortcuts", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		showInstructions();
 		ImGui::EndPopup();
 	}
 }
@@ -555,6 +583,52 @@ void showMatriceValues(Scene* scene)
 	ImGui::Text("eye: %4.2f ,%4.2f,%4.2f,%4.2f", scene->cameras.at(scene->activeCamera)->eye.x, scene->cameras.at(scene->activeCamera)->eye.y, scene->cameras.at(scene->activeCamera)->eye.z);
 	ImGui::Text("at: %4.2f,%4.2f,%4.2f,%4.2f", scene->cameras.at(scene->activeCamera)->at.x, scene->cameras.at(scene->activeCamera)->at.y, scene->cameras.at(scene->activeCamera)->at.z);
 	ImGui::Text("up: %4.2f,%4.2f,%4.2f,%4.2f", scene->cameras.at(scene->activeCamera)->up.x, scene->cameras.at(scene->activeCamera)->up.y, scene->cameras.at(scene->activeCamera)->up.z);
+	if (ImGui::Button("OK"))
+	{
+		ImGui::CloseCurrentPopup();
+	}
+}
+
+void showInstructions()
+{
+	ImGui::Text("Shortcuts");
+	ImGui::Text("Zoom in: Cntrl + '+' ");
+	ImGui::Text("Zoom out: Cntrl + '-' ");
+	ImGui::Text("");
+	ImGui::Text("Move Active Model Left( in -x): Cntrl + Left Arrow ");
+	ImGui::Text("Move Active Model Right( in +x): Cntrl + Right Arrow ");
+	ImGui::Text("Move Active Model Down( in -y): Cntrl + Down Arrow ");
+	ImGui::Text("Move Active Model Up( in +y): Cntrl + Up Arrow ");
+	ImGui::Text("");
+	ImGui::Text("Look At Current Model(center camera): Cntrl + 'L' ");
+
+
+	if (ImGui::Button("OK"))
+	{
+		ImGui::CloseCurrentPopup();
+	}
+}
+
+void showManual()
+{
+	ImGui::Text("Welcome to our model rasterization app.");
+	ImGui::Text("");
+	ImGui::Text("--Models--");
+	ImGui::Text("You can start using this program by loading some models to the scene using two methods");
+	ImGui::Text("1. Loading from the preloaded models from the menu bar (! make sure the obj files are in the \"obj Files\" dir)");
+	ImGui::Text("2. Loading a file from the current machine (using browse option in the menu bar)");
+	ImGui::Text("After choosing a file via browsing, load the model using the \"Add uploaded model\" option under \"Model\" tab");
+	ImGui::Text("");
+	ImGui::Text("--Cameras--");
+	ImGui::Text("The program loads a default camera");
+	ImGui::Text("You can add additional cameras via the menu bar as well as transforming the existing ones");
+	ImGui::Text("");
+	ImGui::Text("--Normals--");
+	ImGui::Text("You can display vertex normal and faces normals via the \"Scene\" tab");
+	ImGui::Text("");
+	ImGui::Text("Have fun and enjoy :)");
+
+
 	if (ImGui::Button("OK"))
 	{
 		ImGui::CloseCurrentPopup();
