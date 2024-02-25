@@ -166,6 +166,9 @@ void MeshModel::draw()
 
 MeshModel::MeshModel()
 {
+	color.r = 0;
+	color.g = 0;
+	color.b = 0;
 	_world_transform = mat4(1.0);
 	_model_transform = mat4(1.0);
 	_normal_world_transform = mat4(1.0);

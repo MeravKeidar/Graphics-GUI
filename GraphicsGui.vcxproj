@@ -176,6 +176,7 @@
   <ItemGroup>
     <ClInclude Include="AxisObj.h" />
     <ClInclude Include="CG_skel_w_imGUI.h" />
+    <ClInclude Include="Color.h" />
     <ClInclude Include="External\GLEW\include\GL\eglew.h" />
     <ClInclude Include="External\GLEW\include\GL\glew.h" />
     <ClInclude Include="External\GLEW\include\GL\glxew.h" />

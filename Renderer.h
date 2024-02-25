@@ -5,13 +5,34 @@
 #include "mat.h"
 #include "GLFW/glfw3.h"
 
+
+
 using namespace std;
+struct Color {
+	GLfloat r;
+	GLfloat g;
+	GLfloat b;
+
+
+	Color operator*(const GLfloat scale) const {
+		Color result{ r * scale, g * scale, b * scale };
+		return result;
+	}
+
+	Color operator+(const Color other) const {
+		Color result{min(r + other.r,1.0f),min(g + other.g,1.0f),min(b + other.b,1.0f) };
+		return result;
+	}
+};
+
+
+
 class Renderer
 {
 	float* m_outBuffer; // 3*width*height
 	float* m_zbuffer; // width*height
 	int m_width, m_height;
-
+	GLfloat ambient_scale = 0.2;
 	
 	void CreateLocalBuffer();
 
@@ -37,8 +58,8 @@ public:
 	void Init();
 	//void DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals = NULL);
 	void CreateBuffers(int width, int height);
-	void DrawTriangles(const vector<vec2>* vertices, float r = 1, float g = 1, float b = 1);
-	void DrawBox(const vector<vec2>* vertices, float r = 1, float g = 1, float b = 1);
+	void DrawTriangles(const vector<vec3>* vertices,Color color);
+	void DrawBox(const vector<vec3>* vertices, Color color);
 	//void SetCameraTransform(const mat4& cTransform);
 	//void SetProjection(const mat4& projection);
 	//void SetObjectMatrices(const mat4& oTransform, const mat3& nTransform);
@@ -47,11 +68,16 @@ public:
 	void ClearDepthBuffer();
 	void SetDemoBuffer();
 	void Reshape(int width, int height);
-	void DrawPixel(int x, int y, float r = 1, float g = 1, float b = 1);
-	void DrawLine(int x1, int x2, int y1, int y2, float r = 1, float g = 1, float b = 1);
+	void DrawPixel(int x, int y, Color color);
+	void DrawLine(int x1, int x2, int y1, int y2, Color color);
 	void UpdateViewPort(GLfloat width, GLfloat height);
-	vec2 viewPortVec(vec2 cannonial);
+	vec3 viewPortVec(vec3 cannonial);
 	void UpdateToScreenMat(int width, int height);
 	void multVertex(const vector<GLfloat>* vertices, mat4 mat , vector<GLfloat>* modified);
 	void pipeLine(const vector<GLfloat>* vertices, vector<GLfloat>* modified, mat4 _world_transform, mat4 camera_mat);
+	GLfloat getDepth(int x, int y, vec3 v1 , vec3 v2 ,vec3 v3);
+	void fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color);
+	void drawScanline(int x_start, int x_end, int y, vec3 v1, vec3 v2, vec3 v3, Color color);
 };
+
+

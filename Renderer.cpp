@@ -4,6 +4,7 @@
 #include "InitShader.h"
 #include "GLFW\glfw3.h"
 
+
 //using namespace Renderer;
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
@@ -23,39 +24,46 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<vec2>* vertices, float r, float g , float b)
+void Renderer::DrawTriangles(const vector<vec3>* vertices, Color color)
 {
 	int size = vertices->size();
+	Color blue{ 0,0,1 };
 	for (size_t i = 0; i < size-3; i+= 3)
 	{
-		vec2 v1 = vertices->at(i);
-		vec2 v2 = vertices->at(i+1);
-		vec2 v3 = vertices->at(i+2);
-		DrawLine(v1.x, v2.x, v1.y, v2.y,r,g,b);
-		DrawLine(v1.x, v3.x, v1.y, v3.y,r,g,b);
-		DrawLine(v2.x, v3.x, v2.y, v3.y,r,g,b);
+		vec3 v1 = vertices->at(i);
+		vec3 v2 = vertices->at(i+1);
+		vec3 v3 = vertices->at(i+2);
+
+
+		DrawLine(v1.x, v2.x, v1.y, v2.y, blue);
+		DrawLine(v1.x, v3.x, v1.y, v3.y, blue);
+		DrawLine(v2.x, v3.x, v2.y, v3.y, blue);
+
+		fillTriangle(v1, v2, v3, color);
+
+
 	}
 	
 }
 
-void Renderer::DrawBox(const vector<vec2>* vertices, float r, float g, float b)
+void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
 {
 	//bottom
-	DrawLine(vertices->at(0).x, vertices->at(1).x, vertices->at(0).y, vertices->at(1).y, r, g, b);
-	DrawLine(vertices->at(1).x, vertices->at(2).x, vertices->at(1).y, vertices->at(2).y, r, g, b);
-	DrawLine(vertices->at(2).x, vertices->at(3).x, vertices->at(2).y, vertices->at(3).y, r, g, b);
-	DrawLine(vertices->at(2).x, vertices->at(0).x, vertices->at(2).y, vertices->at(0).y, r, g, b);
+	DrawLine(vertices->at(0).x, vertices->at(1).x, vertices->at(0).y, vertices->at(1).y, color);
+	DrawLine(vertices->at(1).x, vertices->at(2).x, vertices->at(1).y, vertices->at(2).y, color);
+	DrawLine(vertices->at(2).x, vertices->at(3).x, vertices->at(2).y, vertices->at(3).y, color);
+	DrawLine(vertices->at(2).x, vertices->at(0).x, vertices->at(2).y, vertices->at(0).y, color);
 	//top
-	DrawLine(vertices->at(4).x, vertices->at(5).x, vertices->at(4).y, vertices->at(5).y, r, g, b);
-	DrawLine(vertices->at(5).x, vertices->at(6).x, vertices->at(5).y, vertices->at(6).y, r, g, b);
-	DrawLine(vertices->at(6).x, vertices->at(7).x, vertices->at(6).y, vertices->at(7).y, r, g, b);
-	DrawLine(vertices->at(7).x, vertices->at(4).x, vertices->at(7).y, vertices->at(4).y, r, g, b);
+	DrawLine(vertices->at(4).x, vertices->at(5).x, vertices->at(4).y, vertices->at(5).y, color);
+	DrawLine(vertices->at(5).x, vertices->at(6).x, vertices->at(5).y, vertices->at(6).y, color);
+	DrawLine(vertices->at(6).x, vertices->at(7).x, vertices->at(6).y, vertices->at(7).y, color);
+	DrawLine(vertices->at(7).x, vertices->at(4).x, vertices->at(7).y, vertices->at(4).y, color);
 	//front
-	DrawLine(vertices->at(0).x, vertices->at(4).x, vertices->at(0).y, vertices->at(4).y, r, g, b);
-	DrawLine(vertices->at(1).x, vertices->at(5).x, vertices->at(1).y, vertices->at(5).y, r, g, b);
+	DrawLine(vertices->at(0).x, vertices->at(4).x, vertices->at(0).y, vertices->at(4).y, color);
+	DrawLine(vertices->at(1).x, vertices->at(5).x, vertices->at(1).y, vertices->at(5).y, color);
 	//back
-	DrawLine(vertices->at(3).x, vertices->at(7).x, vertices->at(3).y, vertices->at(7).y, r, g, b);
-	DrawLine(vertices->at(2).x, vertices->at(6).x, vertices->at(2).y, vertices->at(6).y, r, g, b);
+	DrawLine(vertices->at(3).x, vertices->at(7).x, vertices->at(3).y, vertices->at(7).y, color);
+	DrawLine(vertices->at(2).x, vertices->at(6).x, vertices->at(2).y, vertices->at(6).y, color);
 }
 //
 //void Renderer::SetCameraTransform(const mat4& cTransform)
@@ -74,10 +82,18 @@ void Renderer::CreateBuffers(int width, int height)
 {
 	if (m_outBuffer != NULL)
 		delete m_outBuffer;
+	if (m_zbuffer != NULL)
+		delete m_zbuffer;
 	m_width = width;
 	m_height = height;
 	CreateOpenGLBuffer(); //Do not remove this line.
 	m_outBuffer = new float[3 * m_width * m_height];
+	m_zbuffer = new float[m_width * m_height];
+	for (size_t i = 0; i < m_width * m_height; i++)
+	{
+		m_zbuffer[i] = 1.1;
+	}
+	
 }
 
 
@@ -103,11 +119,11 @@ void Renderer::SetDemoBuffer()
 }
 
 
-void Renderer::DrawPixel(int x, int y, float r, float g, float b) {
+void Renderer::DrawPixel(int x, int y, Color color) {
 	if ((x < m_width) && (y < m_height) && (0 < x) && ( 0 < y)) {
-		m_outBuffer[INDEX(m_width, x, y, 0)] = r;
-		m_outBuffer[INDEX(m_width, x, y, 1)] = g;
-		m_outBuffer[INDEX(m_width, x, y, 2)] = b;
+		m_outBuffer[INDEX(m_width, x, y, 0)] = color.r;
+		m_outBuffer[INDEX(m_width, x, y, 1)] = color.g;
+		m_outBuffer[INDEX(m_width, x, y, 2)] = color.b;
 	}
 	
 
@@ -140,14 +156,14 @@ void Renderer::DrawPixel(int x, int y, float r, float g, float b) {
 */
 
 
-void Renderer::DrawLine(int x1, int x2, int y1, int y2, float r, float g, float b) {
+void Renderer::DrawLine(int x1, int x2, int y1, int y2, Color color) {
 
 	int dx = abs(x2 - x1), sx = x1 < x2 ? 1 : -1;
 	int dy = -abs(y2 - y1), sy = y1 < y2 ? 1 : -1;
 	int err = dx + dy, e2;
 
 	while (true) {
-		DrawPixel(x1, y1, r, g, b);
+		DrawPixel(x1, y1, color);
 		if (x1 == x2 && y1 == y2) break;
 		e2 = 2 * err;
 		if (e2 >= dy)
@@ -188,7 +204,10 @@ void Renderer::ClearColorBuffer()
 
 void Renderer::ClearDepthBuffer()
 {
-	// will be used on late stages, when we add depth 
+	for (size_t i = 0; i < m_height * m_width; i++)
+	{
+		m_zbuffer[i] = 1.1;
+	}
 }
 
 
@@ -273,12 +292,12 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 }
 
-vec2 Renderer::viewPortVec(vec2 cannonial)
+vec3 Renderer::viewPortVec(vec3 cannonial)
 {
 	GLfloat factor = min(m_width, m_height);
 	//to fix center
 	GLfloat max_fix = max(m_width, m_height);
-	return vec2((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2);
+	return vec3((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2, cannonial.z);
 }
 
 
@@ -322,5 +341,93 @@ void Renderer::pipeLine(const vector<GLfloat>* vertices, vector<GLfloat>* modifi
 	//set for normal projection rather than ortho
 	mat4 total_mat = viewPortMat*(to_cannonical_projection* (camera_mat * _world_transform));
 	multVertex(vertices, total_mat, modified);
+}
+
+
+GLfloat Renderer::getDepth(int x, int y, vec3 v1, vec3 v2, vec3 v3)
+{
+
+	vec2 p1 (x - v1.x, y - v1.y);
+	vec2 p2 (x - v2.x, y - v2.y);
+	vec2 p3 (x - v3.x, y - v3.y);
+
+	GLfloat area1 = abs(cross(p2, p3));
+	GLfloat area2 = abs(cross(p1, p3));
+	GLfloat area3 = abs(cross(p2, p1));
+	return (area1 * v1.z + area2 * v2.z + area3 * v3.z) / (area1 + area2 + area3);
+}
+
+void Renderer::fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color)
+{
+	Color fin_color = color * ambient_scale;
+	// Sort vertices by y-coordinate
+	vec3 temp_vec;
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+	if (v2.y < v3.y)
+	{
+		temp_vec = v3;
+		v3 = v2;
+		v2 = temp_vec;
+	}
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+	GLfloat slope1 = 0;
+	GLfloat slope2 = 0;
+	if(v1.y - v2.y != 0)
+	 slope1 = (v1.x - v2.x) / (v1.y - v2.y);
+	if(v1.y - v3.y != 0)
+	 slope2 = (v1.x - v3.x) / (v1.y - v3.y);
+	GLfloat x1 = v1.x;
+	GLfloat x2 = v1.x;
+	int y;
+	for ( y = v1.y; y >= v2.y; y--)
+	{
+		drawScanline(x1, x2, y, v1, v2, v3, fin_color);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+
+	x1 = v2.x;
+	if (v2.y - v3.y == 0)
+		slope1 = 0;
+	else
+		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
+
+
+	for (; y >= v3.y; y--)
+	{
+		drawScanline(x1, x2, y, v1, v2, v3, fin_color);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+	
+	
+}
+
+void Renderer::drawScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color)
+{
+	if (x1 > x2) std::swap(x1, x2);
+	for (int x = x1; x <= x2; x++)
+	{
+		GLfloat z = getDepth(x, y, v1, v2, v3);
+
+		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
+		{
+			if (m_zbuffer[x + m_width * y] > z)
+			{
+				m_zbuffer[x + m_width*y] = z;
+				DrawPixel(x, y, color);
+			}
+		}
+	}
 }
 

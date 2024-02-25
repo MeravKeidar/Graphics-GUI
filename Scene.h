@@ -18,6 +18,9 @@ protected:
 	void virtual draw() = 0;
 
 public:
+	GLfloat diffuse_fraction;
+	GLfloat specular_fraction;
+	Color color;
 	virtual ~Model() {}
 	mat4 _model_transform;
 	vector<vec3> vertex_positions;
@@ -37,7 +40,6 @@ public:
 	void Rotate(const int hinge, const GLfloat theta);
 
 };
-
 
 class Light {
 };
@@ -77,10 +79,10 @@ class Scene {
 	vector<Light*> lights;
 	Renderer* m_renderer;
 	mat4 _world_transform;
-	void drawModel(Model* model,float r = 1.0, float g  = 1.0, float b = 1.0);
+	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);
-
+	
 public:
 	Scene();
 	Scene(Renderer* renderer) : m_renderer(renderer) {};
@@ -106,7 +108,7 @@ public:
 	mat4 getCurrentWorldTrasform();
 	mat4 getCurrentCameraTrasform();
 	mat4 getCurrentProjection();
-	vec2 getCurrentViewPort();
+	vec3 getCurrentViewPort();
 	vector<Camera*> cameras;
 	void setCameraOrtho(const float left, const float right,
 		const float bottom, const float top,

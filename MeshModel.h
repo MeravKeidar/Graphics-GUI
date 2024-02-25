@@ -14,6 +14,7 @@ class MeshModel : public Model
 protected:
 	//void Normals(vector<FaceIdcs> faces, vector<vec3> vertices, vector<vec3> verticesNorm);
 public:
+	
 	void boundingBox();
 	MeshModel();
 	MeshModel(string fileName);
@@ -31,3 +32,4 @@ public:
 	PrimMeshModel(string type);
 
 };
+

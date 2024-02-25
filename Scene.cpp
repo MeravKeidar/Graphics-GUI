@@ -5,7 +5,12 @@
 
 
 using namespace std;
-
+Color c_white{ 1, 1, 1 };
+Color c_black{ 0, 0, 0 };
+Color c_red{ 1, 0, 0 };
+Color c_green{ 0, 1, 0 };
+Color c_blue{ 0, 0, 1 };
+Color c_yellow{ 1, 1, 0 };
 void Model::Translate(const GLfloat x, const GLfloat y, const GLfloat z)
 {
 	mat4 t = TranslationMat(x, y, z);
@@ -42,7 +47,10 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName);
+	model->color = c_white;
 	models.push_back(model);
+	
+
 	nModels++;
 	activeModel++;
 }
@@ -51,6 +59,7 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
+	model->color = c_white;
 	models.push_back(model);
 	nModels++;
 	activeModel++;
@@ -72,6 +81,7 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 void Scene::draw()
 {
 	m_renderer->ClearColorBuffer();
+	m_renderer->ClearDepthBuffer();
 	m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y - 20 );
 
 	if (displayCameras)
@@ -81,10 +91,13 @@ void Scene::draw()
 	{
 		if (i != activeModel) 
 		{
-			drawModel(models.at(i),0.6,0.6,0.6);
+			models.at(i)->color = Color{ 0.5,0.5,0.5 };
+
+			drawModel(models.at(i));
 		}
 		else
 		{
+			models.at(i)->color = Color{ 1,1,1 };
 			drawModel(models.at(i));
 		}
 		
@@ -108,24 +121,24 @@ void Scene::draw()
 
 
 
-void Scene::drawModel(Model* model, float r, float g ,float b)
+void Scene::drawModel(Model* model)
 {
 	int size = model->vertex_positions.size();
-	mat4 Tc = cameras.at(activeCamera)->cTransform;\
+	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
-	vector<vec2> modified_vertex;
+	vector<vec3> modified_vertex;
 	for (size_t i = 0; i < size; i++)
 	{
 		vec4 v(model->vertex_positions.at(i));
 		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
 		v = P * v; // projection
 		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
-		vec2 v_2d(v.x / v.w, v.y / v.w);
-		v_2d = m_renderer->viewPortVec(v_2d); // view-port
-		modified_vertex.push_back(v_2d);
+		vec3 v_3d(v.x / v.w, v.y / v.w,v.z/v.w);
+		v_3d = m_renderer->viewPortVec(v_3d); // view-port
+		modified_vertex.push_back(v_3d);
 
 	}
-	m_renderer->DrawTriangles(&(modified_vertex),r,g,b);
+	m_renderer->DrawTriangles(&(modified_vertex),model->color);
 
 }
 
@@ -135,18 +148,22 @@ void Scene::drawboundingBox(Model* model)
 {
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
-	vector<vec2> modified_box;
+	vector<vec3> modified_box;
 	for (size_t i = 0; i < 8; i++)
 	{
 		vec4 v(model->bounding_box.at(i));
 		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
 		v = P * v; //Projection
 		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
-		vec2 v_2d(v.x / v.w, v.y / v.w);
+		vec3 v_2d(v.x / v.w, v.y / v.w , v.z/v.w);
 		v_2d = m_renderer->viewPortVec(v_2d); // view-port
 		modified_box.push_back(v_2d);
 	}
-	m_renderer->DrawBox(&(modified_box),0.3, 0.3, 0.4);
+	Color box_color;
+	box_color.r = 0.3;
+	box_color.g = 0.3;
+	box_color.b = 0.4;
+	m_renderer->DrawBox(&(modified_box),box_color);
 
 }
 
@@ -168,11 +185,12 @@ void Scene::drawFaceNormals(Model* model)
 		v_dest = (P * v_dest); //View-port
 		v_origin = (P * v_origin); //View-port
 		if ((v_origin.w < 0.00001) && (v_origin.w > -0.00001)) continue;
-		vec2 v_2d_dest(v_dest.x / v_dest.w, v_dest.y / v_dest.w);
+		vec3 v_2d_dest(v_dest.x / v_dest.w, v_dest.y / v_dest.w);
 		v_2d_dest = m_renderer->viewPortVec(v_2d_dest); //View-port
-		vec2 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
+		vec3 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
 		v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
-		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.686f, 0, 1.0f);
+		
+		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y,c_blue);
 
 	}
 }
@@ -193,11 +211,11 @@ void Scene::drawVertexNormals(Model* model)
 		vec4 v_dest = v_origin + normal; 
 		v_dest = (P * v_dest); //View-port
 		v_origin = (P * v_origin); //View-port
-		vec2 v_2d_dest(v_dest.x / v_dest.w, v_dest.y / v_dest.w);
+		vec3 v_2d_dest(v_dest.x / v_dest.w, v_dest.y / v_dest.w);
 		v_2d_dest = m_renderer->viewPortVec(v_2d_dest); //View-port
-		vec2 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
+		vec3 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
 		v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
-		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y, 0.0f, 0.8, 0.9f);
+		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y,c_blue);
 	}
 
 }
@@ -472,16 +490,16 @@ void Scene::drawCameras()
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
 	vec4 modified_eye;
-	vec2 modified_eye_2d;
+	vec3 modified_eye_3d;
 	for (size_t i = 0; i < nCameras; i++)
 	{
 		if (i == activeCamera)
 			continue;
 		modified_eye = P * (Tc * cameras.at(i)->eye);  //Projection
-		modified_eye_2d = (modified_eye.x, modified_eye.y);
-		modified_eye_2d = m_renderer->viewPortVec(modified_eye_2d);//View-port
-		m_renderer->DrawLine(modified_eye_2d[0] - 10, modified_eye_2d[0] + 10, modified_eye_2d[1], modified_eye_2d[1], 0.6, 0.8, 0.9);
-		m_renderer->DrawLine(modified_eye_2d[0], modified_eye_2d[0], modified_eye_2d[1] - 10, modified_eye_2d[1] + 10, 0.6, 0.8, 0.9);
+		modified_eye_3d = (modified_eye.x, modified_eye.y);
+		modified_eye_3d = m_renderer->viewPortVec(modified_eye_3d);//View-port
+		m_renderer->DrawLine(modified_eye_3d[0] - 10, modified_eye_3d[0] + 10, modified_eye_3d[1], modified_eye_3d[1],c_yellow);
+		m_renderer->DrawLine(modified_eye_3d[0], modified_eye_3d[0], modified_eye_3d[1] - 10, modified_eye_3d[1] + 10, c_yellow);
 	}
 	
 }
@@ -531,8 +549,8 @@ mat4 Scene::getCurrentProjection()
 	return cameras.at(activeCamera)->projection;
 }
 
-vec2 Scene::getCurrentViewPort()
+vec3 Scene::getCurrentViewPort()
 {
-	return m_renderer->viewPortVec(vec2(1));
+	return m_renderer->viewPortVec(vec3(1));
 }
 
