@@ -150,6 +150,8 @@ GLfloat dot(const vec2& u, const vec2& v) {
     return u.x * v.x + u.y * v.y;
 }
 
+
+
 inline
 GLfloat length(const vec2& v) {
     return std::sqrt(dot(v, v));
@@ -241,6 +243,11 @@ struct vec3 {
     vec3& operator += (const vec3& v)
     {
         x += v.x;  y += v.y;  z += v.z;  return *this;
+    }
+
+    inline
+      GLfloat dot(const vec3& u, const vec3& v) {
+        return u.x * v.x + u.y * v.y + u.z * v.z;
     }
 
     vec3& operator -= (const vec3& v)

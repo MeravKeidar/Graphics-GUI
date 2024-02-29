@@ -47,7 +47,7 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName);
-	model->color = c_white;
+	model->material.color = c_white;
 	models.push_back(model);
 	
 
@@ -59,7 +59,7 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
-	model->color = c_white;
+	model->material.color = c_white;
 	models.push_back(model);
 	nModels++;
 	activeModel++;
@@ -91,13 +91,13 @@ void Scene::draw()
 	{
 		if (i != activeModel) 
 		{
-			models.at(i)->color = Color{ 0.5,0.5,0.5 };
+			models.at(i)->material.color = Color{ 0.5,0.5,0.5 };
 
 			drawModel(models.at(i));
 		}
 		else
 		{
-			models.at(i)->color = Color{ 1,1,1 };
+			models.at(i)->material.color = Color{ 1,1,1 };
 			drawModel(models.at(i));
 		}
 		
@@ -126,19 +126,71 @@ void Scene::drawModel(Model* model)
 	int size = model->vertex_positions.size();
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
-	vector<vec3> modified_vertex;
+	vector<vec4> modified_vertex;
+	//taking bounding edges at 0(min) and 7(max) of bounding box
+	vec4 min_corner(1,1,1,1);
+	vec4 max_corner(-1,-1,-1,1);
+
+	vector<vec3> modified_box;
+
+	for (size_t i = 0; i < 8; i++)
+	{
+		vec4 v(model->bounding_box.at(i));
+		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
+		v = P * v; //Projection
+		
+		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
+		vec3 v_2d(v.x / v.w, v.y / v.w, v.z / v.w);
+		if (v_2d.x < min_corner.x)
+			min_corner.x = v_2d.x;
+
+		if (v_2d.y < min_corner.y)
+			min_corner.y = v_2d.y;
+
+		if (v_2d.z < min_corner.z)
+			min_corner.z = v_2d.z;
+
+		if (v_2d.x > max_corner.x)
+			max_corner.x = v_2d.x;
+
+		if (v_2d.y > max_corner.y)
+			max_corner.y = v_2d.y;
+
+		if (v_2d.z > max_corner.z)
+			max_corner.z = v_2d.z;
+
+		v_2d = m_renderer->viewPortVec(v_2d); // view-port
+		modified_box.push_back(v_2d);
+	}
+
+	if ((min_corner.x > min_corner.w || min_corner.y > min_corner.w || min_corner.z > min_corner.w)
+		|| (max_corner.x < -max_corner.w || max_corner.y < -max_corner.w || max_corner.z < -max_corner.w))
+		return;
+
+	if (displayBoundingBox)
+	{
+		Color box_color;
+		box_color.r = 0.3;
+		box_color.g = 0.3;
+		box_color.b = 0.4;
+		m_renderer->DrawBox(&(modified_box), box_color);
+	}
+
+
+	
+	
+	
 	for (size_t i = 0; i < size; i++)
 	{
 		vec4 v(model->vertex_positions.at(i));
 		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
 		v = P * v; // projection
-		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
-		vec3 v_3d(v.x / v.w, v.y / v.w,v.z/v.w);
-		v_3d = m_renderer->viewPortVec(v_3d); // view-port
-		modified_vertex.push_back(v_3d);
+		//if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
+		
+		modified_vertex.push_back(v);
 
 	}
-	m_renderer->DrawTriangles(&(modified_vertex),model->color);
+	m_renderer->DrawTriangles(&(modified_vertex),model->material.color);
 
 }
 
@@ -441,7 +493,10 @@ Scene::Scene()
 	
 	//m_renderer = new Renderer(512,512);
 	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
-	addCamera(vec4(0, 0, 2, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
+	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
+	addLight(vec3(0, 1, 0), vec3(0, -1, 0), POINT_LIGHT);
+
+	
 
 
 }
@@ -552,5 +607,15 @@ mat4 Scene::getCurrentProjection()
 vec3 Scene::getCurrentViewPort()
 {
 	return m_renderer->viewPortVec(vec3(1));
+}
+
+
+void Scene::addLight(const vec3 location, const vec3 direction, LIGHT_TYPE light_type)
+{
+	Light * new_light = new Light();
+	new_light->location = vec4(location.x, location.y, location.z, 1);
+	new_light->direction = vec4(direction.x, direction.y, direction.z, 0);
+	new_light->light_type = light_type;
+	lights.push_back(new_light);
 }
 

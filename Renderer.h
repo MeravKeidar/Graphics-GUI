@@ -4,26 +4,12 @@
 #include "vec.h"
 #include "mat.h"
 #include "GLFW/glfw3.h"
-
+#include "Camera.h"
+#include "Light.h"
 
 
 using namespace std;
-struct Color {
-	GLfloat r;
-	GLfloat g;
-	GLfloat b;
 
-
-	Color operator*(const GLfloat scale) const {
-		Color result{ r * scale, g * scale, b * scale };
-		return result;
-	}
-
-	Color operator+(const Color other) const {
-		Color result{min(r + other.r,1.0f),min(g + other.g,1.0f),min(b + other.b,1.0f) };
-		return result;
-	}
-};
 
 
 
@@ -32,7 +18,7 @@ class Renderer
 	float* m_outBuffer; // 3*width*height
 	float* m_zbuffer; // width*height
 	int m_width, m_height;
-	GLfloat ambient_scale = 0.2;
+	
 	
 	void CreateLocalBuffer();
 
@@ -58,7 +44,7 @@ public:
 	void Init();
 	//void DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals = NULL);
 	void CreateBuffers(int width, int height);
-	void DrawTriangles(const vector<vec3>* vertices,Color color);
+	void DrawTriangles(const vector<vec4>* vertices,Color color);
 	void DrawBox(const vector<vec3>* vertices, Color color);
 	//void SetCameraTransform(const mat4& cTransform);
 	//void SetProjection(const mat4& projection);
@@ -77,7 +63,11 @@ public:
 	void pipeLine(const vector<GLfloat>* vertices, vector<GLfloat>* modified, mat4 _world_transform, mat4 camera_mat);
 	GLfloat getDepth(int x, int y, vec3 v1 , vec3 v2 ,vec3 v3);
 	void fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color);
-	void drawScanline(int x_start, int x_end, int y, vec3 v1, vec3 v2, vec3 v3, Color color);
+	void drawScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color);
+	bool liangBarsky(vec3 v1, vec3 v2);
+	Color calcColor(MATERIAL material, vec3 normal, vec3 P, vector<Light*> lights, Camera* camera);
+	
+
 };
 
 

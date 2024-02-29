@@ -24,22 +24,39 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<vec3>* vertices, Color color)
+void Renderer::DrawTriangles(const vector<vec4>* vertices, Color color)
 {
 	int size = vertices->size();
 	Color blue{ 0,0,1 };
+	vec3 min_values;
+	vec3 max_values;
+	GLfloat min_x, min_y, min_z, max_x, max_y, max_z;
 	for (size_t i = 0; i < size-3; i+= 3)
 	{
-		vec3 v1 = vertices->at(i);
-		vec3 v2 = vertices->at(i+1);
-		vec3 v3 = vertices->at(i+2);
+
+		
+		vec4 v1 = vertices->at(i);
+		vec4 v2 = vertices->at(i+1);
+		vec4 v3 = vertices->at(i+2);
+		//vec3 v_3d(v.x / v.w, v.y / v.w,v.z/v.w);
+		//v_3d = m_renderer->viewPortVec(v_3d); // view-port
+		vec3 v1_3(v1.x / v1.w, v1.y / v1.w, v1.z / v1.w);
+		v1_3 = viewPortVec(v1_3);
+
+		vec3 v2_3(v2.x / v2.w, v2.y / v2.w, v2.z / v2.w);
+		v2_3 = viewPortVec(v2_3);
+
+		vec3 v3_3(v3.x / v3.w, v3.y / v3.w, v3.z / v3.w);
+		v3_3 = viewPortVec(v3_3);
+
+		//clipping method
 
 
 		DrawLine(v1.x, v2.x, v1.y, v2.y, blue);
 		DrawLine(v1.x, v3.x, v1.y, v3.y, blue);
 		DrawLine(v2.x, v3.x, v2.y, v3.y, blue);
 
-		fillTriangle(v1, v2, v3, color);
+		fillTriangle(v1_3, v2_3, v3_3, color);
 
 
 	}
@@ -48,6 +65,7 @@ void Renderer::DrawTriangles(const vector<vec3>* vertices, Color color)
 
 void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
 {
+
 	//bottom
 	DrawLine(vertices->at(0).x, vertices->at(1).x, vertices->at(0).y, vertices->at(1).y, color);
 	DrawLine(vertices->at(1).x, vertices->at(2).x, vertices->at(1).y, vertices->at(2).y, color);
@@ -315,17 +333,16 @@ void Renderer::UpdateToScreenMat(int width, int height)
 //assume vertices at vec4
 void Renderer::multVertex(const vector<GLfloat>* vertices, mat4 mat, vector<GLfloat>* modified)
 {
-	//std::cout << "mult vertex func" << std::endl;
+	
 	int size = vertices->size();
-	//std::cout << "size : " << size << std::endl;
+
 	for (size_t i = 0; i < size; i+= 4)
 	{
 
 		vec4 vec(vertices->at(i) , vertices->at(i+1), vertices->at(i+2), vertices->at(i+3));
 		
 		vec4 res_vec = mat * vec;
-		//std::cout << "x: " << vec[i] << " x': " << res_vec[i]<< std::endl;
-		//std::cout << "y: " << vec[i+1] << " y': " << res_vec[i+1] << std::endl;
+		
 		(*(modified)).at(i) = res_vec[0];
 		(*(modified)).at(i+1) = res_vec[1];
 		(*(modified)).at(i+2) = res_vec[2];
@@ -359,7 +376,6 @@ GLfloat Renderer::getDepth(int x, int y, vec3 v1, vec3 v2, vec3 v3)
 
 void Renderer::fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color)
 {
-	Color fin_color = color * ambient_scale;
 	// Sort vertices by y-coordinate
 	vec3 temp_vec;
 	if (v1.y < v2.y)
@@ -388,10 +404,11 @@ void Renderer::fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color)
 	 slope2 = (v1.x - v3.x) / (v1.y - v3.y);
 	GLfloat x1 = v1.x;
 	GLfloat x2 = v1.x;
-	int y;
-	for ( y = v1.y; y >= v2.y; y--)
+	int y =  min(v1.y,GLfloat(m_height));
+	for (; y >= v2.y; y--)
 	{
-		drawScanline(x1, x2, y, v1, v2, v3, fin_color);
+
+		drawScanline(x1, x2, y, v1, v2, v3, color);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -405,7 +422,7 @@ void Renderer::fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color)
 
 	for (; y >= v3.y; y--)
 	{
-		drawScanline(x1, x2, y, v1, v2, v3, fin_color);
+		drawScanline(x1, x2, y, v1, v2, v3, color);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -416,6 +433,8 @@ void Renderer::fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color)
 void Renderer::drawScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color)
 {
 	if (x1 > x2) std::swap(x1, x2);
+
+
 	for (int x = x1; x <= x2; x++)
 	{
 		GLfloat z = getDepth(x, y, v1, v2, v3);
@@ -431,3 +450,42 @@ void Renderer::drawScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Co
 	}
 }
 
+
+bool Renderer::liangBarsky(vec3 v1, vec3 v2)
+{
+	return true;
+}
+
+Color calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, Camera* camera)
+{
+	Color color = material.color;
+	//ambient
+	color *= material.ambient_fraction;
+
+
+	for (size_t i = 0; i < lights.size(); i++)
+	{
+		Light* current_light = lights.at(i);
+		//diffuse
+		vec3 l;
+		if (current_light->light_type == POINT_LIGHT)
+		{
+			l = current_light->modified_location - p;
+		}
+		else
+		{
+			 l = current_light->modified_direction;
+		}
+
+		GLfloat angle_cos = dot(normalize(l), normalize(normal));
+		color = color + material.color * (angle_cos * material.diffuse_fraction * current_light->intensity);
+
+		// specular
+
+
+	}
+	
+
+
+	
+}

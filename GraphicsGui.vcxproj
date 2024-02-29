@@ -191,11 +191,13 @@
     <ClInclude Include="External\ImGui\imstb_textedit.h" />
     <ClInclude Include="External\ImGui\imstb_truetype.h" />
     <ClInclude Include="imgui_main.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="InitShader.h" />
     <ClInclude Include="mat.h" />
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="vec.h" />
   </ItemGroup>
   <ItemGroup>

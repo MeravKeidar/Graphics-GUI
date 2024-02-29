@@ -293,7 +293,7 @@ void transformCamera(Scene* scene)
 	static bool useLookAt = false; // Checkbox state
 	ImGui::Checkbox("Use LookAt", &useLookAt); // Checkbox for enabling LookAt
 
-	static GLfloat eye[3] = { 0.0f, 0.0f, 0.2f };
+	static GLfloat eye[3] = { 0.0f, 0.0f, 0.0f };
 	static GLfloat at[3] = { 0.0f, 0.0f, -1.0f }; // Adjusted default looking towards -Z
 	static GLfloat up[3] = { 0.0f, 1.0f, 0.0f };  // Adjusted default up direction
 	if (useLookAt) { // Only display these inputs if the checkbox is checked
