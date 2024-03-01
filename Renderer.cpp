@@ -316,7 +316,6 @@ bool Renderer::liangBarsky(vec3 v1, vec3 v2)
 Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
 {
 	Color color = material.color;
-	Color white{ 1,1,1 };
 	vec3 l;
 	vec3 v = normalize(camera_location - p);
 	//ambient
@@ -337,11 +336,11 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 		vec3 r = normalize((2 * normal * NL) - l);
 
 		//diffuse
-		color = color + white * (material.diffuse_fraction * LN * current_light->intensity);
+		color = color + current_light->color * (material.diffuse_fraction * LN * current_light->intensity);
 		GLfloat Shininess = pow(abs(dot(r, v)), material.shininess_coefficient);
 
 		// specular
-		color = color + white * (material.specular_fraction * Shininess * current_light->intensity);
+		color = color + current_light->color * (material.specular_fraction * Shininess * current_light->intensity);
 	}
 
 	return color;

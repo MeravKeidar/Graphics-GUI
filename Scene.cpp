@@ -59,7 +59,7 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
-	model->material.color = { 1,0,0 };
+	model->material.color = { 0,1,1 };
 	models.push_back(model);
 	nModels++;
 	activeModel++;
