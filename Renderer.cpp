@@ -24,44 +24,329 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<vec4>* vertices, Color color)
+void Renderer::DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
 {
 	int size = vertices->size();
 	Color blue{ 0,0,1 };
 	vec3 min_values;
 	vec3 max_values;
 	GLfloat min_x, min_y, min_z, max_x, max_y, max_z;
+	int j = 0;
 	for (size_t i = 0; i < size-3; i+= 3)
 	{
-
-		
 		vec4 v1 = vertices->at(i);
+		vec3 n1 = vertex_normals->at(i);
+
 		vec4 v2 = vertices->at(i+1);
+		vec3 n2 = vertex_normals->at(i+1);
+
 		vec4 v3 = vertices->at(i+2);
-		//vec3 v_3d(v.x / v.w, v.y / v.w,v.z/v.w);
-		//v_3d = m_renderer->viewPortVec(v_3d); // view-port
+		vec3 n3 = vertex_normals->at(i+2);
+
+		vec3 face_normal = face_normals->at(j++); 
+
 		vec3 v1_3(v1.x / v1.w, v1.y / v1.w, v1.z / v1.w);
 		v1_3 = viewPortVec(v1_3);
-
 		vec3 v2_3(v2.x / v2.w, v2.y / v2.w, v2.z / v2.w);
 		v2_3 = viewPortVec(v2_3);
-
 		vec3 v3_3(v3.x / v3.w, v3.y / v3.w, v3.z / v3.w);
 		v3_3 = viewPortVec(v3_3);
 
 		//clipping method
 
-
 		DrawLine(v1.x, v2.x, v1.y, v2.y, blue);
 		DrawLine(v1.x, v3.x, v1.y, v3.y, blue);
 		DrawLine(v2.x, v3.x, v2.y, v3.y, blue);
 
-		fillTriangle(v1_3, v2_3, v3_3, color);
-
-
+		if (shadingType == PHONG)
+		{
+			fillPhongTriangle(v1_3, v2_3, v3_3, n1, n2, n3, material, lights, camera_location, ambient_scale);
+		}
+		else 
+		{
+			Color c1 = calcColor(material, n1, v1_3, lights, camera_location, ambient_scale);
+			Color c2 = calcColor(material, n2, v2_3, lights, camera_location, ambient_scale);
+			Color c3 = calcColor(material, n3, v3_3, lights, camera_location, ambient_scale);
+			if (shadingType == FLAT)
+			{
+				vec3 face_center = ((v1_3 + v2_3 + v3_3) / 3);
+				Color flat_color = calcColor(material, face_normal, face_center, lights, camera_location, ambient_scale);
+				fillFlatTriangle(v1_3, v2_3, v3_3, flat_color);
+			}
+			if (shadingType == GOURAUD)
+			{
+				fillGouraudTriangle(v1_3, v2_3, v3_3, n1, n2, n3, c1, c2, c3);
+			}
+		}
+	
 	}
 	
 }
+
+void Renderer::fillPhongTriangle(vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
+{
+	// Sort vertices by y-coordinate
+	vec3 temp_vec;
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+	if (v2.y < v3.y)
+	{
+		temp_vec = v3;
+		v3 = v2;
+		v2 = temp_vec;
+	}
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+
+	GLfloat slope1 = 0;
+	GLfloat slope2 = 0;
+	if (v1.y - v2.y != 0)
+		slope1 = (v1.x - v2.x) / (v1.y - v2.y);
+	if (v1.y - v3.y != 0)
+		slope2 = (v1.x - v3.x) / (v1.y - v3.y);
+	GLfloat x1 = v1.x;
+	GLfloat x2 = v1.x;
+	int y = min(v1.y, GLfloat(m_height));
+	for (; y >= v2.y; y--)
+	{
+		drawPhongScanline(x1, x2, y, v1, v2, v3, n1, n2 ,n3, material, lights, camera_location, ambient_scale);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+	x1 = v2.x;
+	if (v2.y - v3.y == 0)
+		slope1 = 0;
+	else
+		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
+	for (; y >= v3.y; y--)
+	{
+		drawPhongScanline(x1, x2, y, v1, v2, v3, n1, n2, n3, material, lights, camera_location, ambient_scale);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+}
+
+void Renderer::fillGouraudTriangle(vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, Color c1, Color c2, Color c3)
+{
+	// Sort vertices by y-coordinate
+	vec3 temp_vec;
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+	if (v2.y < v3.y)
+	{
+		temp_vec = v3;
+		v3 = v2;
+		v2 = temp_vec;
+	}
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+
+	GLfloat slope1 = 0;
+	GLfloat slope2 = 0;
+	if (v1.y - v2.y != 0)
+		slope1 = (v1.x - v2.x) / (v1.y - v2.y);
+	if (v1.y - v3.y != 0)
+		slope2 = (v1.x - v3.x) / (v1.y - v3.y);
+	GLfloat x1 = v1.x;
+	GLfloat x2 = v1.x;
+	int y = min(v1.y, GLfloat(m_height));
+	for (; y >= v2.y; y--)
+	{
+		drawGouraudScanline(x1, x2, y, v1, v2, v3, c1, c2, c3);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+	x1 = v2.x;
+	if (v2.y - v3.y == 0)
+		slope1 = 0;
+	else
+		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
+	for (; y >= v3.y; y--)
+	{
+		drawGouraudScanline(x1, x2, y, v1, v2, v3, c1, c2, c3);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+
+}
+
+void Renderer::fillFlatTriangle(vec3 v1, vec3 v2, vec3 v3, Color color)
+{
+	// Sort vertices by y-coordinate
+	vec3 temp_vec;
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+	if (v2.y < v3.y)
+	{
+		temp_vec = v3;
+		v3 = v2;
+		v2 = temp_vec;
+	}
+	if (v1.y < v2.y)
+	{
+		temp_vec = v2;
+		v2 = v1;
+		v1 = temp_vec;
+	}
+
+	GLfloat slope1 = 0;
+	GLfloat slope2 = 0;
+	if (v1.y - v2.y != 0)
+		slope1 = (v1.x - v2.x) / (v1.y - v2.y);
+	if (v1.y - v3.y != 0)
+		slope2 = (v1.x - v3.x) / (v1.y - v3.y);
+	GLfloat x1 = v1.x;
+	GLfloat x2 = v1.x;
+	int y = min(v1.y, GLfloat(m_height));
+	for (; y >= v2.y; y--)
+	{
+		drawFlatScanline(x1, x2, y, v1, v2, v3, color);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+	x1 = v2.x;
+	if (v2.y - v3.y == 0)
+		slope1 = 0;
+	else
+		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
+	for (; y >= v3.y; y--)
+	{
+		drawFlatScanline(x1, x2, y, v1, v2, v3, color);
+		x1 -= slope1;
+		x2 -= slope2;
+	}
+}
+
+void Renderer::drawPhongScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
+{
+	if (x1 > x2) std::swap(x1, x2);
+	for (int x = x1; x <= x2; x++)
+	{
+		GLfloat z = getDepth(x, y, v1, v2, v3);
+
+		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
+		{
+			if (m_zbuffer[x + m_width * y] > z)
+			{
+				m_zbuffer[x + m_width * y] = z;
+				vec2 d1(x - v1.x, y - v1.y);
+				vec2 d2(x - v2.x, y - v2.y);
+				vec2 d3(x - v3.x, y - v3.y);
+				vec3 normal = n1 * length(d1) + n2 * length(d2) + n3 * length(d3);
+				vec3 p(x, y, 1);
+				Color color = calcColor(material, normal, p, lights, camera_location, ambient_scale); 
+				DrawPixel(x, y, color);
+			}
+		}
+	}
+}
+
+void Renderer::drawGouraudScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color c1, Color c2, Color c3)
+{
+	if (x1 > x2) std::swap(x1, x2);
+
+	for (int x = x1; x <= x2; x++)
+	{
+		GLfloat z = getDepth(x, y, v1, v2, v3);
+
+		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
+		{
+			if (m_zbuffer[x + m_width * y] > z)
+			{
+				m_zbuffer[x + m_width * y] = z;
+				vec2 d1(x - v1.x, y - v1.y);
+				vec2 d2(x - v2.x, y - v2.y);
+				vec2 d3(x - v3.x, y - v3.y);
+
+				Color color = c1 * length(d1) + c2 * length(d2) + c3 * length(d3);
+				DrawPixel(x, y, color);
+			}
+		}
+	}
+}
+
+
+void Renderer::drawFlatScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color)
+{
+	if (x1 > x2) std::swap(x1, x2);
+	for (int x = x1; x <= x2; x++)
+	{
+		GLfloat z = getDepth(x, y, v1, v2, v3);
+
+		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
+		{
+			if (m_zbuffer[x + m_width * y] > z)
+			{
+				m_zbuffer[x + m_width * y] = z;
+				DrawPixel(x, y, color);
+			}
+		}
+	}
+}
+
+
+void drawPhongScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
+{}
+
+bool Renderer::liangBarsky(vec3 v1, vec3 v2)
+{
+	return true;
+}
+
+Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
+{
+	Color color = material.color;
+	Color white{ 1,1,1 };
+	vec3 l;
+	vec3 v = normalize(camera_location - p);
+	//ambient
+	color *= (ambient_scale * material.ambient_fraction);
+	for (size_t i = 0; i < lights.size(); i++)
+	{
+		Light* current_light = lights.at(i);
+		if (current_light->light_type == POINT_LIGHT)
+		{
+			l = normalize(current_light->modified_location - p);
+		}
+		else
+		{
+			l = normalize(current_light->modified_direction);
+		}
+		GLfloat NL = abs(dot(normal, l));
+		GLfloat LN = abs(dot(l, normal));
+		vec3 r = normalize((2 * normal * NL) - l);
+
+		//diffuse
+		color = color + white * (material.diffuse_fraction * LN * current_light->intensity);
+		GLfloat Shininess = pow(abs(dot(r, v)), material.shininess_coefficient);
+
+		// specular
+		color = color + white * (material.specular_fraction * Shininess * current_light->intensity);
+	}
+
+	return color;
+}
+
 
 void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
 {
@@ -83,17 +368,6 @@ void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
 	DrawLine(vertices->at(3).x, vertices->at(7).x, vertices->at(3).y, vertices->at(7).y, color);
 	DrawLine(vertices->at(2).x, vertices->at(6).x, vertices->at(2).y, vertices->at(6).y, color);
 }
-//
-//void Renderer::SetCameraTransform(const mat4& cTransform)
-//{
-//
-//}
-//
-//void Renderer::SetProjection(const mat4& projection)
-//{
-//}
-
-
 
 
 void Renderer::CreateBuffers(int width, int height)
@@ -113,7 +387,6 @@ void Renderer::CreateBuffers(int width, int height)
 	}
 	
 }
-
 
 
 void Renderer::CreateLocalBuffer()
@@ -146,33 +419,6 @@ void Renderer::DrawPixel(int x, int y, Color color) {
 	
 
 }
-/**
-	void  Renderer::DrawLine(int x1, int x2, int y1, int y2, float r, float g, float b) {
-
-	int x = x1;
-	int y = y1;
-	int dx = x2 - x1;
-	int dy = y2 - y1;
-	int d = 2 * dy - dx;
-	int de = 2 * dy;
-	int dne = 2 * dy - 2 * dx;
-
-	DrawPixel(x, y,r,g,b);
-
-	while (x < x2) {
-		if (d <= 0) {
-			d += de;
-		}
-		else {
-			d += dne;
-			y++;
-		}
-		x++;
-		DrawPixel(x, y,r,g,b);
-	}
-}
-*/
-
 
 void Renderer::DrawLine(int x1, int x2, int y1, int y2, Color color) {
 
@@ -374,118 +620,3 @@ GLfloat Renderer::getDepth(int x, int y, vec3 v1, vec3 v2, vec3 v3)
 	return (area1 * v1.z + area2 * v2.z + area3 * v3.z) / (area1 + area2 + area3);
 }
 
-void Renderer::fillTriangle(vec3 v1, vec3 v2, vec3 v3, Color color)
-{
-	// Sort vertices by y-coordinate
-	vec3 temp_vec;
-	if (v1.y < v2.y)
-	{
-		temp_vec = v2;
-		v2 = v1;
-		v1 = temp_vec;
-	}
-	if (v2.y < v3.y)
-	{
-		temp_vec = v3;
-		v3 = v2;
-		v2 = temp_vec;
-	}
-	if (v1.y < v2.y)
-	{
-		temp_vec = v2;
-		v2 = v1;
-		v1 = temp_vec;
-	}
-	GLfloat slope1 = 0;
-	GLfloat slope2 = 0;
-	if(v1.y - v2.y != 0)
-	 slope1 = (v1.x - v2.x) / (v1.y - v2.y);
-	if(v1.y - v3.y != 0)
-	 slope2 = (v1.x - v3.x) / (v1.y - v3.y);
-	GLfloat x1 = v1.x;
-	GLfloat x2 = v1.x;
-	int y =  min(v1.y,GLfloat(m_height));
-	for (; y >= v2.y; y--)
-	{
-
-		drawScanline(x1, x2, y, v1, v2, v3, color);
-		x1 -= slope1;
-		x2 -= slope2;
-	}
-
-	x1 = v2.x;
-	if (v2.y - v3.y == 0)
-		slope1 = 0;
-	else
-		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
-
-
-	for (; y >= v3.y; y--)
-	{
-		drawScanline(x1, x2, y, v1, v2, v3, color);
-		x1 -= slope1;
-		x2 -= slope2;
-	}
-	
-	
-}
-
-void Renderer::drawScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color)
-{
-	if (x1 > x2) std::swap(x1, x2);
-
-
-	for (int x = x1; x <= x2; x++)
-	{
-		GLfloat z = getDepth(x, y, v1, v2, v3);
-
-		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
-		{
-			if (m_zbuffer[x + m_width * y] > z)
-			{
-				m_zbuffer[x + m_width*y] = z;
-				DrawPixel(x, y, color);
-			}
-		}
-	}
-}
-
-
-bool Renderer::liangBarsky(vec3 v1, vec3 v2)
-{
-	return true;
-}
-
-Color calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, Camera* camera)
-{
-	Color color = material.color;
-	//ambient
-	color *= material.ambient_fraction;
-
-
-	for (size_t i = 0; i < lights.size(); i++)
-	{
-		Light* current_light = lights.at(i);
-		//diffuse
-		vec3 l;
-		if (current_light->light_type == POINT_LIGHT)
-		{
-			l = current_light->modified_location - p;
-		}
-		else
-		{
-			 l = current_light->modified_direction;
-		}
-
-		GLfloat angle_cos = dot(normalize(l), normalize(normal));
-		color = color + material.color * (angle_cos * material.diffuse_fraction * current_light->intensity);
-
-		// specular
-
-
-	}
-	
-
-
-	
-}

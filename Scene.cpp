@@ -47,7 +47,7 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName);
-	model->material.color = c_white;
+	model->material.color = { 1,0,0 };
 	models.push_back(model);
 	
 
@@ -59,10 +59,15 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
-	model->material.color = c_white;
+	model->material.color = { 1,0,0 };
 	models.push_back(model);
 	nModels++;
 	activeModel++;
+	std::cout << "r:" << model->material.color.r << std::endl;
+	std::cout << "g:" << model->material.color.g << std::endl;
+	std::cout << "b:" << model->material.color.b << std::endl;
+
+	std::cout << "ambient_fraction :" << model->material.ambient_fraction << std::endl;
 }
 
 void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
@@ -91,13 +96,12 @@ void Scene::draw()
 	{
 		if (i != activeModel) 
 		{
-			models.at(i)->material.color = Color{ 0.5,0.5,0.5 };
-
+			//models.at(i)->material.color = Color{ 0.5,0.5,0.5 };
 			drawModel(models.at(i));
 		}
 		else
 		{
-			models.at(i)->material.color = Color{ 1,1,1 };
+			//models.at(i)->material.color = Color{ 1,1,1 };
 			drawModel(models.at(i));
 		}
 		
@@ -127,6 +131,8 @@ void Scene::drawModel(Model* model)
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
 	vector<vec4> modified_vertex;
+	vector<vec3> modified_vertex_normals;
+	vector<vec3> modified_face_normals;
 	//taking bounding edges at 0(min) and 7(max) of bounding box
 	vec4 min_corner(1,1,1,1);
 	vec4 max_corner(-1,-1,-1,1);
@@ -141,6 +147,7 @@ void Scene::drawModel(Model* model)
 		
 		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
 		vec3 v_2d(v.x / v.w, v.y / v.w, v.z / v.w);
+
 		if (v_2d.x < min_corner.x)
 			min_corner.x = v_2d.x;
 
@@ -177,20 +184,30 @@ void Scene::drawModel(Model* model)
 	}
 
 
-	
-	
-	
 	for (size_t i = 0; i < size; i++)
 	{
 		vec4 v(model->vertex_positions.at(i));
-		v = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))); //model view transform
-		v = P * v; // projection
-		//if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
 		
+		v = P * (Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))));
+		vec4 vertex_normal = model->vertex_normal_positions.at(i);
+		vertex_normal[3] = 0;
+		vertex_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * vertex_normal))));
+		int j = 0;
+		if (i%3 == 0)
+		{
+			vec4 face_normal = model->face_normals.at(j++);
+			face_normal[0] = 0;
+			face_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * face_normal))));
+			modified_face_normals.push_back(vec3(face_normal.x, face_normal.y, face_normal.z));
+		}
+
 		modified_vertex.push_back(v);
+		modified_vertex_normals.push_back(vec3(vertex_normal.x, vertex_normal.y, vertex_normal.z));
 
 	}
-	m_renderer->DrawTriangles(&(modified_vertex),model->material.color);
+
+	vec3 camera_location = (cameras.at(activeCamera)->eye.x, cameras.at(activeCamera)->eye.y, cameras.at(activeCamera)->eye.z);
+	m_renderer->DrawTriangles(&(modified_vertex),model->material, &(modified_vertex_normals), &(modified_face_normals), lights, camera_location, ambient_scale);
 
 }
 

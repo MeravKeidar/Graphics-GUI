@@ -153,6 +153,14 @@ void MeshModel::loadFile(string fileName)
 		}
 	}
 
+	for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
+	{
+		for (int i = 0; i < 3; i++)
+		{
+			vertex_normal_positions.push_back(vertex_normals.at((*it).v[i] - 1));
+		}
+	}
+
 	boundingBox();
 
 }
@@ -221,25 +229,7 @@ void PrimMeshModel::Tetrahedron()
 	vertices.push_back(vec3(1, 0, 0));
 	vertices.push_back(vec3(0, 1, 0));
 	vertices.push_back(vec3(0, 0, 1));
-	vertices.push_back(vec3(0, 0, 0)); 
-
-	// 0->z->y
-	vertex_positions.push_back(vertices.at(3));
-	vertex_positions.push_back(vertices.at(2));
-	vertex_positions.push_back(vertices.at(1));
-	// 0->y->x
-	vertex_positions.push_back(vertices.at(3));
-	vertex_positions.push_back(vertices.at(1));
-	vertex_positions.push_back(vertices.at(0));
-	// 0->x->z
-	vertex_positions.push_back(vertices.at(3));
-	vertex_positions.push_back(vertices.at(0));
-	vertex_positions.push_back(vertices.at(2));
-	// z->x->y
-	vertex_positions.push_back(vertices.at(2));
-	vertex_positions.push_back(vertices.at(0));
-	vertex_positions.push_back(vertices.at(1));
-	
+	vertices.push_back(vec3(0, 0, 0));
 
 	face_normals.push_back(vec3(-1, 0, 0));
 	face_normals.push_back(vec3(0, 0, -1));
@@ -256,6 +246,35 @@ void PrimMeshModel::Tetrahedron()
 	vertex_normals.push_back(normalize(face_normals.at(0) + face_normals.at(2) + face_normals.at(3)));
 	vertex_normals.push_back(normalize(face_normals.at(1) + face_normals.at(2) + face_normals.at(0)));
 
+	// 0->z->y
+	vertex_positions.push_back(vertices.at(3));
+	vertex_normal_positions.push_back(vertex_normals.at(3));
+	vertex_positions.push_back(vertices.at(2));
+	vertex_normal_positions.push_back(vertex_normals.at(2));
+	vertex_positions.push_back(vertices.at(1));
+	vertex_normal_positions.push_back(vertex_normals.at(1));
+	// 0->y->x
+	vertex_positions.push_back(vertices.at(3));
+	vertex_normal_positions.push_back(vertex_normals.at(3));
+	vertex_positions.push_back(vertices.at(1));
+	vertex_normal_positions.push_back(vertex_normals.at(1));
+	vertex_positions.push_back(vertices.at(0));
+	vertex_normal_positions.push_back(vertex_normals.at(0));
+	// 0->x->z
+	vertex_positions.push_back(vertices.at(3));
+	vertex_normal_positions.push_back(vertex_normals.at(3));
+	vertex_positions.push_back(vertices.at(0));
+	vertex_normal_positions.push_back(vertex_normals.at(0));
+	vertex_positions.push_back(vertices.at(2));
+	vertex_normal_positions.push_back(vertex_normals.at(2));
+	// z->x->y
+	vertex_positions.push_back(vertices.at(2));
+	vertex_normal_positions.push_back(vertex_normals.at(2));
+	vertex_positions.push_back(vertices.at(0));
+	vertex_normal_positions.push_back(vertex_normals.at(0));
+	vertex_positions.push_back(vertices.at(1));
+	vertex_normal_positions.push_back(vertex_normals.at(1));
+	
 	boundingBox();
 
 }

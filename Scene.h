@@ -25,6 +25,7 @@ public:
 	virtual ~Model() {}
 	mat4 _model_transform;
 	vector<vec3> vertex_positions;
+	vector<vec3> vertex_normal_positions;
 	vector<vec3> face_normals;
 	vector<vec3> face_normals_origin;
 	vector<vec3> bounding_box;
@@ -48,9 +49,9 @@ public:
 class Scene {
 	vector<Model*> models;
 	vector<Light*> lights;
-	GLfloat ambient_scale = 0.2;
 	Renderer* m_renderer;
 	mat4 _world_transform;
+	GLfloat ambient_scale = 0.2;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);

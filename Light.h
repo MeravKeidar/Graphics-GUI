@@ -32,13 +32,15 @@ struct Color {
 		Color result{ std::min(r + other.r,1.0f),std::min(g + other.g,1.0f),std::min(b + other.b,1.0f) };
 		return result;
 	}
+
 };
 struct MATERIAL {
 	Color color = { 1.0,0,0 };
 	GLfloat transparency = 1.0;
-	GLfloat diffuse_fraction = 0.2;
-	GLfloat specular_fraction = 0.2;
-	GLfloat ambient_fraction = 0.2;
+	GLfloat diffuse_fraction = 1.0;
+	GLfloat specular_fraction = 1.0;
+	GLfloat ambient_fraction = 1.0;
+	GLfloat shininess_coefficient = 1.0; 
 };
 class Light
 {
