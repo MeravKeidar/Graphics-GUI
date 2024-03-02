@@ -83,6 +83,7 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 }
 
 
+
 void Scene::draw()
 {
 	m_renderer->ClearColorBuffer();
@@ -123,6 +124,10 @@ void Scene::draw()
 }
 
 
+void Scene::changeShading(SHADING shading_type)
+{
+	m_renderer->shadingType = shading_type; 
+}
 
 
 void Scene::drawModel(Model* model)
@@ -537,6 +542,7 @@ void Scene::Reset()
 	int nModels = 0;
 	int nCameras = 0;
 	addCamera(vec4(0, 0, 2, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
+	changeShading(FLAT);
 }
 
 

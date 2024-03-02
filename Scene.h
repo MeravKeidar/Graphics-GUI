@@ -78,7 +78,7 @@ public:
 	void LookAtModel();
 	void addModel(Model* model);
 	void Reset();
-	
+	void changeShading(SHADING shading_type);
 	mat4 getCurrentModelTrasform();
 	mat4 getCurrentWorldTrasform();
 	mat4 getCurrentCameraTrasform();

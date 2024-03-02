@@ -64,8 +64,26 @@ void MainMenuBar(Scene* scene)
 	static char path[500] = "";*/
 	if (ImGui::BeginMainMenuBar())
 	{
+		if (ImGui::BeginMenu("Shading"))
+		{
+			if (ImGui::MenuItem("Flat"))
+			{
+				scene->changeShading(FLAT);
+			}
+			if (ImGui::MenuItem("Guoroad"))
+			{
+				scene->changeShading(GOURAUD);
+			}
+			if (ImGui::MenuItem("Phong")) 
+			{
+				scene->changeShading(PHONG);
+			}
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Load model"))
 		{
+	
 			FileMenu(scene);
 			if (ImGui::MenuItem("Add uploaded model")) {
 				if (file_uploaded) {
