@@ -47,7 +47,8 @@ public:
 	void Init();
 	//void DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals = NULL);
 	void CreateBuffers(int width, int height);
-	void DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale);
+	//void DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale);
+	void DrawTriangles(vector<Face> faces , vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale);
 	void DrawBox(const vector<vec3>* vertices, Color color);
 	//void SetCameraTransform(const mat4& cTransform);
 	//void SetProjection(const mat4& projection);

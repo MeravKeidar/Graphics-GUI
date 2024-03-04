@@ -24,7 +24,7 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale)
+void Renderer::DrawTriangles(const vector<Face> faces, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale)
 {
 	int size = vertices->size();
 	Color blue{ 0,0,1 };
@@ -294,6 +294,7 @@ void Renderer::drawGouraudScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3
 			}
 		}
 	}
+}
 }
 
 

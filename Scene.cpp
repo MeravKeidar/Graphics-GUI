@@ -140,7 +140,6 @@ void Scene::changeShading(SHADING shading_type)
 
 void Scene::drawModel(Model* model)
 {
-	int size = model->vertices.size();
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
 	vector<vec4> modified_vertex;
@@ -196,30 +195,54 @@ void Scene::drawModel(Model* model)
 		m_renderer->DrawBox(&(modified_box), box_color);
 	}
 
-
+	int size = model->faces.size();
 	for (size_t i = 0; i < size; i++)
 	{
-		vec4 v(model->vertices.at(i).homogenous);
+		Face cur_face = model->faces.at(i);
+		cur_face.v1.view = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * cur_face.v1.position)));
+		cur_face.v2.view = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * cur_face.v2.position)));
+		cur_face.v3.view = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * cur_face.v3.position)));
 		
-		v = P * (Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))));
-		vec4 vertex_normal = model->vertices.at(i).normal;
-		vertex_normal[3] = 0;
-		vertex_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * vertex_normal))));
-		int j = 0;
-		if (i%3 == 0)
-		{
-			vec4 face_normal = model->faces.at(j++).normal;
-			face_normal[0] = 0;
-			face_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * face_normal))));
-			modified_face_normals.push_back(vec3(face_normal.x, face_normal.y, face_normal.z));
-		}
+		cur_face.v1.projected = P * cur_face.v1.view;
+		cur_face.v2.projected = P * cur_face.v2.view;
+		cur_face.v3.projected = P * cur_face.v3.view;
 
-		modified_vertex.push_back(v);
-		modified_vertex_normals.push_back(vec3(vertex_normal.x, vertex_normal.y, vertex_normal.z));
+		cur_face.v1.view_normal = Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * cur_face.v1.normal)));
+		cur_face.v2.view_normal = Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * cur_face.v2.normal)));
+		cur_face.v3.view_normal =  Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * cur_face.v3.normal)));
+		cur_face.v1.view_normal.w = 0;
+		cur_face.v2.view_normal.w = 0;
+		cur_face.v3.view_normal.w = 0;
 
+		cur_face.view_normal = Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * cur_face.normal)));
+		cur_face.view = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * cur_face.position)));;
+		cur_face.projected = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * cur_face.projected)));;
 	}
 
-	m_renderer->DrawTriangles(&(modified_vertex),model->material, &(modified_vertex_normals), &(modified_face_normals), lights, cameras.at(activeCamera)->eye, ambient_scale);
+	//for (size_t i = 0; i < size; i++)
+	//{
+	//	vec4 v(model->vertices.at(i).homogenous);
+	//	
+	//	v = P * (Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))));
+	//	vec4 vertex_normal = model->vertices.at(i).normal;
+	//	vertex_normal[3] = 0;
+	//	vertex_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * vertex_normal))));
+	//	int j = 0;
+	//	if (i%3 == 0)
+	//	{
+	//		vec4 face_normal = model->faces.at(j++).normal;
+	//		face_normal[0] = 0;
+	//		face_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * face_normal))));
+	//		modified_face_normals.push_back(vec3(face_normal.x, face_normal.y, face_normal.z));
+	//	}
+
+	//	modified_vertex.push_back(v);
+	//	modified_vertex_normals.push_back(vec3(vertex_normal.x, vertex_normal.y, vertex_normal.z));
+
+	//}
+	m_renderer->DrawTriangles(model->faces,lights, cameras.at(activeCamera)->eye, ambient_scale);
+
+	/*m_renderer->DrawTriangles(&(modified_vertex),model->material, &(modified_vertex_normals), &(modified_face_normals), lights, cameras.at(activeCamera)->eye, ambient_scale);*/
 
 }
 

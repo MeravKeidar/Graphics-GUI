@@ -23,11 +23,11 @@ protected:
 public:
 	MATERIAL material;
 	virtual ~Model() {}
-	mat4 _model_transform;
-	vector<PolygonTri> faces;
+	mat4 _model_transform;/*
+	vector<PolygonTri> faces;*/
 	vector<vec3> bounding_box;
-	vector<Vertex> vertices;
-	
+	vector<vec3> vertices;
+	vector<Face> faces;
 	vec4 _center_of_mass; 
 	mat4 _world_transform;
 	mat4 _normal_world_transform;

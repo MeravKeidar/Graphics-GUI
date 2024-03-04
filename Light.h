@@ -47,53 +47,73 @@ struct MATERIAL {
 
 struct Vertex
 {
-	vec4 homogenous;
-	vec3 camera_space_location;
-	vec3 normal = vec3(0);
+	vec4 position; //original position in world frame
+	vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
+	vec3 projected; 
+	vec4 normal = vec4(0);
+	vec4 view_normal = vec4(0); // normal in view frame (after transformation amd camera matrix multiplication)
+	vec4 projected = vec3(0); // normal in view frame (after transformation amd camera matrix multiplication)
+
+	vec3 texture = vec3(0);
 	int texture_x = 0;
 	int texture_y = 0;
 	MATERIAL material;
 };
 
-struct PolygonTri
+struct Face
 {
-	int vertices[3];
-	vec3 origin;
-	vec3 normal;
-	vec3 texture;
-	vec4 modified_origin;
-	vec4 modified_normal;
-	PolygonTri()
-	{
-
-	}
-
-	PolygonTri(std::istream& aStream)
-	{
-		for (int i = 0; i < 4; i++)
-			vertices[i] = normal[i] = texture[i] = 0;
-
-		char c;
-		for (int i = 0; i < 3; i++)
-		{
-			aStream >> std::ws >> vertices[i] >> std::ws;
-			if (aStream.peek() != '/')
-				continue;
-			aStream >> c >> std::ws;
-			if (aStream.peek() == '/')
-			{
-				aStream >> c >> std::ws >> normal[i];
-				continue;
-			}
-			else
-				aStream >> texture[i];
-			if (aStream.peek() != '/')
-				continue;
-			aStream >> c >> normal[i];
-		}
-	}
+	Vertex v1;
+	Vertex v2;
+	Vertex v3;
+	vec4 position;
+	vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
+	vec3 projected;
+	vec4 normal = vec3(0);
+	vec4 view_normal = vec4(0); // normal in view frame (after transformation amd camera matrix multiplication)
+	vec4 projected_normal = vec3(0); // normal in view frame (after transformation amd camera matrix multiplication)
 
 };
+
+//
+//struct PolygonTri
+//{
+//	int vertices[3];
+//	vec3 origin;
+//	vec3 normal;
+//	vec3 texture;
+//	vec4 modified_origin;
+//	vec4 modified_normal;
+//	PolygonTri()
+//	{
+//
+//	}
+//
+//	PolygonTri(std::istream& aStream)
+//	{
+//		for (int i = 0; i < 4; i++)
+//			vertices[i] = normal[i] = texture[i] = 0;
+//
+//		char c;
+//		for (int i = 0; i < 3; i++)
+//		{
+//			aStream >> std::ws >> vertices[i] >> std::ws;
+//			if (aStream.peek() != '/')
+//				continue;
+//			aStream >> c >> std::ws;
+//			if (aStream.peek() == '/')
+//			{
+//				aStream >> c >> std::ws >> normal[i];
+//				continue;
+//			}
+//			else
+//				aStream >> texture[i];
+//			if (aStream.peek() != '/')
+//				continue;
+//			aStream >> c >> normal[i];
+//		}
+//	}
+//
+//};
 
 class Light
 {
