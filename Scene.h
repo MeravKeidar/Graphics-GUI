@@ -24,13 +24,10 @@ public:
 	MATERIAL material;
 	virtual ~Model() {}
 	mat4 _model_transform;
-	vector<vec3> vertex_positions;
-	vector<vec3> vertex_normal_positions;
-	vector<vec3> face_normals;
-	vector<vec3> face_normals_origin;
+	vector<PolygonTri> faces;
 	vector<vec3> bounding_box;
-	vector<vec3> vertices;
-	vector<vec3> vertex_normals;
+	vector<Vertex> vertices;
+	
 	vec4 _center_of_mass; 
 	mat4 _world_transform;
 	mat4 _normal_world_transform;

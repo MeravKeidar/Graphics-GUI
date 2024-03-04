@@ -41,7 +41,6 @@ void pushVec(vector<GLfloat>* triangle, vec4 vec)
 	{
 		triangle->push_back(vec[i]);
 	}
-
 }
 
 

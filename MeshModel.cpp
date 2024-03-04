@@ -79,11 +79,13 @@ MeshModel::~MeshModel(void)
 void MeshModel::loadFile(string fileName)
 {
 	ifstream ifile(fileName.c_str());
-	vector<FaceIdcs> faces;
-	
 	vector<vec3> verticesText;
+	vector<vec3> verticesNormal;
 	bool calculate_vnorm = false; 
 		// while not end of file
+	int current_normal_index = 0;
+	int current_texture_index = 0;
+
 	while (!ifile.eof())
 	{
 		// get line
@@ -96,13 +98,28 @@ void MeshModel::loadFile(string fileName)
 
 		issLine >> std::ws >> lineType;
 
+		Vertex current_vertex;
+		PolygonTri current_face;
+
 		// based on the type parse data
 		if (lineType == "v")
-			vertices.push_back(vec3fFromStream(issLine));
+		{
+			current_vertex.homogenous = vec3fFromStream(issLine);
+			vertices.push_back(current_vertex);
+		}	
 		else if (lineType == "vn")
-			vertex_normals.push_back(vec3fFromStream(issLine));
+		{
+			vertices.at(current_normal_index).normal = vec3fFromStream(issLine);
+			current_normal_index++;
+		}
 		else if (lineType == "vt")
-			verticesText.push_back(vec3fFromStream(issLine));
+		{
+			vec2 temp = vec2fFromStream(issLine);
+			vertices.at(current_normal_index).texture_x = temp.x;
+			vertices.at(current_normal_index).texture_y = temp.y;
+			current_texture_index++;
+		}
+			
 		else if (lineType == "f")
 			faces.push_back(issLine);
 		else if (lineType == "#" || lineType == "")
@@ -117,49 +134,53 @@ void MeshModel::loadFile(string fileName)
 	}
 
 	//initilize all vertex vectors to be zero if none were given
-	if (vertex_normals.empty())
+	if (current_normal_index == 0)
 	{
 		calculate_vnorm = true; 
-		vertex_normals = vector<vec3>(vertices.size(),vec3(0.0f));
 	}
 
-	for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
+	for (vector<PolygonTri>::iterator it = faces.begin(); it != faces.end(); ++it)
 	{
 		//calculate face normals
 		vec3 xi, xj, xk, normal;
-		GLfloat norm;
-		xi = vertices.at((*it).v[0] - 1);
-		xj = vertices.at((*it).v[1] - 1);
-		xk = vertices.at((*it).v[2] - 1);
+		//GLfloat norm;
+		
+		xi = truncateVec4(vertices.at((*it).vertices[0] - 1).homogenous);
+		xj = truncateVec4(vertices.at((*it).vertices[1] - 1).homogenous);
+		xk = truncateVec4(vertices.at((*it).vertices[2] - 1).homogenous);
+
 		normal = cross((xj-xi),(xj-xk));
-		face_normals.push_back(normalize(normal));
-		face_normals_origin.push_back((xi + xj + xk) / 3);
+		(*it).normal = normalize(normal);
+		(*it).origin = (xi + xj + xk) / 3;
 		for (int i = 0; i < 3; i++)
 		{
-			vertex_positions.push_back(vertices.at((*it).v[i] - 1));
+			//vertex_positions.push_back(vertices.at((*it).v[i] - 1));
 			//calculate vertices normals
 			if (calculate_vnorm)
 			{
-				vertex_normals.at((*it).v[i] - 1) += normal; 
+				vertices.at((*it).vertices[i] - 1).normal += normal;
+				//vertex_normals.at((*it).v[i] - 1) += normal; 
 			}
 		}
 	}
 
 	//normalize all normals 
+	//TODO: make sure normalizing is correct
 	if (calculate_vnorm)
 	{
-		for (auto& v_normal : vertex_normals) {
-			v_normal = normalize(v_normal);
+		for (auto& v : vertices) {
+			v.normal = normalize(v.normal);
 		}
 	}
 
-	for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
+	//TODO: make sure positions are alligned
+	/*for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
 	{
 		for (int i = 0; i < 3; i++)
 		{
 			vertex_normal_positions.push_back(vertex_normals.at((*it).v[i] - 1));
 		}
-	}
+	}*/
 
 	boundingBox();
 
@@ -188,20 +209,21 @@ MeshModel::MeshModel()
 void MeshModel::boundingBox() 
 {
 	if (vertices.empty()){return;}
-	vec3 min = (vertices[0].x, vertices[0].y, vertices[0].y);
-	vec3 max = (vertices[0].x, vertices[0].y, vertices[0].y);
+	
+	vec3 min = (vertices[0].homogenous.x, vertices[0].homogenous.y, vertices[0].homogenous.y);
+	vec3 max = (vertices[0].homogenous.x, vertices[0].homogenous.y, vertices[0].homogenous.y);
 	for (auto& vertex : vertices)
 	{
-		min.x = (vertex.x < min.x) ? vertex.x : min.x;
-		max.x = (vertex.x > max.x) ? vertex.x : max.x;
+		min.x = (vertex.homogenous.x < min.x) ? vertex.homogenous.x : min.x;
+		max.x = (vertex.homogenous.x > max.x) ? vertex.homogenous.x : max.x;
 
-		min.y = (vertex.y < min.y) ? vertex.y : min.y;
-		max.y = (vertex.y > max.y) ? vertex.y : max.y;
+		min.y = (vertex.homogenous.y < min.y) ? vertex.homogenous.y : min.y;
+		max.y = (vertex.homogenous.y > max.y) ? vertex.homogenous.y : max.y;
 
-		min.z = (vertex.z < min.z) ? vertex.z : min.z;
-		max.z = (vertex.z > max.z) ? vertex.z : max.z;
+		min.z = (vertex.homogenous.z < min.z) ? vertex.homogenous.z : min.z;
+		max.z = (vertex.homogenous.z > max.z) ? vertex.homogenous.z : max.z;
 
-		_center_of_mass += vertex;
+		_center_of_mass += vertex.homogenous;
 	}
 
 	_center_of_mass = _center_of_mass / vertices.size(); 
@@ -225,55 +247,109 @@ void MeshModel::boundingBox()
 
 void PrimMeshModel::Tetrahedron()
 {
+	Vertex temp;
+	//x
+	temp.homogenous = vec4(1, 0, 0, 1);
+	
+	vertices.push_back(temp);
+	//y
+	temp.homogenous = vec4(0, 1, 0, 1);
 
-	vertices.push_back(vec3(1, 0, 0));
-	vertices.push_back(vec3(0, 1, 0));
-	vertices.push_back(vec3(0, 0, 1));
-	vertices.push_back(vec3(0, 0, 0));
+	vertices.push_back(temp);
+	//z
+	temp.homogenous = vec4(0, 0, 1, 1);
+	vertices.push_back(temp);
 
-	face_normals.push_back(vec3(-1, 0, 0));
-	face_normals.push_back(vec3(0, 0, -1));
-	face_normals.push_back(vec3(0, -1, 0));
-	face_normals.push_back(normalize(vec3(1, 1, 1)));
+	//0
+	temp.homogenous = vec4(0, 0, 0, 1);
+	vertices.push_back(temp);
 
-	face_normals_origin.push_back(vec3(0, 0.33333333, 0.33333333));
-	face_normals_origin.push_back(vec3(0.33333333, 0.33333333,0));
-	face_normals_origin.push_back(vec3(0.33333333, 0, 0.33333333));
-	face_normals_origin.push_back(vec3(0.33333333, 0.33333333, 0.33333333));
+	PolygonTri temp_face;
+	temp_face.normal = vec3(-1, 0, 0);
+	temp_face.origin = vec3(0, 0.33333333, 0.33333333);
+	faces.push_back(temp_face);
 
-	vertex_normals.push_back(normalize(face_normals.at(1)+ face_normals.at(2)+ face_normals.at(3)));
-	vertex_normals.push_back(normalize(face_normals.at(0) + face_normals.at(1) + face_normals.at(3)));
-	vertex_normals.push_back(normalize(face_normals.at(0) + face_normals.at(2) + face_normals.at(3)));
-	vertex_normals.push_back(normalize(face_normals.at(1) + face_normals.at(2) + face_normals.at(0)));
+	temp_face.normal = vec3(0, 0, -1);
+	temp_face.origin = vec3(0.33333333, 0.33333333, 0);
+	faces.push_back(temp_face);
+
+	temp_face.normal = vec3(0, -1, 0);
+	temp_face.origin = vec3(0.33333333, 0, 0.33333333);
+	faces.push_back(temp_face);
+
+	temp_face.normal = normalize(vec3(1, 1, 1));
+	temp_face.origin = vec3(0.33333333, 0.33333333, 0.33333333);
+	faces.push_back(temp_face);
+
+
+
+
+	vertices.at(0).normal = normalize(faces.at(1).normal + faces.at(2).normal + faces.at(3).normal);
+	vertices.at(1).normal = normalize(faces.at(0).normal + faces.at(1).normal + faces.at(3).normal);
+	vertices.at(2).normal = normalize(faces.at(0).normal + faces.at(2).normal + faces.at(3).normal);
+	vertices.at(3).normal = normalize(faces.at(1).normal + faces.at(2).normal + faces.at(0).normal);
+
 
 	// 0->z->y
+	faces.at(0).vertices[0] = 3;//0
+	faces.at(0).vertices[1] = 2;//0
+	faces.at(0).vertices[2] = 1;//0
+
+
+	/**
 	vertex_positions.push_back(vertices.at(3));
 	vertex_normal_positions.push_back(vertex_normals.at(3));
 	vertex_positions.push_back(vertices.at(2));
 	vertex_normal_positions.push_back(vertex_normals.at(2));
 	vertex_positions.push_back(vertices.at(1));
 	vertex_normal_positions.push_back(vertex_normals.at(1));
+	*/
+
 	// 0->y->x
-	vertex_positions.push_back(vertices.at(3));
+
+	faces.at(1).vertices[0] = 3;//0
+	faces.at(1).vertices[1] = 1;//y
+	faces.at(1).vertices[2] = 0;//x
+
+	/**
+	* 
+	* vertex_positions.push_back(vertices.at(3));
 	vertex_normal_positions.push_back(vertex_normals.at(3));
 	vertex_positions.push_back(vertices.at(1));
 	vertex_normal_positions.push_back(vertex_normals.at(1));
 	vertex_positions.push_back(vertices.at(0));
 	vertex_normal_positions.push_back(vertex_normals.at(0));
+	*/
+	
 	// 0->x->z
-	vertex_positions.push_back(vertices.at(3));
+	faces.at(2).vertices[0] = 3;//0
+	faces.at(2).vertices[1] = 0;//x
+	faces.at(2).vertices[2] = 2;//z
+
+	/**
+		vertex_positions.push_back(vertices.at(3));
 	vertex_normal_positions.push_back(vertex_normals.at(3));
 	vertex_positions.push_back(vertices.at(0));
 	vertex_normal_positions.push_back(vertex_normals.at(0));
 	vertex_positions.push_back(vertices.at(2));
 	vertex_normal_positions.push_back(vertex_normals.at(2));
+	*/
+	
 	// z->x->y
-	vertex_positions.push_back(vertices.at(2));
+
+	faces.at(3).vertices[0] = 2;//z
+	faces.at(3).vertices[1] = 0;//x
+	faces.at(3).vertices[2] = 1;//y
+
+	/**
+	* vertex_positions.push_back(vertices.at(2));
 	vertex_normal_positions.push_back(vertex_normals.at(2));
 	vertex_positions.push_back(vertices.at(0));
 	vertex_normal_positions.push_back(vertex_normals.at(0));
 	vertex_positions.push_back(vertices.at(1));
 	vertex_normal_positions.push_back(vertex_normals.at(1));
+	*/
+	
 	
 	boundingBox();
 
@@ -281,7 +357,7 @@ void PrimMeshModel::Tetrahedron()
 
 void PrimMeshModel::Cube()
 {
-
+	/**
 	vertices.push_back(vec3(1.0f, 1.0f, 1.0f)); // Vertex 0
 	vertices.push_back(vec3(-1.0f, 1.0f, 1.0f)); // Vertex 1
 	vertices.push_back(vec3(-1.0f, -1.0f, 1.0f)); // Vertex 2
@@ -351,6 +427,8 @@ void PrimMeshModel::Cube()
 	
 
 	boundingBox();
+	*/
+	
 
 }
 

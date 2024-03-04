@@ -528,4 +528,10 @@ vec3 cross(const vec4& a, const vec4& b)
         a.x * b.y - a.y * b.x);
 }
 
+inline
+vec3 truncateVec4(const vec4& a)
+{
+    return vec3(a.x,a.y,a.z);
+}
+
 //----------------------------------------------------------------------------

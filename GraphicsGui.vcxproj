@@ -199,6 +199,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="vec.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="External\GLEW\lib\glew32s.lib" />

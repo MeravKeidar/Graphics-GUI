@@ -93,6 +93,14 @@ void Scene::draw()
 	if (displayCameras)
 		drawCameras();
 	int size = models.size();
+
+	for (size_t i = 0; i <lights.size(); i++)
+	{
+		Light* current_light = lights.at(i);
+		vec4 temp = cameras.at(activeCamera)->cTransform * current_light->location;
+		current_light->projected_location = vec3(temp.x, temp.y, temp.z);
+	}
+
 	for (size_t i = 0; i < size; i++)
 	{
 		if (i != activeModel) 
@@ -132,7 +140,7 @@ void Scene::changeShading(SHADING shading_type)
 
 void Scene::drawModel(Model* model)
 {
-	int size = model->vertex_positions.size();
+	int size = model->vertices.size();
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
 	vector<vec4> modified_vertex;
@@ -191,16 +199,16 @@ void Scene::drawModel(Model* model)
 
 	for (size_t i = 0; i < size; i++)
 	{
-		vec4 v(model->vertex_positions.at(i));
+		vec4 v(model->vertices.at(i).homogenous);
 		
 		v = P * (Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))));
-		vec4 vertex_normal = model->vertex_normal_positions.at(i);
+		vec4 vertex_normal = model->vertices.at(i).normal;
 		vertex_normal[3] = 0;
 		vertex_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * vertex_normal))));
 		int j = 0;
 		if (i%3 == 0)
 		{
-			vec4 face_normal = model->face_normals.at(j++);
+			vec4 face_normal = model->faces.at(j++).normal;
 			face_normal[0] = 0;
 			face_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * face_normal))));
 			modified_face_normals.push_back(vec3(face_normal.x, face_normal.y, face_normal.z));
@@ -211,8 +219,7 @@ void Scene::drawModel(Model* model)
 
 	}
 
-	vec3 camera_location = (cameras.at(activeCamera)->eye.x, cameras.at(activeCamera)->eye.y, cameras.at(activeCamera)->eye.z);
-	m_renderer->DrawTriangles(&(modified_vertex),model->material, &(modified_vertex_normals), &(modified_face_normals), lights, camera_location, ambient_scale);
+	m_renderer->DrawTriangles(&(modified_vertex),model->material, &(modified_vertex_normals), &(modified_face_normals), lights, cameras.at(activeCamera)->eye, ambient_scale);
 
 }
 
@@ -244,15 +251,15 @@ void Scene::drawboundingBox(Model* model)
 
 void Scene::drawFaceNormals(Model* model)
 {
-	int size = model->face_normals.size();
+	int size = model->faces.size();
 	mat4 Tc = cameras.at(activeCamera)->cTransform;
 	mat4 P = cameras.at(activeCamera)->projection;
 
 	for (size_t i = 0; i < size; i++)
 	{
-		vec4 normal = model->face_normals.at(i);
+		vec4 normal = model->faces.at(i).normal;
 		normal[3] = 0;
-		vec4 v_origin = model->face_normals_origin.at(i);
+		vec4 v_origin = model->faces.at(i).origin;
 		normal = Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * normal))); //model-view
 		v_origin = Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v_origin))); //model-view
 		vec4 v_dest = v_origin + normal;
@@ -277,9 +284,9 @@ void Scene::drawVertexNormals(Model* model)
 
 	for (size_t i = 0; i < size; i++)
 	{
-		vec4 normal = model->vertex_normals.at(i);
+		vec4 normal = model->vertices.at(i).normal;
 		normal[3] = 0;
-		vec4 v_origin = model->vertices.at(i);
+		vec4 v_origin = model->vertices.at(i).homogenous;
 		normal =  Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * normal))); //model-view
 		v_origin = Tc *  ( _world_transform * (model->_world_transform * (model->_model_transform * v_origin))); //model-view
 		vec4 v_dest = v_origin + normal; 

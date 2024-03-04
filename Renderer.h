@@ -47,7 +47,7 @@ public:
 	void Init();
 	//void DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals = NULL);
 	void CreateBuffers(int width, int height);
-	void DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale);
+	void DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale);
 	void DrawBox(const vector<vec3>* vertices, Color color);
 	//void SetCameraTransform(const mat4& cTransform);
 	//void SetProjection(const mat4& projection);
@@ -64,15 +64,15 @@ public:
 	void UpdateToScreenMat(int width, int height);
 	void multVertex(const vector<GLfloat>* vertices, mat4 mat , vector<GLfloat>* modified);
 	void pipeLine(const vector<GLfloat>* vertices, vector<GLfloat>* modified, mat4 _world_transform, mat4 camera_mat);
-	GLfloat getDepth(int x, int y, vec3 v1 , vec3 v2 ,vec3 v3);
-	void fillFlatTriangle(vec3 v1, vec3 v2, vec3 v3, Color color);
-	void fillGouraudTriangle(vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, Color c1, Color c2, Color c3);
-	void fillPhongTriangle(vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale);
+	GLfloat getDepth(int x, int y, vec4 v1, vec4 v2, vec4 v3);
+	void fillFlatTriangle(vec4 v1, vec4 v2, vec4 v3, Color color);
+	void fillGouraudTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, vec3 n3, Color c1, Color c2, Color c3);
+	void fillPhongTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale);
 	void drawFlatScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color);
 	void drawGouraudScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color c1, Color c2, Color c3);
-	void drawPhongScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale);
+	void drawPhongScanline(int x1, int x2, int y, vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale);
 	bool liangBarsky(vec3 v1, vec3 v2);
-	Color calcColor(MATERIAL material, vec3 normal, vec3 P, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale);
+	Color calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale);
 	
 };
 
