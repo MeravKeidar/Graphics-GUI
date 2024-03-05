@@ -100,28 +100,17 @@ void MeshModel::loadFile(string fileName)
 
 		issLine >> std::ws >> lineType;
 
-		/*Vertex current_vertex;
-		PolygonTri current_face;*/
-
-
-		// based on the type parse data
 	if (lineType == "v")
 	{
 		vertices.push_back(vec3fFromStream(issLine));
 	}
 	else if (lineType == "vn")
 	{
-		//vertices.at(current_normal_index).normal = vec3fFromStream(issLine);
-		//current_normal_index++;
 		vertex_normals.push_back(vec3fFromStream(issLine));
 	}
 	else if (lineType == "vt")
 	{
 		vertex_textures.push_back(vec3fFromStream(issLine));
-		/*vec2 temp = vec2fFromStream(issLine);
-		vertices.at(current_normal_index).texture_x = temp.x;
-		vertices.at(current_normal_index).texture_y = temp.y;
-		current_texture_index++;*/
 	}
 
 	else if (lineType == "f")
@@ -136,18 +125,12 @@ void MeshModel::loadFile(string fileName)
 	}
 		}
 
-	//for (vector<PolygonTri>::iterator it = faces.begin(); it != faces.end(); ++it)
 	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
 	{
 		Face current_face;
 		//calculate face normals
 		vec3 xi, xj, xk, normal;
 		GLfloat norm;
-
-		/*
-		xi = truncateVec4(vertices.at((*it).vertices[0] - 1).homogenous);
-		xj = truncateVec4(vertices.at((*it).vertices[1] - 1).homogenous);
-		xk = truncateVec4(vertices.at((*it).vertices[2] - 1).homogenous);*/
 
 		xi = vertices.at((*it).v[0] - 1);
 		xj = vertices.at((*it).v[1] - 1);
@@ -180,7 +163,6 @@ void MeshModel::loadFile(string fileName)
 			current_face.v1.normal += normal;
 			current_face.v2.normal += normal;
 			current_face.v3.normal += normal;
-			//vertex_normals.at((*it).v[i] - 1) += normal; 
 		}
 		else
 		{
@@ -192,13 +174,6 @@ void MeshModel::loadFile(string fileName)
 	}
 
 	//normalize all normals 
-	//TODO: make sure normalizing is correct
-	/*if (calculate_vnorm)
-	{
-		for (auto& v : vertices) {
-			v.normal = normalize(v.normal);
-		}
-	}*/
 	for (size_t i = 0; i < faces.size(); i++)
 	{
 		faces.at(i).v1.normal = normalize(faces.at(i).v1.normal);
@@ -209,14 +184,6 @@ void MeshModel::loadFile(string fileName)
 		faces.at(i).v2.normal.w = 0;
 		faces.at(i).v3.normal.w = 0;
 	}
-
-	/*for (vector<FaceIdcs>::iterator it = faces.begin(); it != faces.end(); ++it)
-	{
-		for (int i = 0; i < 3; i++)
-		{
-			vertex_normal_positions.push_back(vertex_normals.at((*it).v[i] - 1));
-		}
-	}*/
 
 	boundingBox();
 

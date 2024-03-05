@@ -37,18 +37,16 @@ public:
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
-
+	void changeUniformColor(Color color);
+	void changeUniformMaterial(MATERIAL material);
 };
 
 
 
 
 class Scene {
-	vector<Model*> models;
-	vector<Light*> lights;
 	Renderer* m_renderer;
 	mat4 _world_transform;
-	GLfloat ambient_scale = 0.2;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	bool drawboundingBox(Model* model);
@@ -60,7 +58,7 @@ public:
 	void loadAxisModels();
 	void loadPrimModel(string type);
 	void addCamera(const vec4& eye, const vec4& at, const vec4& up);
-	void addLight(const vec3 location, const vec3 direction, LIGHT_TYPE light_type,Color color = Color(1,1,1));
+	void addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type,Color color = Color(1,1,1));
 	void draw();
 	void drawDemo();
 	void drawCameras();
@@ -81,7 +79,6 @@ public:
 	mat4 getCurrentCameraTrasform();
 	mat4 getCurrentProjection();
 	vec3 getCurrentViewPort();
-	vector<Camera*> cameras;
 	void setCameraOrtho(const float left, const float right,
 		const float bottom, const float top,
 		const float zNear, const float zFar);
@@ -90,6 +87,9 @@ public:
 		const float zNear, const float zFar);
 	void setCameraPerspective(const float fovy, const float aspect,
 		const float zNear, const float zFar);
+	vector<Camera*> cameras;
+	vector<Light*> lights;
+	vector<Model*> models;
 	int activeModel=-1;
 	int activeLight=-1;
 	int activeCamera=-1;
@@ -99,4 +99,5 @@ public:
 	bool displayFnormal = false;
 	bool displayCameras = false;
 	bool displayBoundingBox = false;
+	GLfloat ambient_scale = 0.2;
 };

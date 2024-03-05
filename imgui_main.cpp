@@ -49,13 +49,16 @@ void FileMenu(Scene* scene)
 	
 }
 
-
 bool transform_model = false;
 bool transform_camera = false;
 bool add_camera = false;
 bool show_matrices = false;
 bool show_instructions = false;
 bool display_manual = true;
+bool add_light = false;
+bool transform_lights = false;
+bool change_material = false;
+bool change_ambient = false;
 
 void MainMenuBar(Scene* scene)
 {
@@ -64,23 +67,7 @@ void MainMenuBar(Scene* scene)
 	static char path[500] = "";*/
 	if (ImGui::BeginMainMenuBar())
 	{
-		if (ImGui::BeginMenu("Shading"))
-		{
-			if (ImGui::MenuItem("Flat"))
-			{
-				scene->changeShading(FLAT);
-			}
-			if (ImGui::MenuItem("Guoroad"))
-			{
-				scene->changeShading(GOURAUD);
-			}
-			if (ImGui::MenuItem("Phong")) 
-			{
-				scene->changeShading(PHONG);
-			}
-			ImGui::EndMenu();
-		}
-
+		
 		if (ImGui::BeginMenu("Load model"))
 		{
 	
@@ -109,21 +96,49 @@ void MainMenuBar(Scene* scene)
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Scene")) {
-			if (ImGui::MenuItem("Normal-per-vertex")) {
-				if (scene->displayVnormal)
-					scene->displayVnormal = false;
-				else
-					scene->displayVnormal = true;
+
+			if (ImGui::BeginMenu("Display Normals"))
+			{
+				if (ImGui::MenuItem("Normal-per-vertex")) {
+					if (scene->displayVnormal)
+						scene->displayVnormal = false;
+					else
+						scene->displayVnormal = true;
+				}
+				if (ImGui::MenuItem("Normal-per-face")) {
+					if (scene->displayFnormal)
+						scene->displayFnormal = false;
+					else
+						scene->displayFnormal = true;
+				}
+				ImGui::EndMenu();
 			}
-			if (ImGui::MenuItem("Normal-per-face")) {
-				if (scene->displayFnormal)
-					scene->displayFnormal = false;
-				else
-					scene->displayFnormal = true;
-			}
+
 			if (ImGui::MenuItem("Reset scene"))
 			{
 				scene->Reset(); 
+			}
+
+			if (ImGui::BeginMenu("Shading"))
+			{
+				if (ImGui::MenuItem("Flat"))
+				{
+					scene->changeShading(FLAT);
+				}
+				if (ImGui::MenuItem("Guoroad"))
+				{
+					scene->changeShading(GOURAUD);
+				}
+				if (ImGui::MenuItem("Phong"))
+				{
+					scene->changeShading(PHONG);
+				}
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::MenuItem("Change Ambient scale"))
+			{
+				change_ambient = true;
 			}
 
 			ImGui::EndMenu();
@@ -158,6 +173,18 @@ void MainMenuBar(Scene* scene)
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Lights"))
+		{
+			if (ImGui::MenuItem("Add light")) {
+				add_light = true;
+			}
+			
+			if (ImGui::MenuItem("Transform Lights")) {
+				transform_lights = true;
+			}
+			ImGui::EndMenu();
+		}
+
 		if (ImGui::BeginMenu("Model"))
 		{
 			if (ImGui::MenuItem("Transforn Active Model")) {
@@ -183,6 +210,11 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Look at active model")) {
 				scene->LookAtModel();
 			}
+
+			if (ImGui::MenuItem("Change Model Material")) {
+				change_material = true;
+			}
+
 			ImGui::EndMenu();
 			
 		}
@@ -204,6 +236,23 @@ void MainMenuBar(Scene* scene)
 
 void ImguiPopUps(Scene* scene) 
 {
+	if (change_ambient)
+	{
+		ImGui::OpenPopup("Change Ambient Scale");
+		change_ambient = false;
+	}
+	if (ImGui::BeginPopupModal("Change Ambient Scale", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		static GLfloat a = 0;
+		ImGui::SliderFloat("Ambient Scale", &a, 0.0, 1.0);
+		scene->ambient_scale = a;
+		if (ImGui::Button("OK"))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+	
 	if (display_manual)
 	{
 		ImGui::OpenPopup("Welcome Manual");
@@ -267,6 +316,36 @@ void ImguiPopUps(Scene* scene)
 	if (ImGui::BeginPopupModal("Keyboard Shortcuts", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		showInstructions();
+		ImGui::EndPopup();
+	}
+	if (transform_lights)
+	{
+		ImGui::OpenPopup("Transform Lights");
+		transform_lights = false;
+	}
+	if (ImGui::BeginPopupModal("Transform Lights", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		transformLights(scene);
+		ImGui::EndPopup();
+	}
+	if (add_light)
+	{
+		ImGui::OpenPopup("Add Light");
+		add_light = false;
+	}
+	if (ImGui::BeginPopupModal("Add Light", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		addLight(scene);
+		ImGui::EndPopup();
+	}
+	if (change_material)
+	{
+		ImGui::OpenPopup("Change Material");
+		change_material = false;
+	}
+	if (ImGui::BeginPopupModal("Change Material", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		changeMaterial(scene);
 		ImGui::EndPopup();
 	}
 }
@@ -496,6 +575,20 @@ void addCamera(Scene* scene)
 	}
 }
 
+void changeMaterial(Scene* scene)
+{
+	ImGui::Text("Change Color");
+	static ImVec4 new_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	ImGui::ColorPicker4("Color Picker", (float*)&new_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+	Color color(new_color.x, new_color.y, new_color.z);
+	scene->models.at(scene->activeModel)->changeUniformColor(color);
+	
+	if (ImGui::Button("OK"))
+	{
+		
+		ImGui::CloseCurrentPopup();
+	}
+}
 
 void transformModel(Scene* scene)
 {
@@ -515,8 +608,7 @@ void transformModel(Scene* scene)
 	ImGui::SliderFloat("X Model", &x_m, -0.5, 0.5);
 	ImGui::SliderFloat("Y Model", &y_m, -0.5, 0.5);
 	ImGui::SliderFloat("Z Model", &z_m, -0.5, 0.5);
-
-	
+		
 	static GLfloat theta_w = 0;
 	static int idx_w = 0;
 	const char* hinge[] = { "X", "Y", "Z" };
@@ -563,6 +655,77 @@ void transformModel(Scene* scene)
 		s_y = 1;
 		s_z = 1;
 		s = 1;
+		ImGui::CloseCurrentPopup();
+	}
+}
+
+void transformLights(Scene* scene)
+{
+	for (size_t i = 0; i < scene->lights.size(); i++)
+	{
+		static vec4 location = scene->lights.at(i)->position;
+		ImGui::Text("Change Light location");
+		ImGui::InputFloat3("X", &location.x);
+		ImGui::InputFloat("Y", &location.y);
+		ImGui::InputFloat("Z", &location.z);
+		scene->lights.at(i)->position = location;
+
+		static vec4 direction = scene->lights.at(i)->direction;
+		ImGui::Text("Change Light Direction");
+		ImGui::InputFloat3("X", &direction.x);
+		ImGui::InputFloat("Y", &direction.y);
+		ImGui::InputFloat("Z", &direction.z);
+		scene->lights.at(i)->direction = direction;
+		ImGui::Text("Change Light Color");
+		static ImVec4 c = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+		ImGui::ColorPicker4("Color Picker", (float*)&c, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+		scene->lights.at(i)->color = Color(c.x, c.y, c.z);
+		static GLfloat light_intensity = scene->lights.at(i)->intensity;
+		ImGui::Text("Change Light Intensity");
+		ImGui::InputFloat("light intensity", &light_intensity);
+		scene->lights.at(i)->intensity = light_intensity;
+	}
+
+	if (ImGui::Button("OK"))
+	{
+		ImGui::CloseCurrentPopup();
+	}
+}
+
+void addLight(Scene* scene) 
+{
+	const char* new_light_type[] = { "Point", "Parallel" };
+	static int selected_light_type = 0;
+	ImGui::Combo("Light type", &selected_light_type, new_light_type, 2);
+
+	static vec4 new_location = { 0,1,0, 1};
+	ImGui::Text("Light location");
+	ImGui::InputFloat3("X", &new_location.x);
+	ImGui::InputFloat("Y", &new_location.y);
+	ImGui::InputFloat("Z", &new_location.z);
+
+	static vec4 new_direction = { 0,1,0 , 0};
+	ImGui::Text("Light Direction");
+	ImGui::InputFloat3("X", &new_direction.x);
+	ImGui::InputFloat("Y", &new_direction.y);
+	ImGui::InputFloat("Z", &new_direction.z);
+
+	ImGui::Text("Light Color");
+	static ImVec4 new_c = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+	ImGui::ColorPicker4("Color Picker", (float*)&new_c, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+
+	static GLfloat new_intensity = 0.5;
+	ImGui::InputFloat("light intensity", &new_intensity);
+
+	if (ImGui::Button("OK"))
+	{
+		LIGHT_TYPE new_type = POINT_LIGHT;
+		if (selected_light_type == 1)
+		{
+			new_type = PARALLEL_LIGHT;
+		}
+		Color color(new_c.x,new_c.y,new_c.z);
+		scene->addLight(new_location, new_direction, new_type, color);
 		ImGui::CloseCurrentPopup();
 	}
 }
@@ -653,7 +816,6 @@ void showManual()
 	}
 }
 
-
 void ImguiInit(GLFWwindow* window) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -664,14 +826,12 @@ void ImguiInit(GLFWwindow* window) {
 	
 }
 
-
 void ImguiFrame() 
 {
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 }
-
 
 void ImguiCleanUP() 
 {

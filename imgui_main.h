@@ -26,3 +26,6 @@ void addCamera(Scene* scene);
 void showMatriceValues(Scene* scene);
 void showInstructions();
 void showManual();
+void addLight(Scene* scene);
+void transformLights(Scene* scene);
+void changeMaterial(Scene* scene);

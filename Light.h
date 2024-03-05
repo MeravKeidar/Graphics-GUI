@@ -36,13 +36,14 @@ struct Color {
 	Color() {};
 
 };
+
 struct MATERIAL {
 	Color color = { 1.0,0,0 };
 	GLfloat transparency = 1.0;
 	GLfloat diffuse_fraction = 1.0;
 	GLfloat specular_fraction = 1.0;
 	GLfloat ambient_fraction = 1.0;
-	GLfloat shininess_coefficient = 1.0; 
+	GLfloat shininess_coefficient = 100; 
 };
 
 struct Vertex
@@ -50,8 +51,10 @@ struct Vertex
 	vec4 position; //original position in world frame
 	vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
 	vec4 projected; 
+	vec3 screen; // after devision by w in screen coordinates
 	vec4 normal = vec4(0);
 	vec4 view_normal = vec4(0); // normal in view frame (after transformation amd camera matrix multiplication)
+
 
 	vec3 texture = vec3(0);
 	int texture_x = 0;

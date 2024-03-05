@@ -4,7 +4,6 @@
 #include "InitShader.h"
 #include "GLFW\glfw3.h"
 
-
 //using namespace Renderer;
 
 #define INDEX(width,x,y,c) (x+y*width)*3+c
@@ -31,15 +30,10 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 	GLfloat min_x, min_y, min_z, max_x, max_y, max_z;
 	int j = 0;
 	int size = faces->size();
-	for (size_t i = 0; i < size-3; i+= 3)
+	for (size_t i = 0; i < size; i++)
 	{
 		Face cur_face = faces->at(i);
-		/*vec3 v1_3(v1.x / v1.w, v1.y / v1.w, v1.z / v1.w);
-		v1_3 = viewPortVec(v1_3);
-		vec3 v2_3(v2.x / v2.w, v2.y / v2.w, v2.z / v2.w);
-		v2_3 = viewPortVec(v2_3);
-		vec3 v3_3(v3.x / v3.w, v3.y / v3.w, v3.z / v3.w);
-		v3_3 = viewPortVec(v3_3);*/
+		
 		//clipping method
 		//default set to phong
 		Color flat_color;
@@ -73,10 +67,10 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambient_scale)
 {
 	// Sort vertices by y-coordinate
-	vec4 v1 = face.v1.projected;
-	vec4 v2 = face.v2.projected;
-	vec4 v3 = face.v3.projected;
-	vec4 temp_vec;
+	vec3 v1 = face.v1.screen;
+	vec3 v2 = face.v2.screen;
+	vec3 v3 = face.v3.screen;
+	vec3 temp_vec;
 	if (v1.y < v2.y)
 	{
 		temp_vec = v2;
@@ -127,10 +121,10 @@ void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambie
 void Renderer::fillGouraudTriangle(Face face, Color c1, Color c2, Color c3)
 {
 	// Sort vertices by y-coordinate
-	vec4 v1 = face.v1.projected;
-	vec4 v2 = face.v2.projected;
-	vec4 v3 = face.v3.projected;
-	vec4 temp_vec;
+	vec3 v1 = face.v1.screen;
+	vec3 v2 = face.v2.screen;
+	vec3 v3 = face.v3.screen;
+	vec3 temp_vec;
 	if (v1.y < v2.y)
 	{
 		temp_vec = v2;
@@ -182,10 +176,10 @@ void Renderer::fillGouraudTriangle(Face face, Color c1, Color c2, Color c3)
 void Renderer::fillFlatTriangle(Face face, Color color)
 {
 	// Sort vertices by y-coordinate
-	vec4 v1 = face.v1.projected;
-	vec4 v2 = face.v2.projected;
-	vec4 v3 = face.v3.projected;
-	vec4 temp_vec;
+	vec3 v1 = face.v1.screen;
+	vec3 v2 = face.v2.screen;
+	vec3 v3 = face.v3.screen;
+	vec3 temp_vec;
 	if (v1.y < v2.y)
 	{
 		temp_vec = v2;
@@ -216,7 +210,7 @@ void Renderer::fillFlatTriangle(Face face, Color color)
 	int y = min(v1.y, GLfloat(m_height));
 	for (; y >= v2.y; y--)
 	{
-		drawFlatScanline(x1, x2, y, truncateVec4(v1), truncateVec4(v2), truncateVec4(v3), color);
+		drawFlatScanline(x1, x2, y, v1, v2 , v3, color); 
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -227,7 +221,7 @@ void Renderer::fillFlatTriangle(Face face, Color color)
 		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
 	for (; y >= v3.y; y--)
 	{
-		drawFlatScanline(x1, x2, y, truncateVec4(v1), truncateVec4(v2), truncateVec4(v3), color);
+		drawFlatScanline(x1, x2, y, v1, v2, v3, color);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -235,13 +229,13 @@ void Renderer::fillFlatTriangle(Face face, Color color)
 
 void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*> lights, GLfloat ambient_scale)
 {
-	vec4 v1 = face.v1.projected;
-	vec4 v2 = face.v2.projected;
-	vec4 v3 = face.v3.projected;
+	vec3 v1 = face.v1.screen;
+	vec3 v2 = face.v2.screen;
+	vec3 v3 = face.v3.screen;
 	if (x1 > x2) std::swap(x1, x2);
 	for (int x = x1; x <= x2; x++)
 	{
-		GLfloat z = getDepth(x, y, face.v1.projected, face.v2.projected, face.v3.projected);
+		GLfloat z = getDepth(x, y, v1, v2, v3);
 
 		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
 		{
@@ -264,9 +258,9 @@ void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*
 void Renderer::drawGouraudScanline(int x1, int x2, int y, Face face, Color c1, Color c2, Color c3)
 {
 	if (x1 > x2) std::swap(x1, x2);
-	vec4 v1 = face.v1.projected;
-	vec4 v2 = face.v2.projected;
-	vec4 v3 = face.v3.projected;
+	vec3 v1 = face.v1.screen;
+	vec3 v2 = face.v2.screen;
+	vec3 v3 = face.v3.screen;
 	for (int x = x1; x <= x2; x++)
 	{
 		GLfloat z = getDepth(x, y, v1, v2, v3);
@@ -294,8 +288,6 @@ void Renderer::drawGouraudScanline(int x1, int x2, int y, Face face, Color c1, C
 	}
 }
 
-
-
 void Renderer::drawFlatScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color)
 {
 	if (x1 > x2) std::swap(x1, x2);
@@ -314,15 +306,10 @@ void Renderer::drawFlatScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3
 	}
 }
 
-
-void drawPhongScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
-{}
-
 bool Renderer::liangBarsky(vec3 v1, vec3 v2)
 {
 	return true;
 }
-
 //Critical assumption: calculating color is done using cannonial coordinates
 //Second assumption: to avoid repeating division by w, assume values are divided (3d cannonial)
 //The following are vectors(no need for w): normal, per-light direction
@@ -366,7 +353,6 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 	return color;
 }
 
-
 void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
 {
 
@@ -388,7 +374,6 @@ void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
 	DrawLine(vertices->at(2).x, vertices->at(6).x, vertices->at(2).y, vertices->at(6).y, color);
 }
 
-
 void Renderer::CreateBuffers(int width, int height)
 {
 	if (m_outBuffer != NULL)
@@ -406,7 +391,6 @@ void Renderer::CreateBuffers(int width, int height)
 	}
 	
 }
-
 
 void Renderer::CreateLocalBuffer()
 {
@@ -427,7 +411,6 @@ void Renderer::SetDemoBuffer()
 
 	}
 }
-
 
 void Renderer::DrawPixel(int x, int y, Color color) {
 	if ((x < m_width) && (y < m_height) && (0 < x) && ( 0 < y)) {
@@ -492,10 +475,6 @@ void Renderer::ClearDepthBuffer()
 		m_zbuffer[i] = 1.1;
 	}
 }
-
-
-
-
 
 /////////////////////////////////////////////////////
 //OpenGL stuff. Don't touch.
@@ -582,49 +561,6 @@ vec3 Renderer::viewPortVec(vec3 cannonial)
 	GLfloat max_fix = max(m_width, m_height);
 	return vec3((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2, cannonial.z);
 }
-
-
-void Renderer::UpdateToScreenMat(int width, int height)
-{
-	to_screen[0][0] = width / 2.0;
-	to_screen[1][1] = height / 2.0;
-	//[1][1] just felt right to make it so |A| = 1
-	to_screen[1][1] = 4.0 / width*height;
-	to_screen[0][2] = width / 2.0;
-	to_screen[1][2] = height / 2.0;
-
-}
-
-//assume vertices at vec4
-void Renderer::multVertex(const vector<GLfloat>* vertices, mat4 mat, vector<GLfloat>* modified)
-{
-	
-	int size = vertices->size();
-
-	for (size_t i = 0; i < size; i+= 4)
-	{
-
-		vec4 vec(vertices->at(i) , vertices->at(i+1), vertices->at(i+2), vertices->at(i+3));
-		
-		vec4 res_vec = mat * vec;
-		
-		(*(modified)).at(i) = res_vec[0];
-		(*(modified)).at(i+1) = res_vec[1];
-		(*(modified)).at(i+2) = res_vec[2];
-		(*(modified)).at(i+3) = res_vec[3];
-	}
-
-}
-
-void Renderer::pipeLine(const vector<GLfloat>* vertices, vector<GLfloat>* modified, mat4 _world_transform, mat4 camera_mat)
-{
-	//Assume for now modelT = I
-	//either the vertices given are already transformed
-	//set for normal projection rather than ortho
-	mat4 total_mat = viewPortMat*(to_cannonical_projection* (camera_mat * _world_transform));
-	multVertex(vertices, total_mat, modified);
-}
-
 
 GLfloat Renderer::getDepth(int x, int y, vec4 v1, vec4 v2, vec4 v3 )
 {
