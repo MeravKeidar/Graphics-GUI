@@ -84,8 +84,7 @@ void MeshModel::loadFile(string fileName)
 	vector<vec3> vertex_textures;
 	vector<vec3> verticesText;
 	vector<vec3> verticesNormal;
-	bool calculate_vnorm = false; 
-		// while not end of file
+	// while not end of file
 	int current_normal_index = 0;
 	int current_texture_index = 0;
 
@@ -137,12 +136,6 @@ void MeshModel::loadFile(string fileName)
 	}
 		}
 
-		if (vertex_normals.empty())
-		{
-			calculate_vnorm = true;
-		}
-
-
 	//for (vector<PolygonTri>::iterator it = faces.begin(); it != faces.end(); ++it)
 	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
 	{
@@ -182,7 +175,7 @@ void MeshModel::loadFile(string fileName)
 			current_face.v3.texture = vertex_textures.at((*it).vt[2] - 1);
 		}
 
-		if (calculate_vnorm)
+		if (vertex_normals.empty())
 		{
 			current_face.v1.normal += normal;
 			current_face.v2.normal += normal;
@@ -191,9 +184,9 @@ void MeshModel::loadFile(string fileName)
 		}
 		else
 		{
-			current_face.v1.normal = vertex_normals.at((*it).vt[0] - 1);
-			current_face.v2.normal = vertex_normals.at((*it).vt[1] - 1);
-			current_face.v3.normal = vertex_normals.at((*it).vt[2] - 1);
+			current_face.v1.normal = vertex_normals.at((*it).vn[0] - 1);
+			current_face.v2.normal = vertex_normals.at((*it).vn[1] - 1);
+			current_face.v3.normal = vertex_normals.at((*it).vn[2] - 1);
 		}
 		faces.push_back(current_face);
 	}
@@ -304,7 +297,7 @@ void PrimMeshModel::Tetrahedron()
 	f1.normal = vec4(-1, 0, 0,0);
 	f2.normal = vec4(0, 0, -1,0);
 	f3.normal = vec4(0, -1, 0,0);
-	f4.normal= vec4(1, 1, 1,0));
+	f4.normal= vec4(1, 1, 1,0);
 
 
 	f1.position = vec3(0, 0.33333333, 0.33333333);

@@ -24,59 +24,44 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<Face> faces, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale)
+void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, GLfloat ambient_scale)
 {
-	int size = vertices->size();
-	Color blue{ 0,0,1 };
 	vec3 min_values;
 	vec3 max_values;
 	GLfloat min_x, min_y, min_z, max_x, max_y, max_z;
 	int j = 0;
+	int size = faces->size();
 	for (size_t i = 0; i < size-3; i+= 3)
 	{
-		vec4 v1 = vertices->at(i);
-		vec3 n1 = vertex_normals->at(i);
-
-		vec4 v2 = vertices->at(i+1);
-		vec3 n2 = vertex_normals->at(i+1);
-
-		vec4 v3 = vertices->at(i+2);
-		vec3 n3 = vertex_normals->at(i+2);
-
-		vec3 face_normal = face_normals->at(j++); 
-
+		Face cur_face = faces->at(i);
 		/*vec3 v1_3(v1.x / v1.w, v1.y / v1.w, v1.z / v1.w);
 		v1_3 = viewPortVec(v1_3);
 		vec3 v2_3(v2.x / v2.w, v2.y / v2.w, v2.z / v2.w);
 		v2_3 = viewPortVec(v2_3);
 		vec3 v3_3(v3.x / v3.w, v3.y / v3.w, v3.z / v3.w);
 		v3_3 = viewPortVec(v3_3);*/
-
 		//clipping method
-
 		//default set to phong
-		vec4 face_center;
 		Color flat_color;
 		Color c1, c2, c3;
 
 		switch (shadingType)
 		{
 			case FLAT:
-				 face_center = ((v1 + v2 + v3) / 3);
-				 flat_color = calcColor(material, face_normal, truncateVec4(face_center), lights, truncateVec4(camera_location), ambient_scale);
-				fillFlatTriangle(v1, v2, v3, flat_color);
+				// TODO:: checl what to do in case of different materials
+				flat_color = calcColor(cur_face.v1.material, truncateVec4(cur_face.view_normal), truncateVec4(cur_face.view), lights, ambient_scale);
+				fillFlatTriangle(cur_face, flat_color);
 				break;
-
 			case GOURAUD:
-				 c1 = calcColor(material, n1, truncateVec4(v1), lights, truncateVec4(camera_location), ambient_scale);
-				 c2 = calcColor(material, n2, truncateVec4(v2), lights, truncateVec4(camera_location), ambient_scale);
-				 c3 = calcColor(material, n3, truncateVec4(v3), lights, truncateVec4(camera_location), ambient_scale);
-				fillGouraudTriangle(v1, v2, v3, n1, n2, n3, c1, c2, c3);
+				 c1 = calcColor(cur_face.v1.material, truncateVec4(cur_face.v1.view_normal), truncateVec4(cur_face.v1.view), lights, ambient_scale);
+				 c2 = calcColor(cur_face.v2.material, truncateVec4(cur_face.v2.view_normal), truncateVec4(cur_face.v2.view), lights, ambient_scale);
+				 c3 = calcColor(cur_face.v3.material, truncateVec4(cur_face.v3.view_normal), truncateVec4(cur_face.v3.view), lights, ambient_scale);
+				fillGouraudTriangle(cur_face, c1, c2, c3);
 				break;
 					
 			default:
 				//TODO: check truncation correct
-				fillPhongTriangle(v1, v2, v3, n1, n2, n3, material, lights, truncateVec4(camera_location), ambient_scale);
+				fillPhongTriangle(cur_face, lights, ambient_scale);
 				break;
 		}
 
@@ -85,9 +70,12 @@ void Renderer::DrawTriangles(const vector<Face> faces, vector<Light*> lights, ve
 	
 }
 
-void Renderer::fillPhongTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
+void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambient_scale)
 {
 	// Sort vertices by y-coordinate
+	vec4 v1 = face.v1.projected;
+	vec4 v2 = face.v2.projected;
+	vec4 v3 = face.v3.projected;
 	vec4 temp_vec;
 	if (v1.y < v2.y)
 	{
@@ -119,7 +107,7 @@ void Renderer::fillPhongTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, ve
 	int y = min(v1.y, GLfloat(m_height));
 	for (; y >= v2.y; y--)
 	{
-		drawPhongScanline(x1, x2, y, v1, v2, v3, n1, n2 ,n3, material, lights, camera_location, ambient_scale);
+		drawPhongScanline(x1, x2, y, face, lights, ambient_scale);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -130,15 +118,18 @@ void Renderer::fillPhongTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, ve
 		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
 	for (; y >= v3.y; y--)
 	{
-		drawPhongScanline(x1, x2, y, v1, v2, v3, n1, n2, n3, material, lights, camera_location, ambient_scale);
+		drawPhongScanline(x1, x2, y, face, lights, ambient_scale);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
 }
 
-void Renderer::fillGouraudTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, vec3 n3, Color c1, Color c2, Color c3)
+void Renderer::fillGouraudTriangle(Face face, Color c1, Color c2, Color c3)
 {
 	// Sort vertices by y-coordinate
+	vec4 v1 = face.v1.projected;
+	vec4 v2 = face.v2.projected;
+	vec4 v3 = face.v3.projected;
 	vec4 temp_vec;
 	if (v1.y < v2.y)
 	{
@@ -170,7 +161,7 @@ void Renderer::fillGouraudTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, 
 	int y = min(v1.y, GLfloat(m_height));
 	for (; y >= v2.y; y--)
 	{
-		drawGouraudScanline(x1, x2, y, truncateVec4(v1), truncateVec4(v2), truncateVec4(v3), c1, c2, c3);
+		drawGouraudScanline(x1, x2, y, face, c1, c2, c3);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -181,16 +172,19 @@ void Renderer::fillGouraudTriangle(vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, 
 		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
 	for (; y >= v3.y; y--)
 	{
-		drawGouraudScanline(x1, x2, y, truncateVec4(v1), truncateVec4(v2), truncateVec4(v3), c1, c2, c3);
+		drawGouraudScanline(x1, x2, y, face, c1, c2, c3);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
 
 }
 
-void Renderer::fillFlatTriangle(vec4 v1, vec4 v2, vec4 v3, Color color)
+void Renderer::fillFlatTriangle(Face face, Color color)
 {
 	// Sort vertices by y-coordinate
+	vec4 v1 = face.v1.projected;
+	vec4 v2 = face.v2.projected;
+	vec4 v3 = face.v3.projected;
 	vec4 temp_vec;
 	if (v1.y < v2.y)
 	{
@@ -239,12 +233,15 @@ void Renderer::fillFlatTriangle(vec4 v1, vec4 v2, vec4 v3, Color color)
 	}
 }
 
-void Renderer::drawPhongScanline(int x1, int x2, int y, vec4 v1, vec4 v2, vec4 v3, vec3 n1, vec3 n2, vec3 n3, MATERIAL material, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
+void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*> lights, GLfloat ambient_scale)
 {
+	vec4 v1 = face.v1.projected;
+	vec4 v2 = face.v2.projected;
+	vec4 v3 = face.v3.projected;
 	if (x1 > x2) std::swap(x1, x2);
 	for (int x = x1; x <= x2; x++)
 	{
-		GLfloat z = getDepth(x, y, v1, v2, v3);
+		GLfloat z = getDepth(x, y, face.v1.projected, face.v2.projected, face.v3.projected);
 
 		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
 		{
@@ -254,23 +251,25 @@ void Renderer::drawPhongScanline(int x1, int x2, int y, vec4 v1, vec4 v2, vec4 v
 				vec2 d1(x - v1.x, y - v1.y);
 				vec2 d2(x - v2.x, y - v2.y);
 				vec2 d3(x - v3.x, y - v3.y);
-				vec3 normal = n1 * length(d1) + n2 * length(d2) + n3 * length(d3);
-				vec3 p(x, y, z);
-				Color color = calcColor(material, normal, p, lights, camera_location, ambient_scale); 
+				vec3 normal = truncateVec4(face.v1.view_normal * length(d1) + face.v2.view_normal * length(d2) + face.v3.view_normal * length(d3));
+				vec3 p = truncateVec4(face.v1.view * length(d1) + face.v2.view * length(d2) + face.v3.view * length(d3));
+				//TODO: chack what to os in case of different materials for vector 
+				Color color = calcColor(face.v1.material, normal, p, lights, ambient_scale);
 				DrawPixel(x, y, color);
 			}
 		}
 	}
 }
 
-void Renderer::drawGouraudScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color c1, Color c2, Color c3)
+void Renderer::drawGouraudScanline(int x1, int x2, int y, Face face, Color c1, Color c2, Color c3)
 {
 	if (x1 > x2) std::swap(x1, x2);
-
+	vec4 v1 = face.v1.projected;
+	vec4 v2 = face.v2.projected;
+	vec4 v3 = face.v3.projected;
 	for (int x = x1; x <= x2; x++)
 	{
 		GLfloat z = getDepth(x, y, v1, v2, v3);
-
 		if ((x < m_width) && (y < m_height) && (0 < x) && (0 < y))
 		{
 			if (m_zbuffer[x + m_width * y] > z)
@@ -288,14 +287,13 @@ void Renderer::drawGouraudScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3
 				GLfloat	red = (c1.r * length1 + c2.r * length2 + c3.r * length3) / total_length;
 				GLfloat	green = (c1.g * length1 + c2.g* length2 + c3.g * length3) / total_length;
 				GLfloat	blue = (c1.b * length1 + c2.b * length2 + c3.b * length3) / total_length;
-
 				Color color(red, green, blue);
 				DrawPixel(x, y, color);
 			}
 		}
 	}
 }
-}
+
 
 
 void Renderer::drawFlatScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color)
@@ -329,14 +327,13 @@ bool Renderer::liangBarsky(vec3 v1, vec3 v2)
 //Second assumption: to avoid repeating division by w, assume values are divided (3d cannonial)
 //The following are vectors(no need for w): normal, per-light direction
 //The following are locations(w is needed, assumption is division already done): p , per-light location(for point_light), camera location
-Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, vec3 camera_location, GLfloat ambient_scale)
+Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, GLfloat ambient_scale)
 {
-
 	Color color = material.color;
 	//direction from point to light(per light)
 	vec3 l;
-	//direction from point to camera
-	vec3 v = normalize(camera_location - p);
+	//direction from point to camera - point is in view frame;
+	vec3 v = normalize(-p);
 
 	//ambient
 	color *= (ambient_scale * material.ambient_fraction);
@@ -345,27 +342,27 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 	for (size_t i = 0; i < lights.size(); i++)
 	{
 		Light* current_light = lights.at(i);
-
 		if (current_light->light_type == POINT_LIGHT)
 		{
-			l = normalize(current_light->projected_location - p);
+			l = normalize(truncateVec4(current_light->view_position) - p);
 		}
 		else
 		{
-			l = normalize(current_light->projected_direction);
+			l = normalize(truncateVec4(current_light->view_direction));
 		}
-		GLfloat NL = abs(dot(normal, l));
-		GLfloat LN = abs(dot(l, normal));
-		vec3 r = normalize((2 * normal * NL) - l);
+
+		GLfloat LN = max(0.0f,dot(l, normal));
+		vec3 r = normalize((2 * normal * LN) - l);
 
 		//diffuse
-		color = color + current_light->color * (material.diffuse_fraction * LN * current_light->intensity);
+		color = color + (color + current_light->color) * (material.diffuse_fraction * LN * current_light->intensity);
 
 		// specular
 		GLfloat Shininess = pow(abs(dot(r, v)), material.shininess_coefficient);
 		
-		color = color + current_light->color * (material.specular_fraction * Shininess * current_light->intensity);
+		color = color + (color + current_light->color) * (material.specular_fraction * Shininess * current_light->intensity);
 	}
+
 	return color;
 }
 

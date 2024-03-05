@@ -51,7 +51,7 @@ class Scene {
 	GLfloat ambient_scale = 0.2;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
-	void drawboundingBox(Model* model);
+	bool drawboundingBox(Model* model);
 	
 public:
 	Scene();
@@ -60,7 +60,7 @@ public:
 	void loadAxisModels();
 	void loadPrimModel(string type);
 	void addCamera(const vec4& eye, const vec4& at, const vec4& up);
-	void addLight(const vec3 location, const vec3 direction, LIGHT_TYPE light_type);
+	void addLight(const vec3 location, const vec3 direction, LIGHT_TYPE light_type,Color color = Color(1,1,1));
 	void draw();
 	void drawDemo();
 	void drawCameras();

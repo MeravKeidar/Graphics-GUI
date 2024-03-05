@@ -159,6 +159,8 @@ GLfloat length(const vec2& v) {
 
 inline
 vec2 normalize(const vec2& v) {
+    if (length(v) == 0)
+        return v;
     return v / length(v);
 }
 
@@ -319,6 +321,10 @@ GLfloat length(const vec3& v) {
 
 inline
 vec3 normalize(const vec3& v) {
+    if  (length(v) == 0)
+    {
+        return v;
+    }
     return v / length(v);
 }
 
@@ -466,6 +472,10 @@ struct vec4 {
 
     inline
         vec4 normalize(const vec4& v) {
+        if (length(v) == 0)
+        {
+            return v;
+        }
         return v / length(v);
     }
 
@@ -517,6 +527,8 @@ GLfloat length(const vec4& v) {
 
 inline
 vec4 normalize(const vec4& v) {
+    if (length(v) == 0)
+        return v;
     return v / length(v);
 }
 

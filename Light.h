@@ -49,10 +49,9 @@ struct Vertex
 {
 	vec4 position; //original position in world frame
 	vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
-	vec3 projected; 
+	vec4 projected; 
 	vec4 normal = vec4(0);
 	vec4 view_normal = vec4(0); // normal in view frame (after transformation amd camera matrix multiplication)
-	vec4 projected = vec3(0); // normal in view frame (after transformation amd camera matrix multiplication)
 
 	vec3 texture = vec3(0);
 	int texture_x = 0;
@@ -67,10 +66,9 @@ struct Face
 	Vertex v3;
 	vec4 position;
 	vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
-	vec3 projected;
-	vec4 normal = vec3(0);
+	vec4 projected;
+	vec4 normal = vec4(0);
 	vec4 view_normal = vec4(0); // normal in view frame (after transformation amd camera matrix multiplication)
-	vec4 projected_normal = vec3(0); // normal in view frame (after transformation amd camera matrix multiplication)
 
 };
 
@@ -122,12 +120,12 @@ public:
 	GLfloat intensity;
 	LIGHT_TYPE light_type;
 	vec4 direction;
-	vec3 projected_direction;
+	vec4 view_direction;
 	//location is the loaded location after transformations
-	vec4 location;
+	vec4 position;
 	//location after projection + w division
-	vec3 projected_location;
-	Light() : location(0, 1, 0, 1), direction(0, -1, 0, 0), intensity(0.5) {light_type = POINT_LIGHT;};
+	vec4 view_position;
+	Light() : position(0, 1, 0, 1), direction(0, -1, 0, 0), intensity(0.5) {light_type = POINT_LIGHT;};
 
 
 };
