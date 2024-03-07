@@ -15,7 +15,7 @@ protected:
 	//void Normals(vector<FaceIdcs> faces, vector<vec3> vertices, vector<vec3> verticesNorm);
 public:
 	
-	void boundingBox();
+	void boundingBox(GLfloat min_x, GLfloat min_y, GLfloat min_z, GLfloat max_x, GLfloat max_y, GLfloat max_z);
 	MeshModel();
 	MeshModel(string fileName);
 	~MeshModel(void);

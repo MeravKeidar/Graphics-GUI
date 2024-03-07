@@ -92,6 +92,9 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Box")) {
 				scene->loadOBJModel("obj_files/box.obj");
 			}
+			if (ImGui::MenuItem("Custom Debug Model")) {
+				scene->loadOBJModel("obj_files/custom.obj");
+			}
 
 			ImGui::EndMenu();
 		}

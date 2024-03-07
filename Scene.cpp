@@ -46,17 +46,17 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 
 void Model::changeUniformColor(Color color)
 {
-	for (size_t i = 0; i < faces.size(); i++)
+	for (auto it = faces.begin(); it != faces.end(); it++)
 	{
-		faces.at(i).v1.material.color = color;
+		(*it).material.color = color;
 	}
 }
 
 void Model::changeUniformMaterial(MATERIAL material)
 {
-	for (size_t i = 0; i < faces.size(); i++)
+	for (auto it = faces.begin(); it != faces.end(); it++)
 	{
-		faces.at(i).v1.material = material;
+		(*it).material= material;
 	}
 }
 
@@ -140,6 +140,7 @@ void Scene::changeShading(SHADING shading_type)
 
 bool Scene::drawboundingBox(Model* model)
 {
+	//Note: current logic should negate the need for recalculation of locations
 	mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (_world_transform * (model->_world_transform * model->_model_transform));
 	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
 	//taking bounding edges at 0(min) and 7(max) of bounding box
@@ -149,7 +150,7 @@ bool Scene::drawboundingBox(Model* model)
 
 	for (size_t i = 0; i < 8; i++)
 	{
-		vec4 v(model->bounding_box.at(i));
+		vec4 v = model->bounding_box.at(i).raw_position;
 		v = ModelViewMatrix * v;
 		v = ProjectionMatrix * v; 
 
@@ -203,12 +204,30 @@ void Scene::drawModel(Model* model)
 	/*vector<vec4> modified_vertex;
 	vector<vec3> modified_vertex_normals;
 	vector<vec3> modified_face_normals;*/
-	 
-	if (drawboundingBox(model) == false) //model is out of the clip volume completly 
+	//TODO: true bounding box here to figure out of should draw or not
+	/**
+	* if (drawboundingBox(model) == false) //model is out of the clip volume completly 
 		return;
-	// Iterate the faces: transform to view frame (position and normals), and project positions (only projected normals if there is a need to draw them)
-	int size = model->faces.size();
-	for (size_t i = 0; i < size; i++)
+	*/
+	
+	//Note: transforming all normals and vertices in one sweep
+	for (auto it = model->vertices.begin(); it != model->vertices.end(); it++)
+	{
+		(*it).view_position = ModelViewMatrix * (*it).raw_position;
+		(*it).projected = ProjectionMatrix * (*it).view_position;
+		(*it).screen = m_renderer->viewPortVec(vec3(((*it).projected.x / (*it).projected.w), ((*it).projected.y / (*it).projected.w), ((*it).projected.z / (*it).projected.w)));
+	}
+
+
+	for (auto it2 = model->normals.begin(); it2 != model->normals.end(); it2++)
+	{
+		(*it2).view_direction = ModelViewMatrix * (*it2).original_direction;
+		(*it2).projected = ProjectionMatrix * (*it2).view_direction;
+	}
+
+	
+	/**
+	* for (size_t i = 0; i < size; i++)
 	{
 		Face cur_face = model->faces.at(i);
 		model->faces.at(i).v1.view = ModelViewMatrix * cur_face.v1.position;
@@ -244,36 +263,16 @@ void Scene::drawModel(Model* model)
 		model->faces.at(i).view_normal.w = 0;
 	}
 	
+	* 
+	*/
+	
 	m_renderer->DrawTriangles(&(model->faces),lights, ambient_scale);
-
-	//for (size_t i = 0; i < size; i++)
-	//{
-	//	vec4 v(model->vertices.at(i).homogenous);
-	//	
-	//	v = P * (Tc * (_world_transform * (model->_world_transform * (model->_model_transform * v))));
-	//	vec4 vertex_normal = model->vertices.at(i).normal;
-	//	vertex_normal[3] = 0;
-	//	vertex_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * vertex_normal))));
-	//	int j = 0;
-	//	if (i%3 == 0)
-	//	{
-	//		vec4 face_normal = model->faces.at(j++).normal;
-	//		face_normal[0] = 0;
-	//		face_normal = P * (Tc * (_world_transform * (model->_normal_world_transform * (model->_normal_model_transform * face_normal))));
-	//		modified_face_normals.push_back(vec3(face_normal.x, face_normal.y, face_normal.z));
-	//	}
-
-	//	modified_vertex.push_back(v);
-	//	modified_vertex_normals.push_back(vec3(vertex_normal.x, vertex_normal.y, vertex_normal.z));
-
-	//}
-
-	/*m_renderer->DrawTriangles(&(modified_vertex),model->material, &(modified_vertex_normals), &(modified_face_normals), lights, cameras.at(activeCamera)->eye, ambient_scale);*/
 
 }
 
 void Scene::drawFaceNormals(Model* model)
 {
+	/**
 	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
 	int size = model->faces.size();
 	for (size_t i = 0; i < size; i++)
@@ -291,10 +290,13 @@ void Scene::drawFaceNormals(Model* model)
 		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y,c_blue);
 
 	}
+	*/
+	
 }
 
 void Scene::drawVertexNormals(Model* model)
 {
+	/**
 	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
 	int size = model->faces.size();
 	for (size_t i = 0; i < size; i++)
@@ -327,6 +329,10 @@ void Scene::drawVertexNormals(Model* model)
 			m_renderer->DrawLine(cur_face.v3.screen.x, v3_2d_dest.x, cur_face.v3.screen.y, v3_2d_dest.y, c_blue);
 		}
 
+	}
+	*/
+	
+
 		//vec4 normal = model->vertices.at(i).normal;
 		//normal[3] = 0;
 		//vec4 v_origin = model->vertices.at(i).homogenous;
@@ -340,7 +346,7 @@ void Scene::drawVertexNormals(Model* model)
 		//vec3 v_2d_origin(v_origin.x / v_origin.w, v_origin.y / v_origin.w);
 		//v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
 		//m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y,c_blue);
-	}
+	
 
 }
 
@@ -557,11 +563,10 @@ void Camera::Perspective(const float fovy, const float aspect, const float zNear
 Scene::Scene()
 {
 	_world_transform = mat4(1.0);
-	
 	//m_renderer = new Renderer(512,512);
 	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
 	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
-	addLight(vec3(0, 1, 0), vec3(0, -1, 0), POINT_LIGHT);
+	addLight(vec3(-1, 1, 0), vec3(0, -1, 0), POINT_LIGHT);
 
 }
 

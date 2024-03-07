@@ -162,8 +162,4 @@
       <Filter>obj Files</Filter>
     </Object>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="vshader.glsl" />
-    <None Include="fshader.glsl" />
-  </ItemGroup>
 </Project>

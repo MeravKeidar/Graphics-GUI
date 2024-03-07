@@ -38,18 +38,19 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 		//default set to phong
 		Color flat_color;
 		Color c1, c2, c3;
-
+		vec4 face_flat_normal;
 		switch (shadingType)
 		{
 			case FLAT:
 				// TODO:: checl what to do in case of different materials
-				flat_color = calcColor(cur_face.v1.material, truncateVec4(cur_face.view_normal), truncateVec4(cur_face.view), lights, ambient_scale);
+				face_flat_normal = normalize( cur_face.v1_normal->view_direction + cur_face.v2_normal->view_direction + cur_face.v3_normal->view_direction);
+				flat_color = calcColor(cur_face.material, truncateVec4(face_flat_normal), truncateVec4(cur_face.face_normal->view_direction), lights, ambient_scale);
 				fillFlatTriangle(cur_face, flat_color);
 				break;
 			case GOURAUD:
-				 c1 = calcColor(cur_face.v1.material, truncateVec4(cur_face.v1.view_normal), truncateVec4(cur_face.v1.view), lights, ambient_scale);
-				 c2 = calcColor(cur_face.v2.material, truncateVec4(cur_face.v2.view_normal), truncateVec4(cur_face.v2.view), lights, ambient_scale);
-				 c3 = calcColor(cur_face.v3.material, truncateVec4(cur_face.v3.view_normal), truncateVec4(cur_face.v3.view), lights, ambient_scale);
+				 c1 = calcColor(cur_face.material, truncateVec4(cur_face.v1_normal->view_direction), truncateVec4(cur_face.v1->view_position), lights, ambient_scale);
+				 c2 = calcColor(cur_face.material, truncateVec4(cur_face.v2_normal->view_direction), truncateVec4(cur_face.v2->view_position), lights, ambient_scale);
+				 c3 = calcColor(cur_face.material, truncateVec4(cur_face.v3_normal->view_direction), truncateVec4(cur_face.v3->view_position), lights, ambient_scale);
 				fillGouraudTriangle(cur_face, c1, c2, c3);
 				break;
 					
@@ -67,9 +68,9 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambient_scale)
 {
 	// Sort vertices by y-coordinate
-	vec3 v1 = face.v1.screen;
-	vec3 v2 = face.v2.screen;
-	vec3 v3 = face.v3.screen;
+	vec3 v1 = face.v1->screen;
+	vec3 v2 = face.v2->screen;
+	vec3 v3 = face.v3->screen;
 	vec3 temp_vec;
 	if (v1.y < v2.y)
 	{
@@ -121,9 +122,9 @@ void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambie
 void Renderer::fillGouraudTriangle(Face face, Color c1, Color c2, Color c3)
 {
 	// Sort vertices by y-coordinate
-	vec3 v1 = face.v1.screen;
-	vec3 v2 = face.v2.screen;
-	vec3 v3 = face.v3.screen;
+	vec3 v1 = face.v1->screen;
+	vec3 v2 = face.v2->screen;
+	vec3 v3 = face.v3->screen;
 	vec3 temp_vec;
 	if (v1.y < v2.y)
 	{
@@ -176,9 +177,9 @@ void Renderer::fillGouraudTriangle(Face face, Color c1, Color c2, Color c3)
 void Renderer::fillFlatTriangle(Face face, Color color)
 {
 	// Sort vertices by y-coordinate
-	vec3 v1 = face.v1.screen;
-	vec3 v2 = face.v2.screen;
-	vec3 v3 = face.v3.screen;
+	vec3 v1 = face.v1->screen;
+	vec3 v2 = face.v2->screen;
+	vec3 v3 = face.v3->screen;
 	vec3 temp_vec;
 	if (v1.y < v2.y)
 	{
@@ -229,9 +230,9 @@ void Renderer::fillFlatTriangle(Face face, Color color)
 
 void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*> lights, GLfloat ambient_scale)
 {
-	vec3 v1 = face.v1.screen;
-	vec3 v2 = face.v2.screen;
-	vec3 v3 = face.v3.screen;
+	vec3 v1 = face.v1->screen;
+	vec3 v2 = face.v2->screen;
+	vec3 v3 = face.v3->screen;
 	if (x1 > x2) std::swap(x1, x2);
 	for (int x = x1; x <= x2; x++)
 	{
@@ -245,10 +246,10 @@ void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*
 				vec2 d1(x - v1.x, y - v1.y);
 				vec2 d2(x - v2.x, y - v2.y);
 				vec2 d3(x - v3.x, y - v3.y);
-				vec3 normal = truncateVec4(face.v1.view_normal * length(d1) + face.v2.view_normal * length(d2) + face.v3.view_normal * length(d3));
-				vec3 p = truncateVec4(face.v1.view * length(d1) + face.v2.view * length(d2) + face.v3.view * length(d3));
+				vec3 normal = truncateVec4(face.v1_normal->view_direction * length(d1) + face.v2_normal->view_direction * length(d2) + face.v3_normal->view_direction * length(d3));
+				vec3 p = truncateVec4(face.v1->view_position * length(d1) + face.v2->view_position * length(d2) + face.v3->view_position * length(d3));
 				//TODO: chack what to os in case of different materials for vector 
-				Color color = calcColor(face.v1.material, normal, p, lights, ambient_scale);
+				Color color = calcColor(face.material, normal, p, lights, ambient_scale);
 				DrawPixel(x, y, color);
 			}
 		}
@@ -258,9 +259,9 @@ void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*
 void Renderer::drawGouraudScanline(int x1, int x2, int y, Face face, Color c1, Color c2, Color c3)
 {
 	if (x1 > x2) std::swap(x1, x2);
-	vec3 v1 = face.v1.screen;
-	vec3 v2 = face.v2.screen;
-	vec3 v3 = face.v3.screen;
+	vec3 v1 = face.v1->screen;
+	vec3 v2 = face.v2->screen;
+	vec3 v3 = face.v3->screen;
 	for (int x = x1; x <= x2; x++)
 	{
 		GLfloat z = getDepth(x, y, v1, v2, v3);

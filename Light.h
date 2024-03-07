@@ -48,31 +48,58 @@ struct MATERIAL {
 
 struct Vertex
 {
-	vec4 position; //original position in world frame
-	vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
+	vec4 raw_position; //original position in world frame
+	vec4 view_position;  // position in view frame (after transformation amd camera matrix multiplication)
 	vec4 projected; 
 	vec3 screen; // after devision by w in screen coordinates
-	vec4 normal = vec4(0);
-	vec4 view_normal = vec4(0); // normal in view frame (after transformation amd camera matrix multiplication)
+	vec3 texture = vec3(0);
+	int texture_x = 0;
+	int texture_y = 0;
+	MATERIAL material;
+
+	Vertex(vec3 new_vec) { raw_position.x = new_vec.x;
+	raw_position.y = new_vec.y;
+	raw_position.z = new_vec.z;
+	raw_position.w = 1;
+	};
+
+	Vertex() {};
+};
+
+struct Normal
+{
+	vec4 original_direction; //original position in world frame
+	vec4 view_direction;  // position in view frame (after transformation amd camera matrix multiplication)
+	vec4 projected;
+	vec3 screen; // after devision by w in screen coordinates
 
 
 	vec3 texture = vec3(0);
 	int texture_x = 0;
 	int texture_y = 0;
 	MATERIAL material;
+
+	Normal(vec3 new_vec) {
+		original_direction.x = new_vec.x;
+		original_direction.y = new_vec.y;
+		original_direction.z = new_vec.z;
+		original_direction.w = 0;
+	};
 };
 
 struct Face
 {
-	Vertex v1;
-	Vertex v2;
-	Vertex v3;
-	vec4 position;
-	vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
-	vec4 projected;
-	vec4 normal = vec4(0);
-	vec4 view_normal = vec4(0); // normal in view frame (after transformation amd camera matrix multiplication)
-
+	Vertex* v1 = NULL;
+	Vertex* v2 = NULL;
+	Vertex* v3 = NULL;
+	//vec4 position;
+	//vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
+	//vec4 projected;
+	Normal* face_normal = NULL;
+	Normal* v1_normal = NULL;
+	Normal* v2_normal = NULL;
+	Normal* v3_normal = NULL;
+	MATERIAL material;
 };
 
 //

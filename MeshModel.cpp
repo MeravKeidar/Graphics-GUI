@@ -5,17 +5,18 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <limits>
 
 using namespace std;
 
 struct FaceIdcs
 {
 	// vertices positions
-	int v[4];
+	int v[4] = { 0,0,0,0 };
 	// vertices normals
-	int vn[4];
+	int vn[4]= { 0,0,0,0 };
 	// vertices textures
-	int vt[4];
+	int vt[4]= { 0,0,0,0 };
 
 	FaceIdcs()
 	{
@@ -79,14 +80,22 @@ MeshModel::~MeshModel(void)
 void MeshModel::loadFile(string fileName)
 {
 	ifstream ifile(fileName.c_str());
-	vector<FaceIdcs> tempfaces;
-	vector<vec3> vertex_normals;
+	//Note: faces is always at the end of file. can directly construct the face sturcture
+	//vector<FaceIdcs> tempfaces;
+	/**
+		vector<vec3> vertex_normals;
 	vector<vec3> vertex_textures;
 	vector<vec3> verticesText;
 	vector<vec3> verticesNormal;
-	// while not end of file
-	int current_normal_index = 0;
-	int current_texture_index = 0;
+	*/
+	
+	GLfloat min_x = numeric_limits<float>::max();
+	GLfloat min_y = min_x;
+	GLfloat min_z = min_x;
+	GLfloat max_x = numeric_limits<float>::min();
+	GLfloat max_y = max_x;
+	GLfloat max_z = max_x;
+
 
 	while (!ifile.eof())
 	{
@@ -100,37 +109,82 @@ void MeshModel::loadFile(string fileName)
 
 		issLine >> std::ws >> lineType;
 
-	if (lineType == "v")
-	{
-		vertices.push_back(vec3fFromStream(issLine));
-	}
-	else if (lineType == "vn")
-	{
-		vertex_normals.push_back(vec3fFromStream(issLine));
-	}
-	else if (lineType == "vt")
-	{
-		vertex_textures.push_back(vec3fFromStream(issLine));
-	}
+		if (lineType == "v")
+		{
+			vec3 current_v3 = vec3fFromStream(issLine);
+			vertices.push_back(current_v3);
+			max_x = max(max_x, current_v3.x);
+			max_y = max(max_y, current_v3.y);
+			max_z = max(max_z, current_v3.z);
 
-	else if (lineType == "f")
-	tempfaces.push_back(issLine);
-	else if (lineType == "#" || lineType == "")
-	{
+			min_x = min(min_x, current_v3.x);
+			min_y = min(min_y, current_v3.y);
+			min_z = min(min_x, current_v3.z);
 
-	}
-	else
-	{
-		cout << "Found unknown line Type \"" << lineType << "\"";
-	}
+		}
+		else if (lineType == "vn")
+		{
+			normals.push_back(vec3fFromStream(issLine));
+		}
+		else if (lineType == "vt")
+		{
+			//TODO: avoid for now from textures
+			//vertex_textures.push_back(vec3fFromStream(issLine));
 		}
 
+		else if (lineType == "f")
+		{
+			//Note: down the line the face normal for drawing and for calculation(acquired via averaging vertex normals) are not the same
+			//Note: keep textures for later
+			FaceIdcs face_indices(issLine);
+			Face current_face;
+
+			current_face.v1 = &vertices.at(face_indices.v[0]-1);
+			current_face.v2 = &vertices.at(face_indices.v[1]-1);
+			current_face.v3 = &vertices.at(face_indices.v[2]-1);
+			vec3 xi, xj, xk;
+			xi = truncateVec4(current_face.v1->raw_position);
+			xj = truncateVec4(current_face.v1->raw_position);
+			xk = truncateVec4(current_face.v1->raw_position);
+			vec3 normal3 = cross((xj - xi), (xj - xk));
+			Normal normal(normal3);
+			//add face normal to pool of normals
+			normals.push_back(normal3);
+			current_face.face_normal = &(*(normals.end() - 1));
+			//TODO: reconstruct calculating vertex normal logic
+			Normal custom_vertex_normal(vec3(0));
+			
+			if (face_indices.vn[0] != 0)
+			{
+				current_face.v1_normal = &normals.at(face_indices.vn[0] - 1);
+				current_face.v2_normal = &normals.at(face_indices.vn[1] - 1);
+				current_face.v3_normal = &normals.at(face_indices.vn[2] - 1);
+			}
+			else
+			{
+
+			}
+			
+
+
+			
+
+			faces.push_back(current_face);
+		
+		}
+	
+		else if (lineType != "#" && lineType != "")
+		{
+			cout << "Found unknown line Type \"" << lineType << "\"";
+		}
+	
+	}
+	/**
 	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
 	{
 		Face current_face;
 		//calculate face normals
 		vec3 xi, xj, xk, normal;
-		GLfloat norm;
 
 		xi = vertices.at((*it).v[0] - 1);
 		xj = vertices.at((*it).v[1] - 1);
@@ -172,9 +226,12 @@ void MeshModel::loadFile(string fileName)
 		}
 		faces.push_back(current_face);
 	}
+	*/
+	
 
 	//normalize all normals 
-	for (size_t i = 0; i < faces.size(); i++)
+	/**
+			for (size_t i = 0; i < faces.size(); i++)
 	{
 		faces.at(i).v1.normal = normalize(faces.at(i).v1.normal);
 		faces.at(i).v2.normal = normalize(faces.at(i).v2.normal);
@@ -184,8 +241,11 @@ void MeshModel::loadFile(string fileName)
 		faces.at(i).v2.normal.w = 0;
 		faces.at(i).v3.normal.w = 0;
 	}
+	*/
 
-	boundingBox();
+	//Note: collect min max before bounding box and handing over the values
+	//Assume all vertices of model are in use(otherwise bounding box would give illusion of bigger than needed)
+	boundingBox(min_x,min_y,min_z,max_x,max_y,max_z);
 
 }
 
@@ -209,36 +269,23 @@ MeshModel::MeshModel()
 	
 }
 
-void MeshModel::boundingBox() 
+void MeshModel::boundingBox(GLfloat min_x, GLfloat min_y, GLfloat min_z, GLfloat max_x, GLfloat max_y, GLfloat max_z)
 {
 	if (vertices.empty()){return;}
-	vec3 min = (vertices[0].x, vertices[0].y, vertices[0].y);
-	vec3 max = (vertices[0].x, vertices[0].y, vertices[0].y);
-	for (auto& vertex : vertices)
-	{
-		min.x = (vertex.x < min.x) ? vertex.x : min.x;
-		max.x = (vertex.x > max.x) ? vertex.x : max.x;
 
-		min.y = (vertex.y < min.y) ? vertex.y : min.y;
-		max.y = (vertex.y > max.y) ? vertex.y : max.y;
+	//Note: settle for this center of mass for now
+	_center_of_mass = vec4((min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2, 1);
 
-		min.z = (vertex.z < min.z) ? vertex.z : min.z;
-		max.z = (vertex.z > max.z) ? vertex.z : max.z;
 
-		_center_of_mass += vertex;
-	}
-
-	_center_of_mass = _center_of_mass / vertices.size(); 
-
-	bounding_box.push_back(vec3(min.x, min.y, min.z));
-	bounding_box.push_back(vec3(max.x, min.y, min.z));
-	bounding_box.push_back(vec3(max.x, min.y, max.z));
-	bounding_box.push_back(vec3(min.x, min.y, max.z));
-	bounding_box.push_back(vec3(min.x, max.y, min.z));
-	bounding_box.push_back(vec3(max.x, max.y, min.z));
-	bounding_box.push_back(vec3(max.x, max.y, max.z));
-	bounding_box.push_back(vec3(min.x, max.y, max.z));
-	vec3 model_center((max.x + min.x) / 2, (max.y + min.y) / 2, (max.z + min.z) / 2);
+	bounding_box.push_back(vec3(min_x, min_y, min_z));
+	bounding_box.push_back(vec3(max_x, min_y, min_z));
+	bounding_box.push_back(vec3(max_x, min_y, max_z));
+	bounding_box.push_back(vec3(min_x, min_y, max_z));
+	bounding_box.push_back(vec3(min_x, max_y, min_z));
+	bounding_box.push_back(vec3(max_x, max_y, min_z));
+	bounding_box.push_back(vec3(max_x, max_y, max_z));
+	bounding_box.push_back(vec3(min_x, max_y, max_z));
+	vec3 model_center((max_x + min_x) / 2, (max_y + min_y) / 2, (max_z + min_z) / 2);
 
 	_world_transform = TranslationMat(-model_center) * _world_transform;
 	_normal_world_transform = TranslationMat(-model_center) * _normal_world_transform;
@@ -249,7 +296,9 @@ void MeshModel::boundingBox()
 
 void PrimMeshModel::Tetrahedron()
 {
-	Face f1, f2, f3, f4;
+	loadFile("obj_files/tetrahedron.obj");
+	
+	/*Face f1, f2, f3, f4;
 	Vertex _x, _y, _z, _o;
 	vertices.push_back(vec3(1, 0, 0));
 	vertices.push_back(vec3(0, 1, 0));
@@ -302,6 +351,8 @@ void PrimMeshModel::Tetrahedron()
 	faces.push_back(f2);
 	faces.push_back(f3);
 	faces.push_back(f4);
+	*/
+	
 
 	//Vertex temp;
 	////x
@@ -404,7 +455,7 @@ void PrimMeshModel::Tetrahedron()
 	*/
 	
 	
-	boundingBox();
+	//boundingBox();
 
 }
 

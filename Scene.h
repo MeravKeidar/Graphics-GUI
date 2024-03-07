@@ -25,8 +25,10 @@ public:
 	virtual ~Model() {}
 	mat4 _model_transform;/*
 	vector<PolygonTri> faces;*/
-	vector<vec3> bounding_box;
-	vector<vec3> vertices;
+	vector<Vertex> bounding_box;
+	vector<Vertex> clipping_box;
+	vector<Vertex> vertices;
+	vector<Normal> normals;
 	vector<Face> faces;
 	vec4 _center_of_mass; 
 	mat4 _world_transform;
