@@ -56,6 +56,7 @@ struct Vertex
 	int texture_x = 0;
 	int texture_y = 0;
 	MATERIAL material;
+	Color updated_color;
 
 	Vertex(vec3 new_vec) { raw_position.x = new_vec.x;
 	raw_position.y = new_vec.y;
@@ -92,13 +93,12 @@ struct Face
 	Vertex* v1 = NULL;
 	Vertex* v2 = NULL;
 	Vertex* v3 = NULL;
-	//vec4 position;
-	//vec4 view;  // position in view frame (after transformation amd camera matrix multiplication)
-	//vec4 projected;
-	Normal* face_normal = NULL;
+	Vertex* face_center;
+
 	Normal* v1_normal = NULL;
 	Normal* v2_normal = NULL;
 	Normal* v3_normal = NULL;
+	Normal* face_normal = NULL;
 	MATERIAL material;
 };
 

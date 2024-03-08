@@ -41,6 +41,7 @@ public:
 	void Rotate(const int hinge, const GLfloat theta);
 	void changeUniformColor(Color color);
 	void changeUniformMaterial(MATERIAL material);
+	void updateModel(Camera active_camera, Renderer* m_renderer);
 };
 
 

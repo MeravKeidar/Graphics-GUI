@@ -97,6 +97,24 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 	activeCamera++;
 }
 
+void Model::updateModel(Camera active_camera,Renderer* m_renderer)
+{
+	for (auto vertex_it = vertices.begin(); vertex_it != vertices.end(); vertex_it++)
+	{
+		(*vertex_it).view_position = active_camera.cTransform*(_world_transform*(_model_transform * (*vertex_it).raw_position));
+		(*vertex_it).projected = active_camera.projection * (*vertex_it).view_position;
+		vec3 v1_screen((*vertex_it).projected.x / (*vertex_it).projected.w, (*vertex_it).projected.y / (*vertex_it).projected.w, (*vertex_it).projected.z / (*vertex_it).projected.w);
+		(*vertex_it).screen = m_renderer->viewPortVec(v1_screen);
+		
+	}
+
+	for (auto normal_it = normals.begin(); normal_it != normals.end(); normal_it++)
+	{
+		(*normal_it).view_direction = active_camera.cTransform *(_normal_world_transform*(_normal_model_transform * (*normal_it).original_direction));
+		(*normal_it).projected = active_camera.projection * (*normal_it).view_direction;
+	}
+}
+
 void Scene::draw()
 {
 	m_renderer->ClearColorBuffer();
@@ -115,21 +133,26 @@ void Scene::draw()
 		current_light->view_direction = ProjectionMatrix * current_light->direction;
 	}
 
-	for (size_t i = 0; i < size; i++)
+
+
+
+	for (auto model_it = models.begin(); model_it  != models.end(); model_it++)
 	{
-		drawModel(models.at(i));
-		//drawVertexNormals(models.at(i));
+		(*model_it)->updateModel(*cameras.at(activeCamera),m_renderer);
+		drawModel(*model_it);
+
+
 		if (displayFnormal) 
 		{
-			drawFaceNormals(models.at(i));
+			drawFaceNormals((*model_it));
 		}
 		if (displayVnormal)
 		{
-			drawVertexNormals(models.at(i));
+			drawVertexNormals((*model_it));
 		}
 
 	}
-	
+	//draw model
 	m_renderer->SwapBuffers();
 }
 
@@ -198,9 +221,9 @@ bool Scene::drawboundingBox(Model* model)
 void Scene::drawModel(Model* model)
 {
 	
-	mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
+	/*mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
 	mat4 NormalViewMatrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
-	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
+	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;*/
 	/*vector<vec4> modified_vertex;
 	vector<vec3> modified_vertex_normals;
 	vector<vec3> modified_face_normals;*/
@@ -211,19 +234,7 @@ void Scene::drawModel(Model* model)
 	*/
 	
 	//Note: transforming all normals and vertices in one sweep
-	for (auto it = model->vertices.begin(); it != model->vertices.end(); it++)
-	{
-		(*it).view_position = ModelViewMatrix * (*it).raw_position;
-		(*it).projected = ProjectionMatrix * (*it).view_position;
-		(*it).screen = m_renderer->viewPortVec(vec3(((*it).projected.x / (*it).projected.w), ((*it).projected.y / (*it).projected.w), ((*it).projected.z / (*it).projected.w)));
-	}
 
-
-	for (auto it2 = model->normals.begin(); it2 != model->normals.end(); it2++)
-	{
-		(*it2).view_direction = ModelViewMatrix * (*it2).original_direction;
-		(*it2).projected = ProjectionMatrix * (*it2).view_direction;
-	}
 
 	
 	/**
@@ -272,25 +283,27 @@ void Scene::drawModel(Model* model)
 
 void Scene::drawFaceNormals(Model* model)
 {
-	/**
-	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
-	int size = model->faces.size();
-	for (size_t i = 0; i < size; i++)
-	{
-		Face cur_face = model->faces.at(i);
-		vec4 dest = cur_face.view + cur_face.view_normal;
-		dest = ProjectionMatrix * dest;
+	
+	//mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
+	//int size = model->faces.size();
+	//for (size_t i = 0; i < size; i++)
+	//{
+	//	Face cur_face = model->faces.at(i);
+	//
+	//	//Note:Where does w gets into play
+	//	vec4 dest = cur_face.view + cur_face.face_normal->view_direction;
+	//	dest = ProjectionMatrix * dest;
 
-		if ((cur_face.projected.w < 0.00001) && (cur_face.projected.w > -0.00001)) continue;
-		vec3 v_2d_dest(dest.x / dest.w, dest.y / dest.w);
-		v_2d_dest = m_renderer->viewPortVec(v_2d_dest); //View-port
-		vec3 v_2d_origin(cur_face.projected.x / cur_face.projected.w, cur_face.projected.y / cur_face.projected.w);
-		v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
-		
-		m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y,c_blue);
+	//	if ((cur_face.projected.w < 0.00001) && (cur_face.projected.w > -0.00001)) continue;
+	//	vec3 v_2d_dest(dest.x / dest.w, dest.y / dest.w);
+	//	v_2d_dest = m_renderer->viewPortVec(v_2d_dest); //View-port
+	//	vec3 v_2d_origin(cur_face.projected.x / cur_face.projected.w, cur_face.projected.y / cur_face.projected.w);
+	//	v_2d_origin = m_renderer->viewPortVec(v_2d_origin); //View-port
+	//	
+	//	m_renderer->DrawLine(v_2d_origin.x, v_2d_dest.x, v_2d_origin.y, v_2d_dest.y,c_blue);
 
-	}
-	*/
+	//}
+	//
 	
 }
 

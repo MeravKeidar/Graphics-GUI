@@ -142,6 +142,12 @@ void MeshModel::loadFile(string fileName)
 			current_face.v1 = &vertices.at(face_indices.v[0]-1);
 			current_face.v2 = &vertices.at(face_indices.v[1]-1);
 			current_face.v3 = &vertices.at(face_indices.v[2]-1);
+
+			vec4 temp_vec = *current_face.v1->raw_position + *current_face.v2->raw_position + *current_face.v3->raw_position;
+			Vertex current_face_center_position(truncateVec4(temp_vec)/3);
+			vertices.push_back(current_face_center_position);
+			current_face.face_center = &(*(vertices.end() - 1));
+
 			vec3 xi, xj, xk;
 			xi = truncateVec4(current_face.v1->raw_position);
 			xj = truncateVec4(current_face.v1->raw_position);
@@ -162,7 +168,26 @@ void MeshModel::loadFile(string fileName)
 			}
 			else
 			{
+				if (current_face.v1_normal == NULL)
+				{
+					normals.push_back(custom_vertex_normal);
+					current_face.v1_normal = &(*(normals.end() - 1));
+				}
+				current_face.v1_normal->original_direction += current_face.face_normal->original_direction;
 
+				if (current_face.v2_normal == NULL)
+				{
+					normals.push_back(custom_vertex_normal);
+					current_face.v2_normal = &(*(normals.end() - 1));
+				}
+				current_face.v2_normal->original_direction += current_face.face_normal->original_direction;
+
+				if (current_face.v3_normal == NULL)
+				{
+					normals.push_back(custom_vertex_normal);
+					current_face.v3_normal = &(*(normals.end() - 1));
+				}
+				current_face.v3_normal->original_direction += current_face.face_normal->original_direction;
 			}
 			
 
