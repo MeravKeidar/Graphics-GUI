@@ -52,7 +52,7 @@ int my_main() {
 	}
 
 	// Create a GLFWwindow of 512 by 512 pixels, named "CG"
-	GLFWwindow* window = glfwCreateWindow(512, 512, "CG", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1024, 1024, "CG", NULL, NULL);
 	if (!window) {
 		fprintf(stderr, "Failed to create GLFW window\n");
 		glfwTerminate();
@@ -62,14 +62,12 @@ int my_main() {
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1); // Enable vsync
 
-
 	// Initialize GLEW
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) {
 		std::cerr << "Failed to initialize GLEW\n";
 		return -1;
 	}
-	
 	
 	// Setup Dear ImGui context
 	ImguiInit(window);
@@ -86,19 +84,14 @@ int my_main() {
 			std::cerr << "OpenGL error: " << error << std::endl;
 		}
 
-		// Start the ImGui frame
 		ImguiFrame();
 		scene->draw();
-		//renderer->DrawTriangles(&post_viewport_mat);
-		
-		//renderer->SwapBuffers();
 		MainMenuBar(scene);
 		ImguiPopUps(scene);
-		
+	
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);
-		
 	}
 
 	// Cleanup

@@ -54,20 +54,19 @@ bool transform_camera = false;
 bool add_camera = false;
 bool show_matrices = false;
 bool show_instructions = false;
-bool display_manual = true;
+bool display_manual = false;
 bool add_light = false;
 bool transform_lights = false;
 bool change_material = false;
 bool change_ambient = false;
+bool change_normal_scale = false;
 
 void MainMenuBar(Scene* scene)
 {
-	
 	/*static char* file_dialog_buffer = new char[500];
 	static char path[500] = "";*/
 	if (ImGui::BeginMainMenuBar())
 	{
-		
 		if (ImGui::BeginMenu("Load model"))
 		{
 	
@@ -115,6 +114,11 @@ void MainMenuBar(Scene* scene)
 						scene->displayFnormal = true;
 				}
 				ImGui::EndMenu();
+			}
+
+			if (ImGui::MenuItem("Change Normal scale"))
+			{
+				change_normal_scale = true;
 			}
 
 			if (ImGui::MenuItem("Reset scene"))
@@ -249,6 +253,23 @@ void ImguiPopUps(Scene* scene)
 		static GLfloat a = 0;
 		ImGui::SliderFloat("Ambient Scale", &a, 0.0, 1.0);
 		scene->ambient_scale = a;
+		if (ImGui::Button("OK"))
+		{
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+	}
+
+	if (change_normal_scale)
+	{
+		ImGui::OpenPopup("Change Normal Scale");
+		change_normal_scale = false;
+	}
+	if (ImGui::BeginPopupModal("Change Normal Scale", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		static GLfloat s = 0.5;
+		ImGui::SliderFloat("Normal Scale", &s, 0.0, 1.0);
+		scene->normal_scale = s;
 		if (ImGui::Button("OK"))
 		{
 			ImGui::CloseCurrentPopup();

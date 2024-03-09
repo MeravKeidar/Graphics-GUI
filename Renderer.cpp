@@ -33,7 +33,6 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 	for (size_t i = 0; i < size; i++)
 	{
 		Face cur_face = faces->at(i);
-		
 		//clipping method
 		//default set to phong
 		Color flat_color;
@@ -43,14 +42,14 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 		{
 			case FLAT:
 				// TODO:: checl what to do in case of different materials
-				face_flat_normal = normalize( cur_face.v1_normal->view_direction + cur_face.v2_normal->view_direction + cur_face.v3_normal->view_direction);
-				flat_color = calcColor(cur_face.material, truncateVec4(face_flat_normal), truncateVec4(cur_face.face_normal->view_direction), lights, ambient_scale);
+				//face_flat_normal = normalize( cur_face.v1_normal->view_direction + cur_face.v2_normal->view_direction + cur_face.v3_normal->view_direction);
+				flat_color = calcColor(cur_face.v1->material, truncateVec4(cur_face.face_normal.view_direction), truncateVec4(cur_face.face_center.view_position), lights, ambient_scale);
 				fillFlatTriangle(cur_face, flat_color);
 				break;
 			case GOURAUD:
-				 c1 = calcColor(cur_face.material, truncateVec4(cur_face.v1_normal->view_direction), truncateVec4(cur_face.v1->view_position), lights, ambient_scale);
-				 c2 = calcColor(cur_face.material, truncateVec4(cur_face.v2_normal->view_direction), truncateVec4(cur_face.v2->view_position), lights, ambient_scale);
-				 c3 = calcColor(cur_face.material, truncateVec4(cur_face.v3_normal->view_direction), truncateVec4(cur_face.v3->view_position), lights, ambient_scale);
+				 c1 = calcColor(cur_face.v1->material, truncateVec4(cur_face.v1_normal->view_direction), truncateVec4(cur_face.v1->view_position), lights, ambient_scale);
+				 c2 = calcColor(cur_face.v2->material, truncateVec4(cur_face.v2_normal->view_direction), truncateVec4(cur_face.v2->view_position), lights, ambient_scale);
+				 c3 = calcColor(cur_face.v3->material, truncateVec4(cur_face.v3_normal->view_direction), truncateVec4(cur_face.v3->view_position), lights, ambient_scale);
 				fillGouraudTriangle(cur_face, c1, c2, c3);
 				break;
 					
@@ -249,7 +248,7 @@ void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*
 				vec3 normal = truncateVec4(face.v1_normal->view_direction * length(d1) + face.v2_normal->view_direction * length(d2) + face.v3_normal->view_direction * length(d3));
 				vec3 p = truncateVec4(face.v1->view_position * length(d1) + face.v2->view_position * length(d2) + face.v3->view_position * length(d3));
 				//TODO: chack what to os in case of different materials for vector 
-				Color color = calcColor(face.material, normal, p, lights, ambient_scale);
+				Color color = calcColor(face.v1->material, normal, p, lights, ambient_scale);
 				DrawPixel(x, y, color);
 			}
 		}
@@ -318,14 +317,10 @@ bool Renderer::liangBarsky(vec3 v1, vec3 v2)
 Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, GLfloat ambient_scale)
 {
 	Color color = material.color;
-	//direction from point to light(per light)
-	vec3 l;
-	//direction from point to camera - point is in view frame;
-	vec3 v = normalize(-p);
-
+	vec3 l; //direction from point to light(per light)
+	vec3 v = normalize(-p); //direction from point to camera - point is in view frame;
 	//ambient
 	color *= (ambient_scale * material.ambient_fraction);
-
 	//itarate per light source
 	for (size_t i = 0; i < lights.size(); i++)
 	{
@@ -344,10 +339,8 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 
 		//diffuse
 		color = color + (color + current_light->color) * (material.diffuse_fraction * LN * current_light->intensity);
-
 		// specular
 		GLfloat Shininess = pow(abs(dot(r, v)), material.shininess_coefficient);
-		
 		color = color + (color + current_light->color) * (material.specular_fraction * Shininess * current_light->intensity);
 	}
 
@@ -560,16 +553,14 @@ vec3 Renderer::viewPortVec(vec3 cannonial)
 	GLfloat factor = min(m_width, m_height);
 	//to fix center
 	GLfloat max_fix = max(m_width, m_height);
-	return vec3((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2, cannonial.z);
+	return vec3((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2, (cannonial.z + 1 ) / 2 );
 }
 
 GLfloat Renderer::getDepth(int x, int y, vec4 v1, vec4 v2, vec4 v3 )
 {
-
 	vec2 p1 (x - v1.x, y - v1.y);
 	vec2 p2 (x - v2.x, y - v2.y);
 	vec2 p3 (x - v3.x, y - v3.y);
-
 	GLfloat area1 = abs(cross(p2, p3));
 	GLfloat area2 = abs(cross(p1, p3));
 	GLfloat area3 = abs(cross(p2, p1));

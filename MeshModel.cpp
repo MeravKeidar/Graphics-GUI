@@ -81,7 +81,7 @@ void MeshModel::loadFile(string fileName)
 {
 	ifstream ifile(fileName.c_str());
 	//Note: faces is always at the end of file. can directly construct the face sturcture
-	//vector<FaceIdcs> tempfaces;
+	vector<FaceIdcs> tempfaces;
 	/**
 		vector<vec3> vertex_normals;
 	vector<vec3> vertex_textures;
@@ -95,14 +95,14 @@ void MeshModel::loadFile(string fileName)
 	GLfloat max_x = numeric_limits<float>::min();
 	GLfloat max_y = max_x;
 	GLfloat max_z = max_x;
-
+	bool calculate_vertex_normals = false;
 
 	while (!ifile.eof())
 	{
 		// get line
 		string curLine;
 		getline(ifile, curLine);
-
+		bool calculate_vertex_normals = true;
 		// read type of the line
 		istringstream issLine(curLine);
 		string lineType;
@@ -134,41 +134,93 @@ void MeshModel::loadFile(string fileName)
 
 		else if (lineType == "f")
 		{
-			//Note: down the line the face normal for drawing and for calculation(acquired via averaging vertex normals) are not the same
+			//Note: down the line the face normal for drawing and for calculation(acquired via averaging vertex normals) are not the same -- they should be...
 			//Note: keep textures for later
 			FaceIdcs face_indices(issLine);
-			Face current_face;
-
-			current_face.v1 = &vertices.at(face_indices.v[0]-1);
-			current_face.v2 = &vertices.at(face_indices.v[1]-1);
-			current_face.v3 = &vertices.at(face_indices.v[2]-1);
-
-			vec4 temp_vec = *current_face.v1->raw_position + *current_face.v2->raw_position + *current_face.v3->raw_position;
-			Vertex current_face_center_position(truncateVec4(temp_vec)/3);
-			vertices.push_back(current_face_center_position);
-			current_face.face_center = &(*(vertices.end() - 1));
-
-			vec3 xi, xj, xk;
-			xi = truncateVec4(current_face.v1->raw_position);
-			xj = truncateVec4(current_face.v1->raw_position);
-			xk = truncateVec4(current_face.v1->raw_position);
-			vec3 normal3 = cross((xj - xi), (xj - xk));
-			Normal normal(normal3);
-			//add face normal to pool of normals
-			normals.push_back(normal3);
-			current_face.face_normal = &(*(normals.end() - 1));
-			//TODO: reconstruct calculating vertex normal logic
-			Normal custom_vertex_normal(vec3(0));
+			tempfaces.push_back(face_indices);
 			
-			if (face_indices.vn[0] != 0)
-			{
-				current_face.v1_normal = &normals.at(face_indices.vn[0] - 1);
-				current_face.v2_normal = &normals.at(face_indices.vn[1] - 1);
-				current_face.v3_normal = &normals.at(face_indices.vn[2] - 1);
-			}
-			else
-			{
-				if (current_face.v1_normal == NULL)
+		
+		}
+	
+		else if (lineType != "#" && lineType != "")
+		{
+			cout << "Found unknown line Type \"" << lineType << "\"";
+		}
+	
+	}
+
+	if (normals.empty())
+	{
+		calculate_vertex_normals = true;
+		for (size_t i = 0; i < vertices.size(); i++)
+		{
+			normals.push_back(Normal(vec3(0, 0, 0)));
+		}
+	}
+
+	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
+	{
+		Face current_face;
+		current_face.v1 = &vertices.at((*it).v[0] - 1);
+		current_face.v2 = &vertices.at((*it).v[1] - 1);
+		current_face.v3 = &vertices.at((*it).v[2] - 1);
+
+		vec4 temp_vec = current_face.v1->raw_position + current_face.v2->raw_position + current_face.v3->raw_position;
+		vec3 current_face_center_position = (normalize(truncateVec4(temp_vec)));
+		//vertices.push_back(current_face_center_position);  BUG
+		current_face.face_center = Vertex(current_face_center_position);
+
+		vec3 xi, xj, xk;
+		xi = truncateVec4(current_face.v1->raw_position);
+		xj = truncateVec4(current_face.v2->raw_position);
+		xk = truncateVec4(current_face.v3->raw_position);
+		vec4 normal_direction = (cross((xj - xi), (xj - xk)), 0);
+		normal_direction = normalize(normal_direction);
+		current_face.face_normal.original_direction = normal_direction;
+
+		if (calculate_vertex_normals)
+		{
+			current_face.v1_normal = &normals.at((*it).v[0] - 1);
+			current_face.v1_normal->original_direction += normal_direction;
+
+			current_face.v2_normal = &normals.at((*it).v[1] - 1);
+			current_face.v2_normal->original_direction += normal_direction;
+
+			current_face.v3_normal = &normals.at((*it).v[2] - 1);
+			current_face.v3_normal->original_direction += normal_direction;
+		}
+		else
+		{
+			current_face.v1_normal = &normals.at((*it).vn[0] - 1);
+			current_face.v2_normal = &normals.at((*it).vn[1] - 1);
+			current_face.v3_normal = &normals.at((*it).vn[2] - 1);
+		}
+
+		faces.push_back(current_face);
+	}
+
+	boundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
+
+}
+
+//All the old code from loadfile here
+	//vec3 normal3 = cross((xj - xi), (xj - xk));
+			//Normal normal(normal3);
+			////add face normal to pool of normals
+			//normals.push_back(normal3);
+			////current_face.face_normal = &(*(normals.end() - 1));
+			////TODO: reconstruct calculating vertex normal logic
+			//Normal custom_vertex_normal(vec3(0));
+			//
+			//if (face_indices.vn[0] != 0)
+			//{
+			//	current_face.v1_normal = &normals.at(face_indices.vn[0] - 1);
+			//	current_face.v2_normal = &normals.at(face_indices.vn[1] - 1);
+			//	current_face.v3_normal = &normals.at(face_indices.vn[2] - 1);
+			//}
+			//else
+			//{
+				/*if (current_face.v1_normal == NULL)
 				{
 					normals.push_back(custom_vertex_normal);
 					current_face.v1_normal = &(*(normals.end() - 1));
@@ -187,23 +239,11 @@ void MeshModel::loadFile(string fileName)
 					normals.push_back(custom_vertex_normal);
 					current_face.v3_normal = &(*(normals.end() - 1));
 				}
-				current_face.v3_normal->original_direction += current_face.face_normal->original_direction;
-			}
-			
+				current_face.v3_normal->original_direction += current_face.face_normal->original_direction;*/
+				//}
 
 
-			
-
-			faces.push_back(current_face);
-		
-		}
-	
-		else if (lineType != "#" && lineType != "")
-		{
-			cout << "Found unknown line Type \"" << lineType << "\"";
-		}
-	
-	}
+	// the face calculation thingy has to be at the end... 
 	/**
 	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
 	{
@@ -270,9 +310,7 @@ void MeshModel::loadFile(string fileName)
 
 	//Note: collect min max before bounding box and handing over the values
 	//Assume all vertices of model are in use(otherwise bounding box would give illusion of bigger than needed)
-	boundingBox(min_x,min_y,min_z,max_x,max_y,max_z);
-
-}
+	
 
 
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
@@ -573,3 +611,25 @@ PrimMeshModel::PrimMeshModel(string type)
 		Cube();
 	}
 }
+
+//vec3 xi, xj, xk;
+//xi = truncateVec4(current_face.v1->raw_position);
+//xj = truncateVec4(current_face.v2->raw_position);
+//xk = truncateVec4(current_face.v3->raw_position);
+//vec4 normal_direction = (cross((xj - xi), (xj - xk)), 0);
+//normal_direction = normalize(normal_direction);
+//current_face.face_normal.original_direction = normal_direction;
+//
+//if (calculate_vertex_normals)
+//{
+//	current_face.v1_normal->original_direction += normal_direction;
+//	current_face.v2_normal->original_direction += normal_direction;
+//	current_face.v3_normal->original_direction += normal_direction;
+//}
+//else
+//{
+//	current_face.v1_normal = &normals.at(face_indices.vn[0] - 1);
+//	current_face.v2_normal = &normals.at(face_indices.vn[1] - 1);
+//	current_face.v3_normal = &normals.at(face_indices.vn[2] - 1);
+//}
+//faces.push_back(current_face);

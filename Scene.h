@@ -17,7 +17,6 @@ using namespace std;
 
 class Model {
 protected:
-	
 	void virtual draw() = 0;
 
 public:
@@ -35,12 +34,12 @@ public:
 	mat4 _normal_world_transform;
 	mat4 _normal_model_transform;
 
-
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
 	void changeUniformColor(Color color);
 	void changeUniformMaterial(MATERIAL material);
+	void colorByNormal();
 	void updateModel(Camera active_camera, Renderer* m_renderer);
 };
 
@@ -103,4 +102,5 @@ public:
 	bool displayCameras = false;
 	bool displayBoundingBox = false;
 	GLfloat ambient_scale = 0.2;
+	GLfloat normal_scale = 0.5;
 };

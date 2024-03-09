@@ -56,7 +56,6 @@ struct Vertex
 	int texture_x = 0;
 	int texture_y = 0;
 	MATERIAL material;
-	Color updated_color;
 
 	Vertex(vec3 new_vec) { raw_position.x = new_vec.x;
 	raw_position.y = new_vec.y;
@@ -71,19 +70,17 @@ struct Normal
 {
 	vec4 original_direction; //original position in world frame
 	vec4 view_direction;  // position in view frame (after transformation amd camera matrix multiplication)
-	vec4 projected;
-	vec3 screen; // after devision by w in screen coordinates
-
-
-	vec3 texture = vec3(0);
-	int texture_x = 0;
-	int texture_y = 0;
-	MATERIAL material;
-
+	//vec4 projected; // No meaning to projection a normal 
+	//vec3 screen; // after devision by w in screen coordinates
+	
+	Normal() {
+		original_direction = (0, 0, 0, 0);
+	};
 	Normal(vec3 new_vec) {
-		original_direction.x = new_vec.x;
-		original_direction.y = new_vec.y;
-		original_direction.z = new_vec.z;
+		vec3 normal = normalize(new_vec);
+		original_direction.x = normal.x;
+		original_direction.y = normal.y;
+		original_direction.z = normal.z;
 		original_direction.w = 0;
 	};
 };
@@ -93,13 +90,15 @@ struct Face
 	Vertex* v1 = NULL;
 	Vertex* v2 = NULL;
 	Vertex* v3 = NULL;
-	Vertex* face_center;
+	Vertex face_center;
 
 	Normal* v1_normal = NULL;
 	Normal* v2_normal = NULL;
 	Normal* v3_normal = NULL;
-	Normal* face_normal = NULL;
-	MATERIAL material;
+	Normal face_normal;
+
+
+	Face() {};
 };
 
 //
@@ -156,6 +155,5 @@ public:
 	//location after projection + w division
 	vec4 view_position;
 	Light() : position(0, 1, 0, 1), direction(0, -1, 0, 0), intensity(0.5) {light_type = POINT_LIGHT;};
-
 
 };
