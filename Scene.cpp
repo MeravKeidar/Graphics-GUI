@@ -553,8 +553,10 @@ void Scene::Reset()
 	lights.clear();
 	activeModel = -1;
 	activeCamera = -1;
-	int nModels = 0;
-	int nCameras = 0;
+	activeLight = -1;
+	nModels = 0;
+	nCameras = 0;
+	nLights = 0;
 	addCamera(vec4(0, 0, 2, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
 	changeShading(FLAT);
 }
@@ -652,6 +654,8 @@ void Scene::addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light
 	new_light->light_type = light_type;
 	new_light->color = color;
 	lights.push_back(new_light);
+	activeLight++;
+	nLights++;
 }
 
 

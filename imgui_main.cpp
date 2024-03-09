@@ -187,9 +187,22 @@ void MainMenuBar(Scene* scene)
 			}
 			
 			if (ImGui::MenuItem("Transform Lights")) {
-				transform_lights = true;
+				if (scene->nLights != 0) 
+				{
+					transform_lights = true;
+				}
+			}
+			if (ImGui::MenuItem("Change Active light")) {
+				if (scene->activeLight < (scene->nLights - 1))
+				{
+					scene->activeLight++;
+				}
+				else
+				{
+					scene->activeLight = 0;
 			}
 			ImGui::EndMenu();
+			}
 		}
 
 		if (ImGui::BeginMenu("Model"))
@@ -725,31 +738,27 @@ void transformModel(Scene* scene)
 
 void transformLights(Scene* scene)
 {
-	for (size_t i = 0; i < scene->lights.size(); i++)
-	{
-		static vec4 location = scene->lights.at(i)->position;
-		ImGui::Text("Change Light location");
-		ImGui::InputFloat3("X", &location.x);
-		ImGui::InputFloat("Y", &location.y);
-		ImGui::InputFloat("Z", &location.z);
-		scene->lights.at(i)->position = location;
+	static GLfloat location[3] = { scene->lights.at(scene->activeLight)->position.x,
+							scene->lights.at(scene->activeLight)->position.y,
+							scene->lights.at(scene->activeLight)->position.z};
+	ImGui::InputFloat3("Light location", location);
+	scene->lights.at(scene->activeLight)->position = vec4(location[0], location[1], location[2], 1);
 
-		static vec4 direction = scene->lights.at(i)->direction;
-		ImGui::Text("Change Light Direction");
-		ImGui::InputFloat3("X", &direction.x);
-		ImGui::InputFloat("Y", &direction.y);
-		ImGui::InputFloat("Z", &direction.z);
-		scene->lights.at(i)->direction = direction;
-		ImGui::Text("Change Light Color");
-		static ImVec4 c = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-		ImGui::ColorPicker4("Color Picker", (float*)&c, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-		scene->lights.at(i)->color = Color(c.x, c.y, c.z);
-		static GLfloat light_intensity = scene->lights.at(i)->intensity;
-		ImGui::Text("Change Light Intensity");
-		ImGui::InputFloat("light intensity", &light_intensity);
-		scene->lights.at(i)->intensity = light_intensity;
-	}
-
+	static GLfloat direction[3] = { scene->lights.at(scene->activeLight)->direction.x, 
+									scene->lights.at(scene->activeLight)->direction.y, 
+									scene->lights.at(scene->activeLight)->direction.z };
+	ImGui::Text("Light Direction");
+	ImGui::InputFloat3("Light Direction", direction);
+	scene->lights.at(scene->activeLight)->direction = scene->lights.at(scene->activeLight)->position = vec4(direction[0], direction[1], direction[2], 0);
+	ImGui::Text("Change Light Color");
+	static ImVec4 c = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+	ImGui::ColorPicker4("Color Picker", (float*)&c, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+	scene->lights.at(scene->activeLight)->color = Color(c.x, c.y, c.z);
+	static GLfloat light_intensity = scene->lights.at(scene->activeLight)->intensity;
+	ImGui::Text("Change Light Intensity");
+	ImGui::InputFloat("light intensity", &light_intensity);
+	scene->lights.at(scene->activeLight)->intensity = light_intensity;
+	
 	if (ImGui::Button("OK"))
 	{
 		ImGui::CloseCurrentPopup();
@@ -762,17 +771,12 @@ void addLight(Scene* scene)
 	static int selected_light_type = 0;
 	ImGui::Combo("Light type", &selected_light_type, new_light_type, 2);
 
-	static vec4 new_location = { 0,1,0, 1};
-	ImGui::Text("Light location");
-	ImGui::InputFloat3("X", &new_location.x);
-	ImGui::InputFloat("Y", &new_location.y);
-	ImGui::InputFloat("Z", &new_location.z);
+	static GLfloat new_location[3] = { 0.0f,1.0f,0.0f};
+	ImGui::InputFloat3("Light location", new_location);
 
-	static vec4 new_direction = { 0,1,0 , 0};
+	static GLfloat new_direction[3] = { 0.0f,1.0f,0.0f };
 	ImGui::Text("Light Direction");
-	ImGui::InputFloat3("X", &new_direction.x);
-	ImGui::InputFloat("Y", &new_direction.y);
-	ImGui::InputFloat("Z", &new_direction.z);
+	ImGui::InputFloat3("Light Direction", new_direction);
 
 	ImGui::Text("Light Color");
 	static ImVec4 new_c = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -789,7 +793,7 @@ void addLight(Scene* scene)
 			new_type = PARALLEL_LIGHT;
 		}
 		Color color(new_c.x,new_c.y,new_c.z);
-		scene->addLight(new_location, new_direction, new_type, color);
+		scene->addLight(vec4(new_location[0], new_location[1], new_location[2],1), vec4(new_direction[0], new_direction[1], new_direction[2],0), new_type, color);
 		ImGui::CloseCurrentPopup();
 	}
 }

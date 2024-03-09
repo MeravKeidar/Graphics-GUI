@@ -247,18 +247,17 @@ void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*
 			if (m_zbuffer[x + m_width * y] > z)
 			{
 				m_zbuffer[x + m_width * y] = z;
-				vec2 d1(x - v1.x, y - v1.y);
-				vec2 d2(x - v2.x, y - v2.y);
-				vec2 d3(x - v3.x, y - v3.y);
-				vec3 normal = truncateVec4(face.v1_normal->view_direction * length(d1) + face.v2_normal->view_direction * length(d2) + face.v3_normal->view_direction * length(d3));
-				vec3 p = truncateVec4(face.v1->view_position * length(d1) + face.v2->view_position * length(d2) + face.v3->view_position * length(d3));
-				//TODO: chack what to os in case of different materials for vector 
+				GLfloat d1 = length(vec2(x - v1.x, y - v1.y));
+				GLfloat d2 = length(vec2(x - v2.x, y - v2.y));
+				GLfloat d3 = length(vec2(x - v3.x, y - v3.y));
+				vec4 normal = (face.v1_normal->view_direction * d1 + face.v2_normal->view_direction * d2 + face.v3_normal->view_direction *d3) / (d1+d2+d3) ;
+				vec4 p = (face.v1->view_position * d1 + face.v2->view_position * d2 + face.v3->view_position * d3) / (d1+d2+d3);
 				MATERIAL point_material = face.v1->material;
 				if (!uniform_color)
 				{
-					point_material = interpulateMaterial(face.v1->material, face.v2->material, face.v3->material, length(d1), length(d2), length(d3));
+					point_material = interpulateMaterial(face.v1->material, face.v2->material, face.v3->material, d1, d2, d3);
 				}
-				Color color = calcColor(point_material, normal, p, lights, ambient_scale);
+				Color color = calcColor(point_material, truncateVec4(normal), truncateVec4(p), lights, ambient_scale);
 				DrawPixel(x, y, color);
 			}
 		}

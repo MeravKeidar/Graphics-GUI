@@ -101,6 +101,7 @@ public:
 	int activeCamera=-1;
 	int nModels = 0;
 	int nCameras = 0;
+	int nLights = 0;
 	bool displayVnormal = false;
 	bool displayFnormal = false;
 	bool displayCameras = false;
