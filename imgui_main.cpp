@@ -601,12 +601,46 @@ void addCamera(Scene* scene)
 
 void changeMaterial(Scene* scene)
 {
-	ImGui::Text("Change Color");
-	static ImVec4 new_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-	ImGui::ColorPicker4("Color Picker", (float*)&new_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-	Color color(new_color.x, new_color.y, new_color.z);
-	scene->models.at(scene->activeModel)->changeUniformColor(color);
+	static bool change_ambiant = false;
+	ImGui::Checkbox("Change Ambiant Color", &change_ambiant);
+	if (change_ambiant)
+	{
+		static ImVec4 ambient_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ImGui::ColorPicker4("Ambiant Color Picker", (float*)&ambient_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+		Color ambientColor(ambient_color.x, ambient_color.y, ambient_color.z);
+		scene->models.at(scene->activeModel)->changeUniformColor(ambientColor);
+	}
 	
+	static bool change_Diffuse = false;
+	ImGui::Checkbox("Change Diffuse Color", &change_Diffuse);
+	if (change_Diffuse)
+	{
+		static ImVec4 diffuse_color = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
+		ImGui::ColorPicker4("Diffuse Color Picker", (float*)&diffuse_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+		Color diffuseColor(diffuse_color.x, diffuse_color.y, diffuse_color.z);
+		scene->models.at(scene->activeModel)->changeUniformDiffuseColor(diffuseColor);
+	}
+
+	static bool change_specular = false;
+	ImGui::Checkbox("Change Specular Color", &change_specular);
+	if (change_specular)
+	{
+		static ImVec4 specular_color = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
+		ImGui::ColorPicker4("Specular Color Picker", (float*)&specular_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+		Color specularColor(specular_color.x, specular_color.y, specular_color.z);
+		scene->models.at(scene->activeModel)->changeUniformSpecularColor(specularColor);
+	}
+
+	static bool change_emissive = false;
+	ImGui::Checkbox("Change Emissive Color", &change_emissive);
+	if (change_emissive)
+	{
+		static ImVec4 emissive_color = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
+		ImGui::ColorPicker4("Emissive Color Picker", (float*)&emissive_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+		Color emissiveColor(emissive_color.x, emissive_color.y, emissive_color.z);
+		scene->models.at(scene->activeModel)->changeUniformEmissiveColor(emissiveColor);
+	}
+
 	if (ImGui::Button("OK"))
 	{
 		

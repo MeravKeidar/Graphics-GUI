@@ -39,6 +39,9 @@ public:
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
 	void changeUniformColor(Color color);
+	void changeUniformEmissiveColor(Color color);
+	void changeUniformSpecularColor(Color color);
+	void changeUniformDiffuseColor(Color color);
 	void changeUniformMaterial(MATERIAL material);
 	void colorByNormal();
 	void updateModel(Camera active_camera, Renderer* m_renderer);

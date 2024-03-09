@@ -52,6 +52,30 @@ void Model::changeUniformColor(Color color)
 	}
 }
 
+void Model::changeUniformEmissiveColor(Color color)
+{
+	for (auto it = vertices.begin(); it != vertices.end(); it++)
+	{
+		(*it).material.emissive_color = color;
+	}
+}
+
+void Model::changeUniformSpecularColor(Color color)
+{
+	for (auto it = vertices.begin(); it != vertices.end(); it++)
+	{
+		(*it).material.specular_color = color;
+	}
+}
+void Model::changeUniformDiffuseColor(Color color) 
+{
+	for (auto it = vertices.begin(); it != vertices.end(); it++)
+	{
+		(*it).material.diffuse_color = color;
+	}
+}
+
+
 void Model::changeUniformMaterial(MATERIAL material)
 {
 	uniform_color = true;
