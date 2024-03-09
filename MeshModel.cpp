@@ -116,7 +116,6 @@ void MeshModel::loadFile(string fileName)
 			max_x = max(max_x, current_v3.x);
 			max_y = max(max_y, current_v3.y);
 			max_z = max(max_z, current_v3.z);
-
 			min_x = min(min_x, current_v3.x);
 			min_y = min(min_y, current_v3.y);
 			min_z = min(min_x, current_v3.z);
@@ -131,7 +130,6 @@ void MeshModel::loadFile(string fileName)
 			//TODO: avoid for now from textures
 			//vertex_textures.push_back(vec3fFromStream(issLine));
 		}
-
 		else if (lineType == "f")
 		{
 			//Note: down the line the face normal for drawing and for calculation(acquired via averaging vertex normals) are not the same -- they should be...
@@ -141,7 +139,6 @@ void MeshModel::loadFile(string fileName)
 			
 		
 		}
-	
 		else if (lineType != "#" && lineType != "")
 		{
 			cout << "Found unknown line Type \"" << lineType << "\"";
@@ -166,28 +163,27 @@ void MeshModel::loadFile(string fileName)
 		current_face.v3 = &vertices.at((*it).v[2] - 1);
 
 		vec4 temp_vec = current_face.v1->raw_position + current_face.v2->raw_position + current_face.v3->raw_position;
-		vec3 current_face_center_position = (normalize(truncateVec4(temp_vec)));
-		//vertices.push_back(current_face_center_position);  BUG
-		current_face.face_center = Vertex(current_face_center_position);
+		current_face.face_center.raw_position = temp_vec / 3;
 
 		vec3 xi, xj, xk;
 		xi = truncateVec4(current_face.v1->raw_position);
 		xj = truncateVec4(current_face.v2->raw_position);
 		xk = truncateVec4(current_face.v3->raw_position);
-		vec4 normal_direction = (cross((xj - xi), (xj - xk)), 0);
-		normal_direction = normalize(normal_direction);
-		current_face.face_normal.original_direction = normal_direction;
+		vec3 normal_direction3 = cross((xj - xi), (xk - xi));
+		normal_direction3 = normalize(normal_direction3);
+		vec4 normal_direction4(normal_direction3.x, normal_direction3.y, normal_direction3.z, 0);
+		current_face.face_normal.original_direction = normal_direction4;
 
 		if (calculate_vertex_normals)
 		{
 			current_face.v1_normal = &normals.at((*it).v[0] - 1);
-			current_face.v1_normal->original_direction += normal_direction;
+			current_face.v1_normal->original_direction += normal_direction4;
 
 			current_face.v2_normal = &normals.at((*it).v[1] - 1);
-			current_face.v2_normal->original_direction += normal_direction;
+			current_face.v2_normal->original_direction += normal_direction4;
 
 			current_face.v3_normal = &normals.at((*it).v[2] - 1);
-			current_face.v3_normal->original_direction += normal_direction;
+			current_face.v3_normal->original_direction += normal_direction4;
 		}
 		else
 		{
@@ -197,6 +193,14 @@ void MeshModel::loadFile(string fileName)
 		}
 
 		faces.push_back(current_face);
+	}
+
+	if (calculate_vertex_normals)
+	{
+		for (size_t i = 0; i < normals.size(); i++)
+		{
+			normals.at(i).original_direction = normalize(normals.at(i).original_direction);
+		}
 	}
 
 	boundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
@@ -322,9 +326,6 @@ void MeshModel::draw()
 MeshModel::MeshModel()
 {
 	 
-	material.color.r = 0;
-	material.color.g = 0;
-	material.color.b = 0;
 	_world_transform = mat4(1.0);
 	_model_transform = mat4(1.0);
 	_normal_world_transform = mat4(1.0);

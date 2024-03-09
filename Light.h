@@ -27,6 +27,11 @@ struct Color {
 		*this = result;
 	}
 
+	Color operator*(const Color other) const {
+		Color result{ std::min(r * other.r,1.0f),  std::min(g * other.b,1.0f),  std::min(b * other.b,1.0f) };
+		return result;
+	}
+
 	Color operator+(const Color other) const {
 		Color result{ std::min(r + other.r,1.0f),std::min(g + other.g,1.0f),std::min(b + other.b,1.0f) };
 		return result;
@@ -38,13 +43,16 @@ struct Color {
 };
 
 struct MATERIAL {
-	Color color = { 1.0,0,0 };
-	GLfloat transparency = 1.0;
-	GLfloat diffuse_fraction = 1.0;
-	GLfloat specular_fraction = 1.0;
-	GLfloat ambient_fraction = 1.0;
+	Color ambient_color = { 1.0,0,0 };
+	Color emissive_color = { 0,0,0 };
+	Color diffuse_color = { 0.2,0.2,0.2 };
+	Color specular_color = { 0.2,0.2,0.2 };
 	GLfloat shininess_coefficient = 100; 
 };
+
+MATERIAL interpulateMaterial(MATERIAL v1_material, MATERIAL v2_material, MATERIAL v3_material, GLfloat d1 = 1, GLfloat d2 = 1, GLfloat d3 = 1);
+
+Color interpulateColor(Color v1_color, Color v2_color, Color v3_color, GLfloat d1 = 1, GLfloat d2 = 1, GLfloat d3 = 1);
 
 struct Vertex
 {

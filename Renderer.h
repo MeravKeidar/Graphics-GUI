@@ -17,6 +17,8 @@ enum SHADING {
 	GOURAUD, 
 	PHONG
 };
+
+
 class Renderer
 {
 	float* m_outBuffer; // 3*width*height
@@ -48,7 +50,7 @@ public:
 	//void DrawTriangles(const vector<vec3>* vertices, const vector<vec3>* normals = NULL);
 	void CreateBuffers(int width, int height);
 	//void DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale);
-	void DrawTriangles(const vector<Face>* faces , vector<Light*> lights, GLfloat ambient_scale);
+	void DrawTriangles(const vector<Face>* faces , vector<Light*> lights, GLfloat ambient_scale, bool uniform_color);
 	void DrawBox(const vector<vec3>* vertices, Color color);
 	//void SetCameraTransform(const mat4& cTransform);
 	//void SetProjection(const mat4& projection);
@@ -68,10 +70,10 @@ public:
 	GLfloat getDepth(int x, int y, vec4 v1, vec4 v2, vec4 v3);
 	void fillFlatTriangle(Face face, Color color);
 	void fillGouraudTriangle(Face face, Color c1, Color c2, Color c3);
-	void fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambient_scale);
+	void fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambient_scale, bool uniform_color);
 	void drawFlatScanline(int x1, int x2, int y, vec3 v1, vec3 v2, vec3 v3, Color color);
 	void drawGouraudScanline(int x1, int x2, int y, Face face, Color c1, Color c2, Color c3);
-	void drawPhongScanline(int x1, int x2, int y, Face face , vector<Light*> lights , GLfloat ambient_scale);
+	void drawPhongScanline(int x1, int x2, int y, Face face , vector<Light*> lights , GLfloat ambient_scale, bool uniform_color);
 	bool liangBarsky(vec3 v1, vec3 v2);
 	Color calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, GLfloat ambient_scale);
 	

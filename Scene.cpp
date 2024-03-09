@@ -45,14 +45,16 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 
 void Model::changeUniformColor(Color color)
 {
+	uniform_color = true;
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
-		(*it).material.color = color;
+		(*it).material.ambient_color = color;
 	}
 }
 
 void Model::changeUniformMaterial(MATERIAL material)
 {
+	uniform_color = true;
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).material = material;
@@ -61,6 +63,7 @@ void Model::changeUniformMaterial(MATERIAL material)
 
 void Model::colorByNormal()
 {
+	uniform_color = false;
 	for (auto it = faces.begin(); it != faces.end(); it++)
 	{
 		vec3 new_v1_color = truncateVec4((*it).v1_normal->view_direction); 
@@ -70,7 +73,7 @@ void Model::colorByNormal()
 void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName);
-	model->material.color = { 1,0,0 };
+
 	models.push_back(model);
 
 	nModels++;
@@ -80,15 +83,11 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
-	model->material.color = { 0,1,1 };
+	
 	models.push_back(model);
 	nModels++;
 	activeModel++;
-	std::cout << "r:" << model->material.color.r << std::endl;
-	std::cout << "g:" << model->material.color.g << std::endl;
-	std::cout << "b:" << model->material.color.b << std::endl;
 
-	std::cout << "ambient_fraction :" << model->material.ambient_fraction << std::endl;
 }
 
 void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
@@ -105,38 +104,39 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 
 void Model::updateModel(Camera active_camera,Renderer* m_renderer)
 {
+	mat4 ModelViewMatrix = active_camera.cTransform * (_world_transform * _model_transform);
+	mat4 NormalViewMatrix = active_camera.cTransform * (_normal_world_transform * _normal_model_transform);
+
 	for (auto vertex_it = vertices.begin(); vertex_it != vertices.end(); vertex_it++)
 	{
-		(*vertex_it).view_position = active_camera.cTransform*(_world_transform*(_model_transform * (*vertex_it).raw_position));
+		(*vertex_it).view_position = ModelViewMatrix * (*vertex_it).raw_position;
 		(*vertex_it).projected = active_camera.projection * (*vertex_it).view_position;
-		vec3 v1_screen((*vertex_it).projected.x / (*vertex_it).projected.w, (*vertex_it).projected.y / (*vertex_it).projected.w, (*vertex_it).projected.z / (*vertex_it).projected.w);
+		vec3 v1_screen((*vertex_it).projected.x / (*vertex_it).projected.w, 
+						(*vertex_it).projected.y / (*vertex_it).projected.w,
+						(*vertex_it).projected.z / (*vertex_it).projected.w);
 		(*vertex_it).screen = m_renderer->viewPortVec(v1_screen);
 	}
 
 	for (auto normal_it = normals.begin(); normal_it != normals.end(); normal_it++)
 	{
-		(*normal_it).view_direction = active_camera.cTransform *(_normal_world_transform*(_normal_model_transform * (*normal_it).original_direction));
+		(*normal_it).original_direction.w = 0;
+		(*normal_it).view_direction = NormalViewMatrix * (*normal_it).original_direction;
 		(*normal_it).view_direction.w = 0;
-		// no meaning to projecting a normal
-		/*(*normal_it).projected = active_camera.projection * (*normal_it).view_direction;
-		(*normal_it).projected.w = 0;*/
 	}
 	for (auto face_it = faces.begin(); face_it != faces.end(); face_it++)
 	{
-		(*face_it).face_normal.view_direction = active_camera.cTransform * (_normal_world_transform * (_normal_model_transform * (*face_it).face_normal.original_direction));
+		(*face_it).face_normal.original_direction.w = 0;
+		(*face_it).face_normal.view_direction = NormalViewMatrix * (*face_it).face_normal.original_direction;
 		(*face_it).face_normal.view_direction.w = 0;
-		// no meaning to projecting a normal
-		/*(*face_it).face_normal.projected = active_camera.projection * (*face_it).face_normal.view_direction; 
-		(*face_it).face_normal.projected.w = 0;*/
-
-		(*face_it).face_center.view_position = active_camera.cTransform * (_world_transform * (_model_transform * (*face_it).face_center.raw_position));
+		(*face_it).face_center.view_position = ModelViewMatrix * (*face_it).face_center.raw_position;
 		(*face_it).face_center.projected = active_camera.projection * (*face_it).face_center.view_position;
-		vec3 v1_screen(	(*face_it).face_center.projected.x / (*face_it).face_center.projected.w, 
+		vec3 face_center_screen((*face_it).face_center.projected.x / (*face_it).face_center.projected.w,
 						(*face_it).face_center.projected.y / (*face_it).face_center.projected.w, 
 						(*face_it).face_center.projected.z / (*face_it).face_center.projected.w);
-		(*face_it).face_center.screen = m_renderer->viewPortVec(v1_screen);
+		(*face_it).face_center.screen = m_renderer->viewPortVec(face_center_screen);
 	}
 }
+
 
 void Scene::draw()
 {
@@ -180,7 +180,7 @@ void Scene::changeShading(SHADING shading_type)
 bool Scene::drawboundingBox(Model* model)
 {
 	//Note: current logic should negate the need for recalculation of locations
-	mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (_world_transform * (model->_world_transform * model->_model_transform));
+	mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
 	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
 	//taking bounding edges at 0(min) and 7(max) of bounding box
 	vec4 min_corner(1, 1, 1, 1);
@@ -236,7 +236,7 @@ bool Scene::drawboundingBox(Model* model)
 
 void Scene::drawModel(Model* model)
 {
-	m_renderer->DrawTriangles(&(model->faces), lights, ambient_scale);
+	m_renderer->DrawTriangles(&(model->faces), lights, ambient_scale, model->uniform_color);
 }
 
 void Scene::drawVertexNormals(Model* model)
@@ -246,19 +246,19 @@ void Scene::drawVertexNormals(Model* model)
 	{
 		vec4 v1_dest = (*face_it).v1->view_position + (normal_scale * (*face_it).v1_normal->view_direction);
 		v1_dest = ProjectionMatrix * v1_dest;
-		vec3 screen_v1_dest = (v1_dest.x / v1_dest.w, v1_dest.y / v1_dest.w, v1_dest.z / v1_dest.w);
+		vec3 screen_v1_dest(v1_dest.x / v1_dest.w, v1_dest.y / v1_dest.w, v1_dest.z / v1_dest.w);
 		screen_v1_dest = m_renderer->viewPortVec(screen_v1_dest);
 		m_renderer->DrawLine((*face_it).v1->screen.x, screen_v1_dest.x, (*face_it).v1->screen.y, screen_v1_dest.y, c_blue);
 
 		vec4 v2_dest = (*face_it).v2->view_position + (normal_scale * (*face_it).v2_normal->view_direction);
 		v2_dest = ProjectionMatrix * v2_dest;
-		vec3 screen_v2_dest = (v2_dest.x / v2_dest.w, v2_dest.y / v2_dest.w, v2_dest.z / v2_dest.w);
+		vec3 screen_v2_dest(v2_dest.x / v2_dest.w, v2_dest.y / v2_dest.w, v2_dest.z / v2_dest.w);
 		screen_v2_dest = m_renderer->viewPortVec(screen_v2_dest);
 		m_renderer->DrawLine((*face_it).v2->screen.x, screen_v2_dest.x, (*face_it).v2->screen.y, screen_v2_dest.y, c_blue);
 
 		vec4 v3_dest = (*face_it).v3->view_position + (normal_scale * (*face_it).v3_normal->view_direction);
 		v3_dest = ProjectionMatrix * v3_dest;
-		vec3 screen_v3_dest = (v3_dest.x / v3_dest.w, v3_dest.y / v3_dest.w, v3_dest.z / v3_dest.w);
+		vec3 screen_v3_dest(v3_dest.x / v3_dest.w, v3_dest.y / v3_dest.w, v3_dest.z / v3_dest.w);
 		screen_v3_dest = m_renderer->viewPortVec(screen_v3_dest);
 		m_renderer->DrawLine((*face_it).v3->screen.x, screen_v3_dest.x, (*face_it).v3->screen.y, screen_v3_dest.y, c_blue);
 	}
@@ -266,12 +266,14 @@ void Scene::drawVertexNormals(Model* model)
 
 void Scene::drawFaceNormals(Model* model)
 {
+	mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
+	mat4 NormalViewMatrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
 	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
 	for (auto face_it = model->faces.begin(); face_it != model->faces.end(); face_it++)
 	{
 		vec4 dest = (*face_it).face_center.view_position + (normal_scale * (*face_it).face_normal.view_direction);
 		dest = ProjectionMatrix * dest;
-		vec3 screen_dest = (dest.x / dest.w, dest.y / dest.w, dest.z / dest.w);
+		vec3 screen_dest((dest.x / dest.w), (dest.y / dest.w), (dest.z / dest.w));
 		screen_dest = m_renderer->viewPortVec(screen_dest);
 		m_renderer->DrawLine((*face_it).face_center.screen.x, screen_dest.x, (*face_it).face_center.screen.y, screen_dest.y, c_blue);
 	}
@@ -489,7 +491,7 @@ void Camera::Perspective(const float fovy, const float aspect, const float zNear
 
 Scene::Scene()
 {
-	_world_transform = mat4(1.0);
+	//_world_transform = mat4(1.0);
 	//m_renderer = new Renderer(512,512);
 	m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
 	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
@@ -536,7 +538,7 @@ void Scene::LookAtModel()
 {
 	if (nModels == 0)
 		return;
-	vec4 v = _world_transform * (models.at(activeModel)->_normal_world_transform * (models.at(activeModel)->_normal_model_transform * models.at(activeModel)->_center_of_mass)); //model-view 
+	vec4 v = (models.at(activeModel)->_normal_world_transform * (models.at(activeModel)->_normal_model_transform * models.at(activeModel)->_center_of_mass)); //model-view 
 	cameras.at(activeCamera)->LookAt(cameras.at(activeCamera)->eye, v, cameras.at(activeCamera)->up);
 }
 

@@ -33,6 +33,7 @@ public:
 	mat4 _world_transform;
 	mat4 _normal_world_transform;
 	mat4 _normal_model_transform;
+	bool uniform_color = true;
 
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
@@ -48,7 +49,7 @@ public:
 
 class Scene {
 	Renderer* m_renderer;
-	mat4 _world_transform;
+	//mat4 _world_transform;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	bool drawboundingBox(Model* model);

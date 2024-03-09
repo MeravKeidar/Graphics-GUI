@@ -23,7 +23,7 @@ Renderer::~Renderer(void){}
 
 void Renderer::Init(){}
 
-void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, GLfloat ambient_scale)
+void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, GLfloat ambient_scale, bool uniform_color)
 {
 	vec3 min_values;
 	vec3 max_values;
@@ -38,12 +38,17 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 		Color flat_color;
 		Color c1, c2, c3;
 		vec4 face_flat_normal;
+		MATERIAL face_material = cur_face.v1->material;
 		switch (shadingType)
 		{
 			case FLAT:
 				// TODO:: checl what to do in case of different materials
 				//face_flat_normal = normalize( cur_face.v1_normal->view_direction + cur_face.v2_normal->view_direction + cur_face.v3_normal->view_direction);
-				flat_color = calcColor(cur_face.v1->material, truncateVec4(cur_face.face_normal.view_direction), truncateVec4(cur_face.face_center.view_position), lights, ambient_scale);
+				if (!uniform_color)
+				{
+					face_material = interpulateMaterial(cur_face.v1->material, cur_face.v2->material, cur_face.v3->material);
+				}
+				flat_color = calcColor(face_material, truncateVec4(cur_face.face_normal.view_direction), truncateVec4(cur_face.face_center.view_position), lights, ambient_scale);
 				fillFlatTriangle(cur_face, flat_color);
 				break;
 			case GOURAUD:
@@ -55,7 +60,7 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 					
 			default:
 				//TODO: check truncation correct
-				fillPhongTriangle(cur_face, lights, ambient_scale);
+				fillPhongTriangle(cur_face, lights, ambient_scale, uniform_color);
 				break;
 		}
 
@@ -64,7 +69,7 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 	
 }
 
-void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambient_scale)
+void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambient_scale, bool uniform_color)
 {
 	// Sort vertices by y-coordinate
 	vec3 v1 = face.v1->screen;
@@ -101,7 +106,7 @@ void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambie
 	int y = min(v1.y, GLfloat(m_height));
 	for (; y >= v2.y; y--)
 	{
-		drawPhongScanline(x1, x2, y, face, lights, ambient_scale);
+		drawPhongScanline(x1, x2, y, face, lights, ambient_scale, uniform_color);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -112,7 +117,7 @@ void Renderer::fillPhongTriangle(Face face, vector<Light*> lights, GLfloat ambie
 		slope1 = (v2.x - v3.x) / (v2.y - v3.y);
 	for (; y >= v3.y; y--)
 	{
-		drawPhongScanline(x1, x2, y, face, lights, ambient_scale);
+		drawPhongScanline(x1, x2, y, face, lights, ambient_scale, uniform_color);
 		x1 -= slope1;
 		x2 -= slope2;
 	}
@@ -227,7 +232,7 @@ void Renderer::fillFlatTriangle(Face face, Color color)
 	}
 }
 
-void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*> lights, GLfloat ambient_scale)
+void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*> lights, GLfloat ambient_scale, bool uniform_color)
 {
 	vec3 v1 = face.v1->screen;
 	vec3 v2 = face.v2->screen;
@@ -248,7 +253,12 @@ void Renderer::drawPhongScanline(int x1, int x2, int y, Face face, vector<Light*
 				vec3 normal = truncateVec4(face.v1_normal->view_direction * length(d1) + face.v2_normal->view_direction * length(d2) + face.v3_normal->view_direction * length(d3));
 				vec3 p = truncateVec4(face.v1->view_position * length(d1) + face.v2->view_position * length(d2) + face.v3->view_position * length(d3));
 				//TODO: chack what to os in case of different materials for vector 
-				Color color = calcColor(face.v1->material, normal, p, lights, ambient_scale);
+				MATERIAL point_material = face.v1->material;
+				if (!uniform_color)
+				{
+					point_material = interpulateMaterial(face.v1->material, face.v2->material, face.v3->material, length(d1), length(d2), length(d3));
+				}
+				Color color = calcColor(point_material, normal, p, lights, ambient_scale);
 				DrawPixel(x, y, color);
 			}
 		}
@@ -316,11 +326,11 @@ bool Renderer::liangBarsky(vec3 v1, vec3 v2)
 //The following are locations(w is needed, assumption is division already done): p , per-light location(for point_light), camera location
 Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, GLfloat ambient_scale)
 {
-	Color color = material.color;
+	Color color = material.emissive_color;
 	vec3 l; //direction from point to light(per light)
 	vec3 v = normalize(-p); //direction from point to camera - point is in view frame;
 	//ambient
-	color *= (ambient_scale * material.ambient_fraction);
+	color = color + (material.ambient_color * ambient_scale);
 	//itarate per light source
 	for (size_t i = 0; i < lights.size(); i++)
 	{
@@ -338,13 +348,31 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 		vec3 r = normalize((2 * normal * LN) - l);
 
 		//diffuse
-		color = color + (color + current_light->color) * (material.diffuse_fraction * LN * current_light->intensity);
+		color = color + (current_light->color) * (material.diffuse_color * LN * current_light->intensity);
 		// specular
 		GLfloat Shininess = pow(abs(dot(r, v)), material.shininess_coefficient);
-		color = color + (color + current_light->color) * (material.specular_fraction * Shininess * current_light->intensity);
+		color = color + (current_light->color) * (material.specular_color * Shininess * current_light->intensity);
 	}
 
 	return color;
+}
+
+MATERIAL interpulateMaterial(MATERIAL v1_material, MATERIAL v2_material, MATERIAL v3_material, GLfloat d1, GLfloat d2, GLfloat d3)
+{
+	MATERIAL m;
+	m.shininess_coefficient = (v1_material.shininess_coefficient * d1 + v2_material.shininess_coefficient * d2 + v3_material.shininess_coefficient * d3) / (d1 + d2 + d3);
+	m.emissive_color = interpulateColor(v1_material.emissive_color, v2_material.emissive_color, v3_material.emissive_color, d1, d2, d3);
+	m.diffuse_color = interpulateColor(v1_material.diffuse_color, v2_material.diffuse_color, v3_material.diffuse_color, d1, d2, d3);
+	m.specular_color = interpulateColor(v1_material.specular_color, v2_material.specular_color, v3_material.specular_color, d1, d2, d3);
+	return m;
+}
+
+Color interpulateColor(Color v1_color, Color v2_color, Color v3_color, GLfloat d1, GLfloat d2, GLfloat d3)
+{
+	GLfloat r = (v1_color.r * d1 + v2_color.r * d2 + v3_color.r * d3) / (d1 + d2 + d3);
+	GLfloat g = (v1_color.g * d1 + v2_color.g * d2 + v3_color.g * d3) / (d1 + d2 + d3);
+	GLfloat b = (v1_color.b * d1 + v2_color.b * d2 + v3_color.b * d3) / (d1 + d2 + d3);
+	return Color(r, g, b);
 }
 
 void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
