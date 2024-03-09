@@ -364,6 +364,7 @@ MATERIAL interpulateMaterial(MATERIAL v1_material, MATERIAL v2_material, MATERIA
 	m.emissive_color = interpulateColor(v1_material.emissive_color, v2_material.emissive_color, v3_material.emissive_color, d1, d2, d3);
 	m.diffuse_color = interpulateColor(v1_material.diffuse_color, v2_material.diffuse_color, v3_material.diffuse_color, d1, d2, d3);
 	m.specular_color = interpulateColor(v1_material.specular_color, v2_material.specular_color, v3_material.specular_color, d1, d2, d3);
+	m.ambient_color = interpulateColor(v1_material.ambient_color, v2_material.ambient_color, v3_material.ambient_color, d1, d2, d3);
 	return m;
 }
 

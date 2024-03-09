@@ -601,6 +601,12 @@ void addCamera(Scene* scene)
 
 void changeMaterial(Scene* scene)
 {
+	static bool color_by_normal = false;
+	ImGui::Checkbox(" Set Color By Normal", &color_by_normal);
+	if (color_by_normal)
+	{
+		scene->models.at(scene->activeModel)->colorByNormal();
+	}
 	static bool change_ambiant = false;
 	ImGui::Checkbox("Change Ambiant Color", &change_ambiant);
 	if (change_ambiant)

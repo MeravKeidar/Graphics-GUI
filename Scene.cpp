@@ -90,7 +90,15 @@ void Model::colorByNormal()
 	uniform_color = false;
 	for (auto it = faces.begin(); it != faces.end(); it++)
 	{
-		vec3 new_v1_color = truncateVec4((*it).v1_normal->view_direction); 
+		
+		Color v1_color(abs((*it).v1_normal->view_direction.x), abs((*it).v1_normal->view_direction.y), abs((*it).v1_normal->view_direction.z));
+		(*it).v1->material.ambient_color = v1_color;
+
+		Color v2_color(abs((*it).v1_normal->view_direction.x), abs((*it).v2_normal->view_direction.y), abs((*it).v2_normal->view_direction.z));
+		(*it).v2->material.ambient_color = v2_color;
+
+		Color v3_color(abs((*it).v3_normal->view_direction.x), abs((*it).v3_normal->view_direction.y), abs((*it).v3_normal->view_direction.z));
+		(*it).v3->material.ambient_color = v3_color;
 	}
 }
 
