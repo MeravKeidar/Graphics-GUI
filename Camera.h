@@ -8,12 +8,7 @@
 #include <imgui_impl_opengl3.h>
 
 class Camera {
-	GLfloat _left = -1;
-	GLfloat _right = 1;
-	GLfloat _bottom = -1;
-	GLfloat _top = 1;
-	GLfloat _zNear = 1;
-	GLfloat _zFar = -1;
+	
 	int projection_type = 0; //ortho by deafult 
 public:
 	mat4 projection;
@@ -33,6 +28,12 @@ public:
 	vec4 eye;
 	vec4 at;
 	vec4 up;
+	GLfloat _left = -1;
+	GLfloat _right = 1;
+	GLfloat _bottom = -1;
+	GLfloat _top = 1;
+	GLfloat _zNear = 1;
+	GLfloat _zFar = -1;
 
 
 };

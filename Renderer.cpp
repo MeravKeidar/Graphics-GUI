@@ -34,7 +34,7 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 	{
 		Face cur_face = faces->at(i);
 		//clipping method
-		//default set to phong
+	
 		Color flat_color;
 		Color c1, c2, c3;
 		vec4 face_flat_normal;
@@ -42,8 +42,6 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 		switch (shadingType)
 		{
 			case FLAT:
-				// TODO:: checl what to do in case of different materials
-				//face_flat_normal = normalize( cur_face.v1_normal->view_direction + cur_face.v2_normal->view_direction + cur_face.v3_normal->view_direction);
 				if (!uniform_color)
 				{
 					face_material = interpulateMaterial(cur_face.v1->material, cur_face.v2->material, cur_face.v3->material);
@@ -331,7 +329,8 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 	//ambient
 	color = color + (material.ambient_color * ambient_scale);
 	//itarate per light source
-	for (size_t i = 0; i < lights.size(); i++)
+	int size = lights.size();
+	for (size_t i = 0; i < size ; i++)
 	{
 		Light* current_light = lights.at(i);
 		if (current_light->light_type == POINT_LIGHT)
@@ -375,25 +374,25 @@ Color interpulateColor(Color v1_color, Color v2_color, Color v3_color, GLfloat d
 	return Color(r, g, b);
 }
 
-void Renderer::DrawBox(const vector<vec3>* vertices, Color color)
+void Renderer::DrawBox(const vector<Vertex>* vertices, Color color)
 {
 
 	//bottom
-	DrawLine(vertices->at(0).x, vertices->at(1).x, vertices->at(0).y, vertices->at(1).y, color);
-	DrawLine(vertices->at(1).x, vertices->at(2).x, vertices->at(1).y, vertices->at(2).y, color);
-	DrawLine(vertices->at(2).x, vertices->at(3).x, vertices->at(2).y, vertices->at(3).y, color);
-	DrawLine(vertices->at(2).x, vertices->at(0).x, vertices->at(2).y, vertices->at(0).y, color);
+	DrawLine(vertices->at(0).screen.x, vertices->at(1).screen.x, vertices->at(0).screen.y, vertices->at(1).screen.y, color);
+	DrawLine(vertices->at(1).screen.x, vertices->at(2).screen.x, vertices->at(1).screen.y, vertices->at(2).screen.y, color);
+	DrawLine(vertices->at(2).screen.x, vertices->at(3).screen.x, vertices->at(2).screen.y, vertices->at(3).screen.y, color);
+	DrawLine(vertices->at(2).screen.x, vertices->at(0).screen.x, vertices->at(2).screen.y, vertices->at(0).screen.y, color);
 	//top
-	DrawLine(vertices->at(4).x, vertices->at(5).x, vertices->at(4).y, vertices->at(5).y, color);
-	DrawLine(vertices->at(5).x, vertices->at(6).x, vertices->at(5).y, vertices->at(6).y, color);
-	DrawLine(vertices->at(6).x, vertices->at(7).x, vertices->at(6).y, vertices->at(7).y, color);
-	DrawLine(vertices->at(7).x, vertices->at(4).x, vertices->at(7).y, vertices->at(4).y, color);
+	DrawLine(vertices->at(4).screen.x, vertices->at(5).screen.x, vertices->at(4).screen.y, vertices->at(5).screen.y, color);
+	DrawLine(vertices->at(5).screen.x, vertices->at(6).screen.x, vertices->at(5).screen.y, vertices->at(6).screen.y, color);
+	DrawLine(vertices->at(6).screen.x, vertices->at(7).screen.x, vertices->at(6).screen.y, vertices->at(7).screen.y, color);
+	DrawLine(vertices->at(7).screen.x, vertices->at(4).screen.x, vertices->at(7).screen.y, vertices->at(4).screen.y, color);
 	//front
-	DrawLine(vertices->at(0).x, vertices->at(4).x, vertices->at(0).y, vertices->at(4).y, color);
-	DrawLine(vertices->at(1).x, vertices->at(5).x, vertices->at(1).y, vertices->at(5).y, color);
+	DrawLine(vertices->at(0).screen.x, vertices->at(4).screen.x, vertices->at(0).screen.y, vertices->at(4).screen.y, color);
+	DrawLine(vertices->at(1).screen.x, vertices->at(5).screen.x, vertices->at(1).screen.y, vertices->at(5).screen.y, color);
 	//back
-	DrawLine(vertices->at(3).x, vertices->at(7).x, vertices->at(3).y, vertices->at(7).y, color);
-	DrawLine(vertices->at(2).x, vertices->at(6).x, vertices->at(2).y, vertices->at(6).y, color);
+	DrawLine(vertices->at(3).screen.x, vertices->at(7).screen.x, vertices->at(3).screen.y, vertices->at(7).screen.y, color);
+	DrawLine(vertices->at(2).screen.x, vertices->at(6).screen.x, vertices->at(2).screen.y, vertices->at(6).screen.y, color);
 }
 
 void Renderer::CreateBuffers(int width, int height)

@@ -44,7 +44,11 @@ public:
 	void changeUniformDiffuseColor(Color color);
 	void changeUniformMaterial(MATERIAL material);
 	void colorByNormal();
-	void updateModel(Camera active_camera, Renderer* m_renderer);
+	void updateModel(Camera active_camera);
+	void toScreen(Camera active_camera, Renderer* m_renderer);
+	void clipModel(Camera active_camera);
+	void clipFace(Camera active_camera);
+	bool inViewVolume(Camera active_camera);
 };
 
 
@@ -55,7 +59,7 @@ class Scene {
 	//mat4 _world_transform;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
-	bool drawboundingBox(Model* model);
+	void drawboundingBox(Model* model);
 	
 public:
 	Scene();

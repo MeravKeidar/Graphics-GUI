@@ -134,7 +134,7 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 	activeCamera++;
 }
 
-void Model::updateModel(Camera active_camera,Renderer* m_renderer)
+void Model::updateModel(Camera active_camera)
 {
 	mat4 ModelViewMatrix = active_camera.cTransform * (_world_transform * _model_transform);
 	mat4 NormalViewMatrix = active_camera.cTransform * (_normal_world_transform * _normal_model_transform);
@@ -143,10 +143,6 @@ void Model::updateModel(Camera active_camera,Renderer* m_renderer)
 	{
 		(*vertex_it).view_position = ModelViewMatrix * (*vertex_it).raw_position;
 		(*vertex_it).projected = active_camera.projection * (*vertex_it).view_position;
-		vec3 v1_screen((*vertex_it).projected.x / (*vertex_it).projected.w, 
-						(*vertex_it).projected.y / (*vertex_it).projected.w,
-						(*vertex_it).projected.z / (*vertex_it).projected.w);
-		(*vertex_it).screen = m_renderer->viewPortVec(v1_screen);
 	}
 
 	for (auto normal_it = normals.begin(); normal_it != normals.end(); normal_it++)
@@ -162,13 +158,136 @@ void Model::updateModel(Camera active_camera,Renderer* m_renderer)
 		(*face_it).face_normal.view_direction.w = 0;
 		(*face_it).face_center.view_position = ModelViewMatrix * (*face_it).face_center.raw_position;
 		(*face_it).face_center.projected = active_camera.projection * (*face_it).face_center.view_position;
-		vec3 face_center_screen((*face_it).face_center.projected.x / (*face_it).face_center.projected.w,
-						(*face_it).face_center.projected.y / (*face_it).face_center.projected.w, 
-						(*face_it).face_center.projected.z / (*face_it).face_center.projected.w);
-		(*face_it).face_center.screen = m_renderer->viewPortVec(face_center_screen);
 	}
 }
 
+void Model::toScreen(Camera active_camera, Renderer* m_renderer)
+{
+	for (auto vertex_it = vertices.begin(); vertex_it != vertices.end(); vertex_it++)
+	{
+		vec3 v1_screen((*vertex_it).projected.x / (*vertex_it).projected.w,
+			(*vertex_it).projected.y / (*vertex_it).projected.w,
+			(*vertex_it).projected.z / (*vertex_it).projected.w);
+		(*vertex_it).screen = m_renderer->viewPortVec(v1_screen);
+	}
+
+	for (auto face_it = faces.begin(); face_it != faces.end(); face_it++)
+	{
+		vec3 face_center_screen((*face_it).face_center.projected.x / (*face_it).face_center.projected.w,
+			(*face_it).face_center.projected.y / (*face_it).face_center.projected.w,
+			(*face_it).face_center.projected.z / (*face_it).face_center.projected.w);
+		(*face_it).face_center.screen = m_renderer->viewPortVec(face_center_screen);
+	}
+	
+}
+
+bool Model::inViewVolume(Camera active_camera)
+{
+	mat4 ModelViewMatrix = active_camera.cTransform * (_world_transform * _model_transform);
+	for (auto box_it = bounding_box.begin(); box_it != bounding_box.end(); box_it++)
+	{
+		(*box_it).view_position = ModelViewMatrix * (*box_it).raw_position;
+		(*box_it).projected = active_camera.projection * (*box_it).view_position;
+		(*box_it).screen.x = (*box_it).projected.x / (*box_it).projected.w; //not really screen but just after devision by w
+		(*box_it).screen.y = (*box_it).projected.y / (*box_it).projected.w;
+		(*box_it).screen.z = (*box_it).projected.z / (*box_it).projected.w;
+	}
+	vec3 min = bounding_box[0].screen;
+	vec3 max = bounding_box[0].screen;
+	for (auto box_it = bounding_box.begin(); box_it != bounding_box.end(); box_it++)
+	{
+		if ((*box_it).screen.x < min.x)
+			min.x = (*box_it).screen.x;
+		if ((*box_it).screen.x > max.x)
+			max.x = (*box_it).screen.x;
+
+		if ((*box_it).screen.y < min.y)
+			min.y = (*box_it).screen.y;
+		if ((*box_it).screen.y > max.y)
+			max.y = (*box_it).screen.y;
+
+		if ((*box_it).screen.z < min.z)
+			min.z = (*box_it).screen.z;
+		if ((*box_it).screen.z > max.z)
+			max.z = (*box_it).screen.z;
+	}
+
+	if ((min.x > -1 && min.x < 1) || (max.x > -1 && max.x < 1)) // x in the view volume 
+	{
+		if ((min.y > -1 && min.y < 1) || (max.y > -1 && max.y < 1)) // y in  view volume 
+		{
+			if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
+				return true;
+			else if (min.z < -1 && max.z > 1) //z consists view volume 
+				return true;
+		}
+		else if ((min.y < -1 && max.y > 1)) // y consists view volume
+		{
+			if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
+				return true;
+			else if (min.z < -1 && max.z > 1) //z consists view volume 
+				return true;
+
+		}
+	}
+
+	else if ((min.x < -1 && max.x > 1)) // x consists view volume 
+	{
+		if ((min.y > -1 && min.y < 1) || (max.y > -1 && max.y < 1)) // y in  view volume 
+		{
+			if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
+				return true;
+			else if (min.z < -1 && max.z > 1) //z consists view volume 
+				return true;
+		}
+		else if ((min.y < -1 && max.y > 1)) // y consists view volume
+		{
+			if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
+				return true;
+			else if (min.z < -1 && max.z > 1) //z consists view volume 
+				return true;
+
+		}
+	}
+	return false;
+}
+
+void Model::clipModel(Camera active_camera)
+{
+	for (auto face_it = faces.begin(); face_it != faces.end(); face_it++)
+	{
+	}
+}
+
+void Model::clipFace(Camera active_camera)
+{
+	for (auto face_it = faces.begin(); face_it != faces.end(); face_it++)
+	{
+		if (((*face_it).v1->projected.x < -(*face_it).v1->projected.w) ||
+			((*face_it).v2->projected.x < -(*face_it).v2->projected.w) ||
+			((*face_it).v2->projected.x < -(*face_it).v3->projected.w))
+		{
+			//clip left 
+		}
+
+		if (((*face_it).v1->projected.x > (*face_it).v1->projected.w) ||
+			((*face_it).v2->projected.x > (*face_it).v2->projected.w) ||
+			((*face_it).v2->projected.x > (*face_it).v3->projected.w))
+		{
+			//clip right
+		}
+
+
+	}
+}
+
+void clipLeft(Face face)
+{
+	if ((face.v1->projected.x < - face.v1->projected.w) && (face.v2->projected.x > face.v2->projected.w))
+	{
+		//clip left 
+	}
+}
 
 void Scene::draw()
 {
@@ -189,9 +308,13 @@ void Scene::draw()
 
 	for (auto model_it = models.begin(); model_it  != models.end(); model_it++)
 	{
-		(*model_it)->updateModel(*cameras.at(activeCamera),m_renderer);
+		if ((*model_it)->inViewVolume(*cameras.at(activeCamera)) == false)
+			continue; 
+		(*model_it)->updateModel(*cameras.at(activeCamera));
+		//just for now, will actially do it in clipping 
+		(*model_it)->clipModel(*cameras.at(activeCamera));
+		(*model_it)->toScreen(*cameras.at(activeCamera), m_renderer);
 		drawModel(*model_it);
-
 		if (displayFnormal) 
 		{
 			drawFaceNormals((*model_it));
@@ -200,70 +323,29 @@ void Scene::draw()
 		{
 			drawVertexNormals((*model_it));
 		}
+		if (displayBoundingBox)
+		{
+			drawboundingBox((*model_it));
+		}
 	}
 	m_renderer->SwapBuffers();
 }
+
+
 
 void Scene::changeShading(SHADING shading_type)
 {
 	m_renderer->shadingType = shading_type; 
 }
 
-bool Scene::drawboundingBox(Model* model)
+void Scene::drawboundingBox(Model* model)
 {
-	//Note: current logic should negate the need for recalculation of locations
-	mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
-	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
-	//taking bounding edges at 0(min) and 7(max) of bounding box
-	vec4 min_corner(1, 1, 1, 1);
-	vec4 max_corner(-1, -1, -1, 1);
-	vector<vec3> modified_box;
-
-	for (size_t i = 0; i < 8; i++)
+	for (auto box_it = model->bounding_box.begin(); box_it != model->bounding_box.end(); box_it++)
 	{
-		vec4 v = model->bounding_box.at(i).raw_position;
-		v = ModelViewMatrix * v;
-		v = ProjectionMatrix * v; 
-
-		if ((v.w < 0.00001) && (v.w > -0.00001)) continue;
-		vec3 v_2d(v.x / v.w, v.y / v.w, v.z / v.w);
-
-		if (v_2d.x < min_corner.x)
-			min_corner.x = v_2d.x;
-
-		if (v_2d.y < min_corner.y)
-			min_corner.y = v_2d.y;
-
-		if (v_2d.z < min_corner.z)
-			min_corner.z = v_2d.z;
-
-		if (v_2d.x > max_corner.x)
-			max_corner.x = v_2d.x;
-
-		if (v_2d.y > max_corner.y)
-			max_corner.y = v_2d.y;
-
-		if (v_2d.z > max_corner.z)
-			max_corner.z = v_2d.z;
-
-		v_2d = m_renderer->viewPortVec(v_2d); // view-port
-		modified_box.push_back(v_2d);
+		(*box_it).screen = m_renderer->viewPortVec((*box_it).screen);
 	}
-
-	if ((min_corner.x > min_corner.w || min_corner.y > min_corner.w || min_corner.z > min_corner.w)
-		|| (max_corner.x < -max_corner.w || max_corner.y < -max_corner.w || max_corner.z < -max_corner.w))
-		return false;
-
-	if (displayBoundingBox)
-	{
-		Color box_color;
-		box_color.r = 0.3;
-		box_color.g = 0.3;
-		box_color.b = 0.4;
-		m_renderer->DrawBox(&(modified_box), box_color);
-	}
-	return true;
-
+	Color box_color(0.3,0.3,0.4);
+	m_renderer->DrawBox(&(model->bounding_box), box_color);
 }
 
 void Scene::drawModel(Model* model)
@@ -557,7 +639,7 @@ void Scene::Reset()
 	nModels = 0;
 	nCameras = 0;
 	nLights = 0;
-	addCamera(vec4(0, 0, 2, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
+	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
 	changeShading(FLAT);
 }
 

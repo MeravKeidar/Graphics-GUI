@@ -51,7 +51,7 @@ public:
 	void CreateBuffers(int width, int height);
 	//void DrawTriangles(const vector<vec4>* vertices, MATERIAL material, const vector<vec3>* vertex_normals, const vector<vec3>* face_normals, vector<Light*> lights, vec4 camera_location, GLfloat ambient_scale);
 	void DrawTriangles(const vector<Face>* faces , vector<Light*> lights, GLfloat ambient_scale, bool uniform_color);
-	void DrawBox(const vector<vec3>* vertices, Color color);
+	void DrawBox(const vector<Vertex>* vertices, Color color);
 	//void SetCameraTransform(const mat4& cTransform);
 	//void SetProjection(const mat4& projection);
 	//void SetObjectMatrices(const mat4& oTransform, const mat3& nTransform);
