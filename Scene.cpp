@@ -313,6 +313,7 @@ void Scene::draw()
 		(*model_it)->updateModel(*cameras.at(activeCamera));
 		//just for now, will actially do it in clipping 
 		(*model_it)->clipModel(*cameras.at(activeCamera));
+
 		(*model_it)->toScreen(*cameras.at(activeCamera), m_renderer);
 		drawModel(*model_it);
 		if (displayFnormal) 

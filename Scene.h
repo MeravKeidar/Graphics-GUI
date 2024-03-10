@@ -11,10 +11,6 @@
 #include "Light.h"
 using namespace std;
 
-
-
-
-
 class Model {
 protected:
 	void virtual draw() = 0;

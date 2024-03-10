@@ -200,9 +200,9 @@ void MainMenuBar(Scene* scene)
 				else
 				{
 					scene->activeLight = 0;
+				}
 			}
 			ImGui::EndMenu();
-			}
 		}
 
 		if (ImGui::BeginMenu("Model"))
