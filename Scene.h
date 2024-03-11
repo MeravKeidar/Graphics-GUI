@@ -21,15 +21,16 @@ public:
 	mat4 _model_transform;/*
 	vector<PolygonTri> faces;*/
 	vector<Vertex> bounding_box;
-	vector<Vertex> clipping_box;
 	vector<Vertex> vertices;
 	vector<Normal> normals;
 	vector<Face> faces;
+	vector<Face> view_volume_faces;
 	vec4 _center_of_mass; 
 	mat4 _world_transform;
 	mat4 _normal_world_transform;
 	mat4 _normal_model_transform;
-	bool uniform_color = true;
+	bool color_by_pos = false;
+	bool color_by_normal = false;
 
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
@@ -40,24 +41,25 @@ public:
 	void changeUniformDiffuseColor(Color color);
 	void changeUniformMaterial(MATERIAL material);
 	void colorByNormal();
+	void colorByPosition();
 	void updateModel(Camera active_camera);
 	void toScreen(Camera active_camera, Renderer* m_renderer);
 	void clipModel(Camera active_camera);
 	void clipFace(Camera active_camera);
 	bool inViewVolume(Camera active_camera);
+
 };
 
 
-
-
 class Scene {
-	Renderer* m_renderer;
+	
 	//mat4 _world_transform;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);
 	
 public:
+	Renderer* m_renderer;
 	Scene();
 	Scene(Renderer* renderer) : m_renderer(renderer) {};
 	void loadOBJModel(string fileName);
@@ -106,6 +108,7 @@ public:
 	bool displayFnormal = false;
 	bool displayCameras = false;
 	bool displayBoundingBox = false;
+	bool blur = false;
 	GLfloat ambient_scale = 0.2;
 	GLfloat normal_scale = 0.5;
 };

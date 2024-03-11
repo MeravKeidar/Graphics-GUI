@@ -13,9 +13,9 @@ enum LIGHT_TYPE {
 	POINT_LIGHT
 };
 struct Color {
-	GLfloat r;
-	GLfloat g;
-	GLfloat b;
+	GLfloat r = 0.0f;
+	GLfloat g = 0.0f;
+	GLfloat b = 0.0f;
 
 	Color operator*(const GLfloat scale) const {
 		Color result{ r * scale, g * scale, b * scale };
@@ -37,13 +37,18 @@ struct Color {
 		return result;
 	}
 
+	Color operator-(const Color other) const {
+		Color result{ std::max(r - other.r,0.0f),std::max(g - other.g,0.0f),std::max(b - other.b,0.0f) };
+		return result;
+	}
+
 	Color(GLfloat new_r, GLfloat new_g, GLfloat new_b) :r(std::min(new_r, 1.0f)), g(std::min(new_g, 1.0f)), b(std::min(new_b, 1.0f)) {};
 	Color() {};
 
 };
 
 struct MATERIAL {
-	Color ambient_color = { 1.0,0,0 };
+	Color ambient_color = { 0.2,1,0.5 };
 	Color emissive_color = { 0,0,0 };
 	Color diffuse_color = { 0.2,0.2,0.2 };
 	Color specular_color = { 0.2,0.2,0.2 };
@@ -59,7 +64,8 @@ struct Vertex
 	vec4 raw_position; //original position in world frame
 	vec4 view_position;  // position in view frame (after transformation amd camera matrix multiplication)
 	vec4 projected; 
-	vec3 screen; // after devision by w in screen coordinates
+	vec3 canonical; // after devision by w
+	vec3 screen; // in screen coordinates
 	vec3 texture = vec3(0);
 	int texture_x = 0;
 	int texture_y = 0;
@@ -109,46 +115,7 @@ struct Face
 	Face() {};
 };
 
-//
-//struct PolygonTri
-//{
-//	int vertices[3];
-//	vec3 origin;
-//	vec3 normal;
-//	vec3 texture;
-//	vec4 modified_origin;
-//	vec4 modified_normal;
-//	PolygonTri()
-//	{
-//
-//	}
-//
-//	PolygonTri(std::istream& aStream)
-//	{
-//		for (int i = 0; i < 4; i++)
-//			vertices[i] = normal[i] = texture[i] = 0;
-//
-//		char c;
-//		for (int i = 0; i < 3; i++)
-//		{
-//			aStream >> std::ws >> vertices[i] >> std::ws;
-//			if (aStream.peek() != '/')
-//				continue;
-//			aStream >> c >> std::ws;
-//			if (aStream.peek() == '/')
-//			{
-//				aStream >> c >> std::ws >> normal[i];
-//				continue;
-//			}
-//			else
-//				aStream >> texture[i];
-//			if (aStream.peek() != '/')
-//				continue;
-//			aStream >> c >> normal[i];
-//		}
-//	}
-//
-//};
+
 
 class Light
 {

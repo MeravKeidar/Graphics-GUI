@@ -58,8 +58,7 @@ bool display_manual = false;
 bool add_light = false;
 bool transform_lights = false;
 bool change_material = false;
-bool change_ambient = false;
-bool change_normal_scale = false;
+bool change_scene_parameters = false;
 
 void MainMenuBar(Scene* scene)
 {
@@ -99,6 +98,10 @@ void MainMenuBar(Scene* scene)
 		}
 		if (ImGui::BeginMenu("Scene")) {
 
+			if (ImGui::MenuItem("Change Scene Parameters"))
+			{
+				change_scene_parameters = true;
+			}
 			if (ImGui::BeginMenu("Display Normals"))
 			{
 				if (ImGui::MenuItem("Normal-per-vertex")) {
@@ -114,11 +117,6 @@ void MainMenuBar(Scene* scene)
 						scene->displayFnormal = true;
 				}
 				ImGui::EndMenu();
-			}
-
-			if (ImGui::MenuItem("Change Normal scale"))
-			{
-				change_normal_scale = true;
 			}
 
 			if (ImGui::MenuItem("Reset scene"))
@@ -142,12 +140,15 @@ void MainMenuBar(Scene* scene)
 				}
 				ImGui::EndMenu();
 			}
-
-			if (ImGui::MenuItem("Change Ambient scale"))
+			if (ImGui::MenuItem("Blur"))
 			{
-				change_ambient = true;
+				if (scene->blur)
+					scene->blur = false;
+				else
+					scene->blur = true;
 			}
 
+			
 			ImGui::EndMenu();
 
 		}
@@ -253,43 +254,35 @@ void MainMenuBar(Scene* scene)
 		ImGui::EndMainMenuBar();
 	}
 }
-
+void scenePararmeters(Scene* scene)
+{
+	GLfloat a = scene->ambient_scale;
+	ImGui::SliderFloat("Ambient Scale", &a, 0.0, 1.0);
+	scene->ambient_scale = a;
+	GLfloat s = scene->normal_scale;
+	ImGui::SliderFloat("Normal Scale", &s, 0.0, 1.0);
+	scene->normal_scale = s;
+	GLfloat f = scene->m_renderer->fog_factor;
+	ImGui::SliderFloat("Fog factor", &f, 0.0, 1.0);
+	scene->m_renderer->fog_factor = f;
+	if (ImGui::Button("OK"))
+	{
+		ImGui::CloseCurrentPopup();
+	}
+}
 void ImguiPopUps(Scene* scene) 
 {
-	if (change_ambient)
+	if (change_scene_parameters)
 	{
-		ImGui::OpenPopup("Change Ambient Scale");
-		change_ambient = false;
+		ImGui::OpenPopup("Change Scene parameters");
+		change_scene_parameters = false;
 	}
-	if (ImGui::BeginPopupModal("Change Ambient Scale", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Change Scene parameters", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
-		static GLfloat a = 0;
-		ImGui::SliderFloat("Ambient Scale", &a, 0.0, 1.0);
-		scene->ambient_scale = a;
-		if (ImGui::Button("OK"))
-		{
-			ImGui::CloseCurrentPopup();
-		}
+		scenePararmeters(scene);
 		ImGui::EndPopup();
 	}
 
-	if (change_normal_scale)
-	{
-		ImGui::OpenPopup("Change Normal Scale");
-		change_normal_scale = false;
-	}
-	if (ImGui::BeginPopupModal("Change Normal Scale", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		static GLfloat s = 0.5;
-		ImGui::SliderFloat("Normal Scale", &s, 0.0, 1.0);
-		scene->normal_scale = s;
-		if (ImGui::Button("OK"))
-		{
-			ImGui::CloseCurrentPopup();
-		}
-		ImGui::EndPopup();
-	}
-	
 	if (display_manual)
 	{
 		ImGui::OpenPopup("Welcome Manual");
@@ -534,7 +527,7 @@ void transformCamera(Scene* scene)
 
 
 }
-
+ 
 void addCamera(Scene* scene)
 {
 
@@ -614,11 +607,15 @@ void addCamera(Scene* scene)
 
 void changeMaterial(Scene* scene)
 {
-	static bool color_by_normal = false;
-	ImGui::Checkbox(" Set Color By Normal", &color_by_normal);
-	if (color_by_normal)
+	if (scene->nModels == 0)
+		ImGui::CloseCurrentPopup();
+	if (ImGui::Button("Set Color By Normal"))
 	{
 		scene->models.at(scene->activeModel)->colorByNormal();
+	}
+	if (ImGui::Button("Set Color By Position"))
+	{
+		scene->models.at(scene->activeModel)->colorByPosition();
 	}
 	static bool change_ambiant = false;
 	ImGui::Checkbox("Change Ambiant Color", &change_ambiant);
@@ -660,15 +657,28 @@ void changeMaterial(Scene* scene)
 		scene->models.at(scene->activeModel)->changeUniformEmissiveColor(emissiveColor);
 	}
 
+	 GLfloat shininess_slide = scene->models.at(scene->activeModel)->material.shininess_coefficient;
+	ImGui::SliderFloat("Shininess coefficient", &shininess_slide, 0, 100);
+	scene->models.at(scene->activeModel)->material.shininess_coefficient = shininess_slide;
+	GLfloat shininess = scene->models.at(scene->activeModel)->material.shininess_coefficient;
+	ImGui::InputFloat("Shininess", &shininess);
+	scene->models.at(scene->activeModel)->material.shininess_coefficient = shininess;
+
+
 	if (ImGui::Button("OK"))
 	{
-		
+		change_Diffuse = false;
+		change_emissive = false;
+		change_specular = false;
+		change_ambiant = false;
 		ImGui::CloseCurrentPopup();
 	}
 }
 
 void transformModel(Scene* scene)
 {
+	if (scene->nModels == 0)
+		ImGui::CloseCurrentPopup();
 	static GLfloat x_w = 0;
 	static GLfloat y_w = 0;
 	static GLfloat z_w = 0;
@@ -738,6 +748,13 @@ void transformModel(Scene* scene)
 
 void transformLights(Scene* scene)
 {
+	if (scene->nLights == 0)
+		ImGui::CloseCurrentPopup();
+	static int type_idx = (scene->lights.at(scene->activeLight)->light_type == POINT_LIGHT ? 0 : 1);
+	const char* light_type[] = { "Point", "Parallel" };
+	ImGui::Combo("Light type", &type_idx, light_type, 2);
+	scene->lights.at(scene->activeLight)->light_type = (type_idx == 0 ? POINT_LIGHT: PARALLEL_LIGHT);
+
 	static GLfloat location[3] = { scene->lights.at(scene->activeLight)->position.x,
 							scene->lights.at(scene->activeLight)->position.y,
 							scene->lights.at(scene->activeLight)->position.z};

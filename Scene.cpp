@@ -11,6 +11,8 @@ Color c_red{ 1, 0, 0 };
 Color c_green{ 0, 1, 0 };
 Color c_blue{ 0, 0, 1 };
 Color c_yellow{ 1, 1, 0 };
+
+
 void Model::Translate(const GLfloat x, const GLfloat y, const GLfloat z)
 {
 	mat4 t = TranslationMat(x, y, z);
@@ -45,7 +47,8 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 
 void Model::changeUniformColor(Color color)
 {
-	uniform_color = true;
+	 color_by_pos = false;
+	 color_by_normal = false;
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).material.ambient_color = color;
@@ -67,6 +70,7 @@ void Model::changeUniformSpecularColor(Color color)
 		(*it).material.specular_color = color;
 	}
 }
+
 void Model::changeUniformDiffuseColor(Color color) 
 {
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
@@ -75,10 +79,10 @@ void Model::changeUniformDiffuseColor(Color color)
 	}
 }
 
-
 void Model::changeUniformMaterial(MATERIAL material)
 {
-	uniform_color = true;
+	color_by_pos = false;
+	color_by_normal = false;
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).material = material;
@@ -87,17 +91,36 @@ void Model::changeUniformMaterial(MATERIAL material)
 
 void Model::colorByNormal()
 {
-	uniform_color = false;
+	color_by_normal = true;
+	color_by_pos = false;
 	for (auto it = faces.begin(); it != faces.end(); it++)
 	{
 		
 		Color v1_color(abs((*it).v1_normal->view_direction.x), abs((*it).v1_normal->view_direction.y), abs((*it).v1_normal->view_direction.z));
 		(*it).v1->material.ambient_color = v1_color;
 
-		Color v2_color(abs((*it).v1_normal->view_direction.x), abs((*it).v2_normal->view_direction.y), abs((*it).v2_normal->view_direction.z));
+		Color v2_color(abs((*it).v2_normal->view_direction.x), abs((*it).v2_normal->view_direction.y), abs((*it).v2_normal->view_direction.z));
 		(*it).v2->material.ambient_color = v2_color;
 
 		Color v3_color(abs((*it).v3_normal->view_direction.x), abs((*it).v3_normal->view_direction.y), abs((*it).v3_normal->view_direction.z));
+		(*it).v3->material.ambient_color = v3_color;
+	}
+}
+
+void Model::colorByPosition()
+{
+	color_by_normal = false;
+	color_by_pos = true;
+	for (auto it = faces.begin(); it != faces.end(); it++)
+	{
+
+		Color v1_color(abs((*it).v1->view_position.x), abs((*it).v1->view_position.y), abs((*it).v1->view_position.z));
+		(*it).v1->material.ambient_color = v1_color;
+
+		Color v2_color(abs((*it).v2->view_position.x), abs((*it).v2->view_position.y), abs((*it).v2->view_position.z));
+		(*it).v2->material.ambient_color = v2_color;
+
+		Color v3_color(abs((*it).v3->view_position.x), abs((*it).v3->view_position.y), abs((*it).v3->view_position.z));
 		(*it).v3->material.ambient_color = v3_color;
 	}
 }
@@ -163,20 +186,25 @@ void Model::updateModel(Camera active_camera)
 
 void Model::toScreen(Camera active_camera, Renderer* m_renderer)
 {
+
 	for (auto vertex_it = vertices.begin(); vertex_it != vertices.end(); vertex_it++)
 	{
-		vec3 v1_screen((*vertex_it).projected.x / (*vertex_it).projected.w,
-			(*vertex_it).projected.y / (*vertex_it).projected.w,
-			(*vertex_it).projected.z / (*vertex_it).projected.w);
-		(*vertex_it).screen = m_renderer->viewPortVec(v1_screen);
+		if (((*vertex_it).projected.w > -epsilon) && ((*vertex_it).projected.w < epsilon))
+			(*vertex_it).projected.w = epsilon;
+		(*vertex_it).canonical.x = (*vertex_it).projected.x / (*vertex_it).projected.w; 
+		(*vertex_it).canonical.y = (*vertex_it).projected.y / (*vertex_it).projected.w;
+		(*vertex_it).canonical.z = (*vertex_it).projected.z / (*vertex_it).projected.w;
+		(*vertex_it).screen = m_renderer->viewPortVec((*vertex_it).canonical);
 	}
 
 	for (auto face_it = faces.begin(); face_it != faces.end(); face_it++)
 	{
-		vec3 face_center_screen((*face_it).face_center.projected.x / (*face_it).face_center.projected.w,
-			(*face_it).face_center.projected.y / (*face_it).face_center.projected.w,
-			(*face_it).face_center.projected.z / (*face_it).face_center.projected.w);
-		(*face_it).face_center.screen = m_renderer->viewPortVec(face_center_screen);
+		if (((*face_it).face_center.projected.w > -epsilon) && ((*face_it).face_center.projected.w < epsilon))
+			(*face_it).face_center.projected.w = epsilon;
+		(*face_it).face_center.canonical.x = (*face_it).face_center.projected.x / (*face_it).face_center.projected.w;
+		(*face_it).face_center.canonical.y = (*face_it).face_center.projected.y / (*face_it).face_center.projected.w;
+		(*face_it).face_center.canonical.z = (*face_it).face_center.projected.z / (*face_it).face_center.projected.w;
+		(*face_it).face_center.screen = m_renderer->viewPortVec((*face_it).face_center.canonical);
 	}
 	
 }
@@ -188,9 +216,11 @@ bool Model::inViewVolume(Camera active_camera)
 	{
 		(*box_it).view_position = ModelViewMatrix * (*box_it).raw_position;
 		(*box_it).projected = active_camera.projection * (*box_it).view_position;
-		(*box_it).screen.x = (*box_it).projected.x / (*box_it).projected.w; //not really screen but just after devision by w
-		(*box_it).screen.y = (*box_it).projected.y / (*box_it).projected.w;
-		(*box_it).screen.z = (*box_it).projected.z / (*box_it).projected.w;
+		if (((*box_it).projected.w > -epsilon) && ((*box_it).projected.w < epsilon))
+			(*box_it).projected.w = epsilon;
+		(*box_it).canonical.x = (*box_it).projected.x / (*box_it).projected.w; //not really screen but just after devision by w
+		(*box_it).canonical.y = (*box_it).projected.y / (*box_it).projected.w;
+		(*box_it).canonical.z = (*box_it).projected.z / (*box_it).projected.w;
 	}
 	vec3 min = bounding_box[0].screen;
 	vec3 max = bounding_box[0].screen;
@@ -252,10 +282,67 @@ bool Model::inViewVolume(Camera active_camera)
 	return false;
 }
 
+
 void Model::clipModel(Camera active_camera)
 {
 	for (auto face_it = faces.begin(); face_it != faces.end(); face_it++)
 	{
+		Face face = (*face_it);
+		bool faceInClipWindow = false; 
+		GLfloat max_x = std::max(face.v1->canonical.x, face.v2->canonical.x);
+		max_x = std::max(max_x, face.v3->canonical.x);
+		GLfloat max_y = std::max(face.v1->canonical.y, face.v2->canonical.y);
+		max_y = std::max(max_y, face.v3->canonical.y);
+		GLfloat max_z = std::max(face.v1->canonical.z, face.v2->canonical.z);
+		max_z = std::max(max_z, face.v3->canonical.z);
+		GLfloat min_x = std::min(face.v1->canonical.x, face.v2->canonical.x);
+		min_x = std::max(min_x, face.v3->canonical.x);
+		GLfloat min_y = std::min(face.v1->canonical.y, face.v2->canonical.y);
+		min_y = std::max(min_y, face.v3->canonical.y);
+		GLfloat min_z = std::min(face.v1->canonical.z, face.v2->canonical.z);
+		min_z = std::max(min_z, face.v3->canonical.z);
+
+		if ((min_x > -1 && min_x < 1) || (max_x > -1 && max_x < 1)) // x in the view volume 
+		{
+			if ((min_y > -1 && min_y < 1) || (max_y > -1 && max_y < 1)) // y in  view volume 
+			{
+				if ((min_z > -1 && min_z < 1) || (max_z > -1 && max_z < 1)) // z in view volume 
+					faceInClipWindow = true;
+				else if (min_z < -1 && max_z > 1) //z consists view volume 
+					faceInClipWindow = true;
+			}
+			else if ((min_y < -1 && max_y > 1)) // y consists view volume
+			{
+				if ((min_z > -1 && min_z < 1) || (max_z > -1 && max_z < 1)) // z in view volume 
+					faceInClipWindow = true;
+				else if (min_z < -1 && max_z > 1) //z consists view volume 
+					faceInClipWindow = true;
+
+			}
+		}
+
+		else if ((min_x < -1 && max_x > 1)) // x consists view volume 
+		{
+			if ((min_y > -1 && min_y < 1) || (max_y > -1 && max_y < 1)) // y in  view volume 
+			{
+				if ((min_z > -1 && min_z < 1) || (max_z > -1 && max_z < 1)) // z in view volume 
+					faceInClipWindow = true;
+				else if (min_z < -1 && max_z > 1) //z consists view volume 
+					faceInClipWindow = true;
+			}
+			else if ((min_y < -1 && max_y > 1)) // y consists view volume
+			{
+				if ((min_z > -1 && min_z < 1) || (max_z > -1 && max_z < 1)) // z in view volume 
+					faceInClipWindow = true;
+				else if (min_z < -1 && max_z > 1) //z consists view volume 
+					faceInClipWindow = true;
+
+			}
+		}
+		if (faceInClipWindow)
+		{
+			view_volume_faces.push_back((*face_it));
+		}
 	}
 }
 
@@ -311,10 +398,8 @@ void Scene::draw()
 		if ((*model_it)->inViewVolume(*cameras.at(activeCamera)) == false)
 			continue; 
 		(*model_it)->updateModel(*cameras.at(activeCamera));
-		//just for now, will actially do it in clipping 
-		(*model_it)->clipModel(*cameras.at(activeCamera));
-
 		(*model_it)->toScreen(*cameras.at(activeCamera), m_renderer);
+		//(*model_it)->clipModel(*cameras.at(activeCamera));
 		drawModel(*model_it);
 		if (displayFnormal) 
 		{
@@ -329,10 +414,12 @@ void Scene::draw()
 			drawboundingBox((*model_it));
 		}
 	}
+	if (blur)
+	{
+		m_renderer->Blur();
+	}
 	m_renderer->SwapBuffers();
 }
-
-
 
 void Scene::changeShading(SHADING shading_type)
 {
@@ -351,7 +438,8 @@ void Scene::drawboundingBox(Model* model)
 
 void Scene::drawModel(Model* model)
 {
-	m_renderer->DrawTriangles(&(model->faces), lights, ambient_scale, model->uniform_color);
+	m_renderer->DrawTriangles(&(model->faces), lights, ambient_scale, model->color_by_pos, model->color_by_normal);
+	//m_renderer->DrawTriangles(&(model->view_volume_faces), lights, ambient_scale, model->uniform_color);
 }
 
 void Scene::drawVertexNormals(Model* model)
