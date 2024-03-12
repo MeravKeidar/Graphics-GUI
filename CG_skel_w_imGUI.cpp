@@ -86,6 +86,7 @@ int my_main() {
 
 		ImguiFrame();
 		scene->draw();
+
 		MainMenuBar(scene);
 		ImguiPopUps(scene);
 	

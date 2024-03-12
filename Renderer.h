@@ -20,12 +20,14 @@ enum SHADING {
 
 class Renderer
 {
+	float* _outBuffer; // 3*width*height
 	
-	float* m_outBuffer; // 3*width*height
-	float* m_zbuffer; // width*height
+	float* m_outBuffer; //antialiasing_resolution * 3*width*height
+	float* m_zbuffer; // antialiasing_resolution *width*height
 	int m_width, m_height;
+	int _width, _height;
+
 	
-	float* m_blurBuffer; // 2 * 3*width*height
 
 	void CreateLocalBuffer();
 	
@@ -39,7 +41,11 @@ class Renderer
 	
 	//////////////////////////////
 public:
-	GLfloat fog_factor = 0.002;
+	bool fog = true; 
+	int antialiasing_resolution = 1;
+	Color fog_color = Color(0.4f, 0.4f, 0.4f);
+	GLfloat fog_start = 0.2;
+	GLfloat fog_end = 0.8;
 	SHADING shadingType = FLAT;
 	mat4 to_cannonical_projection;
 	mat4 viewPortMat;
@@ -64,6 +70,7 @@ public:
 	void DrawLine(int x1, int x2, int y1, int y2, Color color);
 	void UpdateViewPort(GLfloat width, GLfloat height);
 	vec3 viewPortVec(vec3 cannonial);
+	void AntiAlias();
 	void UpdateToScreenMat(int width, int height);
 	void multVertex(const vector<GLfloat>* vertices, mat4 mat , vector<GLfloat>* modified);
 	void pipeLine(const vector<GLfloat>* vertices, vector<GLfloat>* modified, mat4 _world_transform, mat4 camera_mat);
@@ -76,6 +83,7 @@ public:
 	void drawPhongScanline(int x1, int x2, int y, Face face , vector<Light*> lights , GLfloat ambient_scale, bool color_by_pos, bool color_by_normal);
 	bool liangBarsky(vec3 v1, vec3 v2);
 	Color calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, GLfloat ambient_scale);
+	Color calcFogColor(GLfloat z, Color color);
 	void Blur();
 };
 

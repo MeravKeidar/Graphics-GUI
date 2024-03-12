@@ -347,6 +347,17 @@ bool Renderer::liangBarsky(vec3 v1, vec3 v2)
 //Second assumption: to avoid repeating division by w, assume values are divided (3d cannonial)
 //The following are vectors(no need for w): normal, per-light direction
 //The following are locations(w is needed, assumption is division already done): p , per-light location(for point_light), camera location
+
+Color Renderer::calcFogColor(GLfloat z, Color color)
+{
+	GLfloat fog_factor = 0;
+	z = abs(z); 
+	fog_factor = ((fog_end - z) / (fog_end - fog_start));
+	fog_factor = max(0.0f, fog_factor);
+	fog_factor = min(1.0f, fog_factor);
+	return (color*(1 - fog_factor) + fog_color * fog_factor);
+}
+
 Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, GLfloat ambient_scale)
 {
 	Color color = material.emissive_color;
@@ -355,18 +366,10 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 	//ambient
 	Color ambiant = (material.ambient_color * ambient_scale);
 	color = color + ambiant;
-	/*float fog_maxdist = 8.0;
-	float fog_mindist = 0.1;*/
-	Color fog(0.4, 0.4, 0.4);
-	GLfloat dist = length(p);
-	/*float f_factor = (fog_maxdist - dist) /
-		(fog_maxdist - fog_mindist);
-	f_factor = abs((f_factor) / (f_factor - 1));*/
-	fog *= (dist * fog_factor);
-	color = color - fog ;
+	
 	//itarate per light source
 	int size = lights.size();
-	for (size_t i = 0; i < size ; i++)
+	for (size_t i = 0; i < size; i++)
 	{
 		Light* current_light = lights.at(i);
 		if (current_light->light_type == POINT_LIGHT)
@@ -377,17 +380,20 @@ Color Renderer::calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*>
 		{
 			l = normalize(truncateVec4(current_light->view_direction));
 		}
-		GLfloat LN = max(0.0f,dot(l, normal));
+		GLfloat LN = max(0.0f, dot(l, normal));
 		vec3 r = normalize((2 * normal * LN) - l);
 
 		//diffuse
 		Color diffuse = current_light->color * (material.diffuse_color * (LN * current_light->intensity));
 		// specular
-		GLfloat Shininess = pow(max(dot(r, v),0.0f), material.shininess_coefficient);
+		GLfloat Shininess = pow(max(dot(r, v), 0.0f), material.shininess_coefficient);
 		Color specular = current_light->color * (material.specular_color * Shininess * current_light->intensity);
 		color = color + diffuse + specular;
 	}
-
+	if (fog)
+	{
+		color = calcFogColor(p.z, color);
+	}
 	return color;
 }
 
@@ -406,7 +412,7 @@ Color interpulateColor(Color v1_color, Color v2_color, Color v3_color, GLfloat d
 {
 	GLfloat total_d = d1 + d2 + d3;
 	if ((total_d < epsilon) && (total_d > -epsilon))
-		return Color(0,0,0);
+		return Color(0, 0, 0);
 	GLfloat r = (v1_color.r * d1 + v2_color.r * d2 + v3_color.r * d3) / (d1 + d2 + d3);
 	GLfloat g = (v1_color.g * d1 + v2_color.g * d2 + v3_color.g * d3) / (d1 + d2 + d3);
 	GLfloat b = (v1_color.b * d1 + v2_color.b * d2 + v3_color.b * d3) / (d1 + d2 + d3);
@@ -448,20 +454,71 @@ void Renderer::DrawBox(const vector<Vertex>* vertices, Color color)
 	DrawLine(vertices->at(2).screen.x, vertices->at(6).screen.x, vertices->at(2).screen.y, vertices->at(6).screen.y, color);
 }
 
+vec3 Renderer::viewPortVec(vec3 cannonial)
+{
+	GLfloat factor = min(m_width, m_height);
+	//to fix center
+	GLfloat max_fix = max(m_width, m_height);
+	return vec3((factor / 2) * (cannonial.x + 1) + (max_fix - m_height) / 2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width) / 2, (cannonial.z + 1) / 2);
+}
+
+void Renderer::AntiAlias()
+{
+	if (antialiasing_resolution == 1)
+	{
+		for (size_t i = 0; i < 3 * m_width * m_height; i++)
+		{
+			_outBuffer[i] = m_outBuffer[i];
+		}
+	}
+	else 
+	{
+		size_t m_y_idx = 0;
+		for (int y = 0; y < _height; y++)
+		{
+			size_t m_x_idx = 0;
+			for (int x = 0; x < _width ; x++)
+			{
+				float sumR = 0.0f;
+				float sumG = 0.0f;
+				float sumB = 0.0f;
+				for (size_t j = 0; j < 3 * antialiasing_resolution; j += 3)
+				{
+					sumR += m_outBuffer[(m_y_idx * m_width + m_x_idx + j) * 3] + m_outBuffer[((m_y_idx + j) * m_width + m_x_idx) * 3];
+					sumG += m_outBuffer[(m_y_idx * m_width + m_x_idx + j) * 3 + 1] + m_outBuffer[((m_y_idx + j) * m_width + m_x_idx) * 3 + 1];
+					sumB += m_outBuffer[(m_y_idx * m_width + m_x_idx + j) * 3 + 2] + m_outBuffer[((m_y_idx + j) * m_width + m_x_idx) * 3 + 2];
+		
+
+				}
+				_outBuffer[INDEX(_width, x, y, 0)] = sumR / (antialiasing_resolution*2);
+				_outBuffer[INDEX(_width, x, y, 1)] = sumG / (antialiasing_resolution*2);
+				_outBuffer[INDEX(_width, x, y, 2)] = sumB / (antialiasing_resolution*2);
+				m_x_idx += antialiasing_resolution;
+			}
+			m_y_idx += antialiasing_resolution;
+		}
+	}
+}
+
 void Renderer::CreateBuffers(int width, int height)
 {
 	if (m_outBuffer != NULL)
 		delete m_outBuffer;
 	if (m_zbuffer != NULL)
 		delete m_zbuffer;
-	m_width = width;
-	m_height = height;
+	if (_outBuffer != NULL)
+		delete _outBuffer;
+	m_width = antialiasing_resolution * width;
+	m_height = antialiasing_resolution * height;
+	_width = width;
+	_height = height;
 	CreateOpenGLBuffer(); //Do not remove this line.
 	m_outBuffer = new float[3 * m_width * m_height];
 	m_zbuffer = new float[m_width * m_height];
+	_outBuffer = new float[3 * _width * _height];
 	for (size_t i = 0; i < m_width * m_height; i++)
 	{
-		m_zbuffer[i] = 1.1;
+		m_zbuffer[i] = 10;
 	}
 	
 }
@@ -572,8 +629,10 @@ void Renderer::DrawLine(int x1, int x2, int y1, int y2, Color color) {
 
 void Renderer::Reshape(int width, int height)
 {
-	m_width = width;
-	m_height = height;
+	m_width = antialiasing_resolution * width;
+	m_height = antialiasing_resolution * height;
+	_width =  width;
+	_height =  height;
 }
 
 void Renderer::ClearColorBuffer()
@@ -585,6 +644,16 @@ void Renderer::ClearColorBuffer()
 			m_outBuffer[(i * m_width + j) * 3] = 0;
 			m_outBuffer[(i * m_width + j) * 3 + 1 ] = 0;
 			m_outBuffer[(i * m_width + j) * 3 + 2] = 0;
+		}
+
+	}
+	for (size_t i = 0; i < _height; i++)
+	{
+		for (size_t j = 0; j < _width; j++)
+		{
+			_outBuffer[(i * _width + j) * 3] = 0;
+			_outBuffer[(i * _width + j) * 3 + 1] = 0;
+			_outBuffer[(i * _width + j) * 3 + 2] = 0;
 		}
 
 	}
@@ -653,8 +722,8 @@ void Renderer::CreateOpenGLBuffer()
 {
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, gScreenTex);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, NULL);
-	glViewport(0, 0, m_width, m_height);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, _width, _height, 0, GL_RGB, GL_FLOAT, NULL);
+	glViewport(0, 0, _width, _height);
 }
 
 void Renderer::SwapBuffers()
@@ -665,7 +734,7 @@ void Renderer::SwapBuffers()
 	a = glGetError();
 	glBindTexture(GL_TEXTURE_2D, gScreenTex);
 	a = glGetError();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, m_outBuffer);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, _width, _height, GL_RGB, GL_FLOAT, _outBuffer);
 	glGenerateMipmap(GL_TEXTURE_2D);
 	a = glGetError();
 
@@ -676,14 +745,6 @@ void Renderer::SwapBuffers()
 	//glutSwapBuffers();
 	//glfwSwapBuffers(glfwGetCurrentContext());
 	a = glGetError();
-}
-
-vec3 Renderer::viewPortVec(vec3 cannonial)
-{
-	GLfloat factor = min(m_width, m_height);
-	//to fix center
-	GLfloat max_fix = max(m_width, m_height);
-	return vec3((factor / 2) * (cannonial.x + 1) + (max_fix - m_height)/2, (factor / 2) * (cannonial.y + 1) + (max_fix - m_width)/2, (cannonial.z + 1 ) / 2 );
 }
 
 

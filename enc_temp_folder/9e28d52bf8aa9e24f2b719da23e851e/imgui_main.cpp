@@ -11,21 +11,32 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, S
 			scene->cameras.at(scene->activeCamera)->Zoom(-0.1);
 		}
 
-		else if (key == GLFW_KEY_RIGHT && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(1, 0, 0);
+
+		else if (key == GLFW_KEY_RIGHT && key == GLFW_KEY_X) {
+			scene->moveModel(0.2, 0, 0);
 		}
-		else if (key == GLFW_KEY_LEFT && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(-1, 0, 0);
+		else if (key == GLFW_KEY_LEFT && key == GLFW_KEY_X) {
+			scene->moveModel(-0.2, 0, 0);
 			
 		}
-		else if (key == GLFW_KEY_UP && mods == GLFW_MOD_CONTROL) {
+		else if (key == GLFW_KEY_UP && key == GLFW_KEY_Y) {
 			scene->moveModel(0, 1, 0);
 
 		}
-		else if (key == GLFW_KEY_DOWN && mods == GLFW_MOD_CONTROL) {
+		else if (key == GLFW_KEY_DOWN && key == GLFW_KEY_Y) {
 			scene->moveModel(0, -1, 0);
 		}
-		else if (key == GLFW_KEY_L && mods == GLFW_MOD_CONTROL) {
+
+		else if (key == GLFW_KEY_UP && key == GLFW_KEY_Z) {
+			scene->moveModel(0, 0, 1);
+
+		}
+		else if (key == GLFW_KEY_DOWN && key == GLFW_KEY_Z) {
+			scene->moveModel(0, 0, -1);
+		}
+
+
+		else if (key == GLFW_KEY_L && key == GLFW_MOD_CONTROL) {
 			scene->LookAtModel();
 		}
 	}

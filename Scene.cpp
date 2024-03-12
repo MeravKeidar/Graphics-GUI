@@ -376,12 +376,18 @@ void clipLeft(Face face)
 	}
 }
 
+void Scene::ChangeAntiAliasingResolution(int resolution)
+{
+	m_renderer->antialiasing_resolution = resolution;
+	//m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y - 20);
+}
+
 void Scene::draw()
 {
 	m_renderer->ClearColorBuffer();
 	m_renderer->ClearDepthBuffer();
 	m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y - 20 );
-
+	
 	if (displayCameras)
 		drawCameras();
 
@@ -418,6 +424,7 @@ void Scene::draw()
 	{
 		m_renderer->Blur();
 	}
+	m_renderer->AntiAlias();
 	m_renderer->SwapBuffers();
 }
 

@@ -59,6 +59,7 @@ class Scene {
 	void drawboundingBox(Model* model);
 	
 public:
+	void ChangeAntiAliasingResolution(int resolution);
 	Renderer* m_renderer;
 	Scene();
 	Scene(Renderer* renderer) : m_renderer(renderer) {};
