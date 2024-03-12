@@ -206,6 +206,10 @@ void MainMenuBar(Scene* scene)
 				{
 					scene->changeShading(PHONG);
 				}
+				if (ImGui::MenuItem("Mesh"))
+				{
+					scene->changeShading(MESH);
+				}
 				ImGui::EndMenu();
 			}
 			if (ImGui::MenuItem("Blur"))

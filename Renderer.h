@@ -14,7 +14,8 @@ static const GLfloat epsilon = 0.001;
 enum SHADING {
 	FLAT,
 	GOURAUD, 
-	PHONG
+	PHONG,
+	MESH
 };
 
 

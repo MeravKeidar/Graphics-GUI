@@ -54,17 +54,21 @@ void Renderer::DrawTriangles(const vector<Face>* faces, vector<Light*> lights, G
 				flat_color = calcColor(face_material, truncateVec4(cur_face.face_normal.view_direction), truncateVec4(cur_face.face_center.view_position), lights, ambient_scale);
 				fillFlatTriangle(cur_face, flat_color);
 				break;
-			case GOURAUD:
+		case GOURAUD:
 				 c1 = calcColor(cur_face.v1->material, truncateVec4(cur_face.v1_normal->view_direction), truncateVec4(cur_face.v1->view_position), lights, ambient_scale);
 				 c2 = calcColor(cur_face.v2->material, truncateVec4(cur_face.v2_normal->view_direction), truncateVec4(cur_face.v2->view_position), lights, ambient_scale);
 				 c3 = calcColor(cur_face.v3->material, truncateVec4(cur_face.v3_normal->view_direction), truncateVec4(cur_face.v3->view_position), lights, ambient_scale);
 				fillGouraudTriangle(cur_face, c1, c2, c3);
 				break;
 					
-			default:
+		case PHONG:
 				//TODO: check truncation correct
 				fillPhongTriangle(cur_face, lights, ambient_scale,  color_by_pos,  color_by_normal);
 				break;
+		case MESH:
+			DrawLine(cur_face.v1->screen.x, cur_face.v2->screen.x, cur_face.v1->screen.y, cur_face.v2->screen.y,Color(1,1,1));
+			DrawLine(cur_face.v2->screen.x, cur_face.v3->screen.x, cur_face.v2->screen.y, cur_face.v3->screen.y, Color(1, 1, 1));
+			DrawLine(cur_face.v1->screen.x, cur_face.v3->screen.x, cur_face.v1->screen.y, cur_face.v3->screen.y, Color(1, 1, 1));
 		}
 
 	
