@@ -350,9 +350,17 @@ bool Renderer::liangBarsky(vec3 v1, vec3 v2)
 
 Color Renderer::calcFogColor(GLfloat z, Color color)
 {
+
 	GLfloat fog_factor = 0;
 	z = abs(z); 
-	fog_factor = ((fog_end - z) / (fog_end - fog_start));
+	if (fog_type == LINEAR)
+	{
+		fog_factor = 1 - ((fog_end - z) / (fog_end - fog_start));
+	}
+	else 
+	{
+		fog_factor = 1 - exp(-fog_density * z);
+	}
 	fog_factor = max(0.0f, fog_factor);
 	fog_factor = min(1.0f, fog_factor);
 	return (color*(1 - fog_factor) + fog_color * fog_factor);

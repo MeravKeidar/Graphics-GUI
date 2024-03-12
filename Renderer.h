@@ -18,6 +18,11 @@ enum SHADING {
 };
 
 
+enum FOG {
+	LINEAR,
+	EXP,
+}; 
+
 class Renderer
 {
 	float* _outBuffer; // 3*width*height
@@ -43,9 +48,11 @@ class Renderer
 public:
 	bool fog = true; 
 	int antialiasing_resolution = 1;
-	Color fog_color = Color(0.4f, 0.4f, 0.4f);
+	FOG fog_type = EXP; 
+	Color fog_color = Color(0.2f, 0.2f, 0.2f);
 	GLfloat fog_start = 0.2;
-	GLfloat fog_end = 0.8;
+	GLfloat fog_end = 0.8; 
+	GLfloat fog_density = 0.5;
 	SHADING shadingType = FLAT;
 	mat4 to_cannonical_projection;
 	mat4 viewPortMat;

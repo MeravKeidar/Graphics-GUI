@@ -1,29 +1,96 @@
 #include  "imgui_main.h"
 #include <L2DFileDialog.h>
 
+
+void showInstructions()
+{
+	ImGui::Text("Shortcuts");
+	ImGui::Text("Zoom in: Cntrl + '+' ");
+	ImGui::Text("Zoom out: Cntrl + '-' ");
+	ImGui::Text("");
+	ImGui::Text("Move Active Camera Left(in view space): C + Left Arrow ");
+	ImGui::Text("Move Active Camera Right(in view space): C + Right Arrow ");
+	ImGui::Text("Move Active Camera Down(in view space): C + Down Arrow ");
+	ImGui::Text("Move Active Camera Up( in view space): C + Up Arrow ");
+	ImGui::Text("Look At Current Model(center camera): Cntrl + 'L' ");
+	ImGui::Text("");
+	ImGui::Text("Move Active Model Left( in -x): X + Left Arrow ");
+	ImGui::Text("Move Active Model Right( in +x): X + Right Arrow ");
+	ImGui::Text("Move Active Model Down( in -y): Y + Down Arrow ");
+	ImGui::Text("Move Active Model Up( in +y): Y + Up Arrow ");
+	ImGui::Text("Move Active Model far( in -z): Z + Down Arrow ");
+	ImGui::Text("Move Active Model near( in +z): Z + Up Arrow ");
+	ImGui::Text("");
+	ImGui::Text("Scale Active Model : M + Plus/Minus Key ");
+
+	if (ImGui::Button("OK"))
+	{
+		ImGui::CloseCurrentPopup();
+	}
+}
+
 // keyboard callback
 void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, Scene* scene) {
+
+	//move model
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	{
+		scene->moveModel(0.3, 0, 0);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	{
+		scene->moveModel(-0.3, 0, 0);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+	{
+		scene->moveModel(0,0.3, 0);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS)
+	{
+		scene->moveModel(0,-0.3, 0);
+	}
+
+	else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+	{
+		scene->moveModel(0,0, 0.3);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+	{
+		scene->moveModel(0,0, -0.3);
+	}
+	//move camera
+	else if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	{
+		scene->moveCamera(-0.3, 0, 0, 0);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	{
+		scene->moveCamera(0.3, 0, 0, 0);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	{
+		scene->moveCamera(0, -0.3, 0, 0);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+	{
+		scene->moveCamera(0, 0.3, 0, 0);
+	}
+	//scale model
+	else if (glfwGetKey(window, GLFW_KEY_EQUAL) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+	{
+		scene->scaleModel(1.1, 1.1, 1.1);
+	}
+	else if (glfwGetKey(window, GLFW_KEY_MINUS) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS)
+	{
+		scene->scaleModel(0.9, 0.9, 0.9);
+	}
+
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_EQUAL && mods == GLFW_MOD_CONTROL) {
 			scene->cameras.at(scene->activeCamera)->Zoom(0.1);
 		}
 		else if (key == GLFW_KEY_MINUS && mods == GLFW_MOD_CONTROL) {
 			scene->cameras.at(scene->activeCamera)->Zoom(-0.1);
-		}
-
-		else if (key == GLFW_KEY_RIGHT && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(1, 0, 0);
-		}
-		else if (key == GLFW_KEY_LEFT && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(-1, 0, 0);
-			
-		}
-		else if (key == GLFW_KEY_UP && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(0, 1, 0);
-
-		}
-		else if (key == GLFW_KEY_DOWN && mods == GLFW_MOD_CONTROL) {
-			scene->moveModel(0, -1, 0);
 		}
 		else if (key == GLFW_KEY_L && mods == GLFW_MOD_CONTROL) {
 			scene->LookAtModel();
@@ -272,13 +339,28 @@ void scenePararmeters(Scene* scene)
 		else
 			scene->m_renderer->fog = true;
 	}
-
-	GLfloat fs = scene->m_renderer->fog_start;
-	ImGui::SliderFloat("Fog starting distance", &fs, 0.0, 1.0);
-	scene->m_renderer->fog_start = fs;
-	GLfloat fe = scene->m_renderer->fog_end;
-	ImGui::SliderFloat("Fog ending distance", &fe, 0.0, 1.0);
-	scene->m_renderer->fog_end = fe;
+	static int fog_type_idx = (scene->m_renderer->fog_type == EXP ? 0 : 1);
+	const char* fog_type[] = { "exp", "linear" };
+	ImGui::Combo("Light type", &fog_type_idx, fog_type, 2);
+	if (fog_type_idx == 0) //exp
+	{
+		scene->m_renderer->fog_type = EXP;
+		GLfloat fd = scene->m_renderer->fog_density;
+		ImGui::SliderFloat("Fog density", &fd, 0.0, 1.0);
+		scene->m_renderer->fog_density = fd;
+	}
+	if (fog_type_idx == 1) //linear
+	{
+		scene->m_renderer->fog_type = LINEAR;
+		GLfloat fs = scene->m_renderer->fog_start;
+		ImGui::SliderFloat("Fog starting distance", &fs, 0.0, 1.0);
+		scene->m_renderer->fog_start = fs;
+		GLfloat fe = scene->m_renderer->fog_end;
+		ImGui::SliderFloat("Fog ending distance", &fe, 0.0, 1.0);
+		scene->m_renderer->fog_end = fe;
+	}
+	
+	
 
 	static ImVec4 fc = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
 	ImGui::ColorPicker4("Emissive Color Picker", (float*)&fc, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
@@ -778,23 +860,23 @@ void transformLights(Scene* scene)
 	ImGui::Combo("Light type", &type_idx, light_type, 2);
 	scene->lights.at(scene->activeLight)->light_type = (type_idx == 0 ? POINT_LIGHT: PARALLEL_LIGHT);
 
-	static GLfloat location[3] = { scene->lights.at(scene->activeLight)->position.x,
+	 GLfloat location[3] = { scene->lights.at(scene->activeLight)->position.x,
 							scene->lights.at(scene->activeLight)->position.y,
 							scene->lights.at(scene->activeLight)->position.z};
 	ImGui::InputFloat3("Light location", location);
 	scene->lights.at(scene->activeLight)->position = vec4(location[0], location[1], location[2], 1);
 
-	static GLfloat direction[3] = { scene->lights.at(scene->activeLight)->direction.x, 
+	 GLfloat direction[3] = { scene->lights.at(scene->activeLight)->direction.x, 
 									scene->lights.at(scene->activeLight)->direction.y, 
 									scene->lights.at(scene->activeLight)->direction.z };
 	ImGui::Text("Light Direction");
 	ImGui::InputFloat3("Light Direction", direction);
 	scene->lights.at(scene->activeLight)->direction = scene->lights.at(scene->activeLight)->position = vec4(direction[0], direction[1], direction[2], 0);
 	ImGui::Text("Change Light Color");
-	static ImVec4 c = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+	 ImVec4 c = ImVec4(scene->lights.at(scene->activeLight)->color.r, scene->lights.at(scene->activeLight)->color.g, scene->lights.at(scene->activeLight)->color.b, 1.0f);
 	ImGui::ColorPicker4("Color Picker", (float*)&c, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
 	scene->lights.at(scene->activeLight)->color = Color(c.x, c.y, c.z);
-	static GLfloat light_intensity = scene->lights.at(scene->activeLight)->intensity;
+	 GLfloat light_intensity = scene->lights.at(scene->activeLight)->intensity;
 	ImGui::Text("Change Light Intensity");
 	ImGui::InputFloat("light intensity", &light_intensity);
 	scene->lights.at(scene->activeLight)->intensity = light_intensity;
@@ -878,25 +960,6 @@ void showMatriceValues(Scene* scene)
 	}
 }
 
-void showInstructions()
-{
-	ImGui::Text("Shortcuts");
-	ImGui::Text("Zoom in: Cntrl + '+' ");
-	ImGui::Text("Zoom out: Cntrl + '-' ");
-	ImGui::Text("");
-	ImGui::Text("Move Active Model Left( in -x): Cntrl + Left Arrow ");
-	ImGui::Text("Move Active Model Right( in +x): Cntrl + Right Arrow ");
-	ImGui::Text("Move Active Model Down( in -y): Cntrl + Down Arrow ");
-	ImGui::Text("Move Active Model Up( in +y): Cntrl + Up Arrow ");
-	ImGui::Text("");
-	ImGui::Text("Look At Current Model(center camera): Cntrl + 'L' ");
-
-
-	if (ImGui::Button("OK"))
-	{
-		ImGui::CloseCurrentPopup();
-	}
-}
 
 void showManual()
 {
