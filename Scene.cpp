@@ -420,11 +420,17 @@ void Scene::draw()
 			drawboundingBox((*model_it));
 		}
 	}
+	m_renderer->AntiAlias();
+	
 	if (blur)
 	{
 		m_renderer->Blur();
 	}
-	m_renderer->AntiAlias();
+	if (bloom)
+	{
+		m_renderer->Bloom();
+	}
+	
 	m_renderer->SwapBuffers();
 }
 

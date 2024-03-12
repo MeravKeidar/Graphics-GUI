@@ -540,52 +540,149 @@ void Renderer::CreateLocalBuffer()
 	
 }
 
-void Renderer::Blur()
+void Renderer::Bloom()
 {
-	float weights[] = { 0.227027f, 0.1945946f, 0.1216216f, 0.054054f, 0.016216f };
-	float weightSum = 0.0f;
+	const int offsets[11] = { -5,-4,-3,-2,-1,0,1,2,3,4,5 };
+	const float weights[11] = {
+		0.011797803481426415,
+		0.0320697548192923,
+		0.06980398824247301,
+		0.1216619992483103,
+		0.16979299781175633,
+		0.18974691279348324,
+		0.16979299781175633,
+		0.1216619992483103,
+		0.06980398824247301,
+		0.0320697548192923,
+		0.011797803481426415
+	};
 
-	float* horizontalBuffer = new float[3 * m_width * m_height];
-	float* verticalBuffer = new float[3 * m_width * m_height];
-	for (size_t i = 0; i < m_width * m_height * 3; i++)
+	float* horizontalBuffer = new float[3 * _width * _height];
+	float* verticalBuffer = new float[3 * _width * _height];
+
+	for (size_t i = 0; i < _width * _height * 3; i++)
 	{
 		horizontalBuffer[i] = 0;
-		verticalBuffer[i] = 0;
+		verticalBuffer[i] = _outBuffer[i] * weights[0];
 	}
-	// Horizontal blur
-	for (int h = 0; h < m_height; h++)
+
+	for (int k = 0; k < 5; k++)
 	{
-		for (int w = 0; w < m_width - 5; w++)
+		for (int h = 0; h < _height; h++)
 		{
-			for (int i = 0; i < 5; i++)
+			for (int w = 0; w < _width; w++)
 			{
-				horizontalBuffer[INDEX(m_width, w, h, 0)] += m_outBuffer[INDEX(m_width, w + i, h, 0)] * weights[i];
-				horizontalBuffer[INDEX(m_width, w, h, 1)] += m_outBuffer[INDEX(m_width, w + i, h, 1)] * weights[i];
-				horizontalBuffer[INDEX(m_width, w, h, 2)] += m_outBuffer[INDEX(m_width, w + i, h, 2)] * weights[i];
+
+				for (int i = 0; i < 11; i++)
+		
+				{
+					if (verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] + verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] + verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] > bloom_threshold)
+					{
+						if ((w + offsets[i]) < _width && (w + offsets[i]) >= 0)
+						{
+							horizontalBuffer[INDEX(_width, w, h, 0)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] * weights[i];
+							horizontalBuffer[INDEX(_width, w, h, 1)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] * weights[i];
+							horizontalBuffer[INDEX(_width, w, h, 2)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] * weights[i];
+						}
+
+					}
+
+				}
+			}
+		}
+		for (int w = 0; w < _width; w++) {
+			for (int h = 0; h < _height; h++) {
+				for (int i = 0; i < 11; i++) {
+					if ((h + offsets[i]) < _height && (h + offsets[i]) >= 0)
+					{
+						if (horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] + horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] + horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] > bloom_threshold) 
+						{
+							verticalBuffer[INDEX(_width, w, h, 0)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] * weights[i];
+							verticalBuffer[INDEX(_width, w, h, 1)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] * weights[i];
+							verticalBuffer[INDEX(_width, w, h, 2)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] * weights[i];
+						}
+					}
+				}
 			}
 		}
 	}
 
-	// Vertical blur
-	for (int w = 0; w < m_width; w++)
+	for (int i = 0; i < _width * _height * 3; i++) {
+		_outBuffer[i] += verticalBuffer[i];
+	}
+	delete[] horizontalBuffer;
+	delete[] verticalBuffer;
+}
+
+
+void Renderer::Blur()
+{
+	const int offsets[11] = {-5,-4,-3,-2,-1,0,1,2,3,4,5};
+	const float weights[11] = {
+		0.011797803481426415,
+		0.0320697548192923,
+		0.06980398824247301,
+		0.1216619992483103,
+		0.16979299781175633,
+		0.18974691279348324,
+		0.16979299781175633,
+		0.1216619992483103,
+		0.06980398824247301,
+		0.0320697548192923,
+		0.011797803481426415
+	};
+
+	float* horizontalBuffer = new float[3 * _width * _height];
+	float* verticalBuffer = new float[3 * _width * _height];
+
+	for (size_t i = 0; i < _width * _height * 3; i++)
 	{
-		for (int h = 0; h < m_height - 5; h++)
+		horizontalBuffer[i] = 0;
+		verticalBuffer[i] = _outBuffer[i] * weights[0];
+	}
+	for (int k = 0; k < 5 ; k++)
+	{
+		// Horizontal blur
+		for (int h = 0; h < _height; h++)
 		{
-			for (int i = 0; i < 5; i++)
+			for (int w = 0; w < _width; w++)
 			{
-				m_outBuffer[INDEX(m_width, w, h, 0)] += horizontalBuffer[INDEX(m_width, w ,h +i, 0)] * weights[i];
-				m_outBuffer[INDEX(m_width, w, h, 1)] += horizontalBuffer[INDEX(m_width, w, h +i, 1)] * weights[i];
-				m_outBuffer[INDEX(m_width, w, h, 2)] += horizontalBuffer[INDEX(m_width, w , h + i, 2)] * weights[i];
+
+				for (int i = 0; i < 11; i++)
+				{
+					if ((w + offsets[i]) < _width && (w + offsets[i]) >= 0)
+					{
+						horizontalBuffer[INDEX(_width, w, h, 0)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] * weights[i];
+						horizontalBuffer[INDEX(_width, w, h, 1)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] * weights[i];
+						horizontalBuffer[INDEX(_width, w, h, 2)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] * weights[i];
+					}
+				}
+			}
+		}
+
+		// Vertical blur
+		
+		for (int w = 0; w < _width; w++) {
+			for (int h = 0; h < _height; h++) {
+				for (int i = 0; i < 11; i++) {
+					if ((h + offsets[i]) < _height && (h + offsets[i]) >= 0) {
+						verticalBuffer[INDEX(_width, w, h, 0)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] * weights[i];
+						verticalBuffer[INDEX(_width, w, h, 1)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] * weights[i];
+						verticalBuffer[INDEX(_width, w, h, 2)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] * weights[i];
+					}
+				}
 			}
 		}
 	}
-	/*for (size_t i = 0; i < m_width * m_height * 3; i++)
-	{
-		m_outBuffer[i] = verticalBuffer[i];
-	}*/
+	
+
+	for (int i = 0; i < _width * _height * 3; i++) {
+		_outBuffer[i] = verticalBuffer[i];
+	}
 
 	delete[] horizontalBuffer;
 	delete[] verticalBuffer;
+
 }
 
 

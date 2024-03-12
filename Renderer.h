@@ -47,6 +47,8 @@ class Renderer
 	
 	//////////////////////////////
 public:
+	float  bloom_threshold = 0.5;
+	
 	bool fog = true; 
 	int antialiasing_resolution = 1;
 	FOG fog_type = EXP; 
@@ -93,6 +95,7 @@ public:
 	Color calcColor(MATERIAL material, vec3 normal, vec3 p, vector<Light*> lights, GLfloat ambient_scale);
 	Color calcFogColor(GLfloat z, Color color);
 	void Blur();
+	void Bloom();
 };
 
 

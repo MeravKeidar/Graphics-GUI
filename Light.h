@@ -121,7 +121,7 @@ class Light
 {
 public:
 	Color color = { 1.0, 1.0, 1.0 }; //white by default 
-	GLfloat intensity;
+	GLfloat intensity = 1;
 	LIGHT_TYPE light_type;
 	vec4 direction;
 	vec4 view_direction;
