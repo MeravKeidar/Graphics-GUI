@@ -155,13 +155,13 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Cow")) {
 				scene->loadOBJModel("obj_files/cow.obj");
 			}
-			if (ImGui::MenuItem("Box")) {
-				scene->loadOBJModel("obj_files/box.obj");
+			if (ImGui::MenuItem("Bunny")) {
+				scene->loadOBJModel("obj_files/Bunny.obj");
 			}
-			if (ImGui::MenuItem("Custom Debug Model")) {
-				scene->loadOBJModel("obj_files/custom.obj");
+			if (ImGui::MenuItem("chain")) {
+				scene->loadOBJModel("obj_files/chain.obj");
 			}
-
+			
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Scene")) {
@@ -218,6 +218,16 @@ void MainMenuBar(Scene* scene)
 					scene->blur = false;
 				else
 					scene->blur = true;
+					scene->bloom = false;
+			}
+
+			if (ImGui::MenuItem("Bloom"))
+			{
+				if (scene->bloom)
+					scene->bloom = false;
+				else
+					scene->bloom = true;
+					scene->blur = false;
 			}
 
 			
@@ -363,16 +373,20 @@ void scenePararmeters(Scene* scene)
 		ImGui::SliderFloat("Fog ending distance", &fe, 0.0, 1.0);
 		scene->m_renderer->fog_end = fe;
 	}
-	
-	
 
 	static ImVec4 fc = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
-	ImGui::ColorPicker4("Emissive Color Picker", (float*)&fc, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+	ImGui::ColorPicker4("Fog Color Picker", (float*)&fc, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
 	scene->m_renderer->fog_color = Color(fc.x, fc.y, fc.z);
 	
 	int r = scene->m_renderer->antialiasing_resolution;
 	ImGui::SliderInt("Anti-Aliasing Resolution", &r, 1, 4);
 	scene->ChangeAntiAliasingResolution(r);
+
+
+	GLfloat b = scene->m_renderer->bloom_threshold;
+	ImGui::SliderFloat("Bloom threshold", &b, 0.0, 3.0);
+	scene->m_renderer->bloom_threshold = b;
+
 	if (ImGui::Button("OK"))
 	{
 		ImGui::CloseCurrentPopup();

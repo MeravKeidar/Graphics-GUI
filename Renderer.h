@@ -47,7 +47,7 @@ class Renderer
 	
 	//////////////////////////////
 public:
-	float  bloom_threshold = 0.5;
+	float  bloom_threshold = 1.5;
 	
 	bool fog = true; 
 	int antialiasing_resolution = 1;

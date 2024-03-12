@@ -452,18 +452,18 @@ void Renderer::DrawBox(const vector<Vertex>* vertices, Color color)
 	DrawLine(vertices->at(0).screen.x, vertices->at(1).screen.x, vertices->at(0).screen.y, vertices->at(1).screen.y, color);
 	DrawLine(vertices->at(1).screen.x, vertices->at(2).screen.x, vertices->at(1).screen.y, vertices->at(2).screen.y, color);
 	DrawLine(vertices->at(2).screen.x, vertices->at(3).screen.x, vertices->at(2).screen.y, vertices->at(3).screen.y, color);
-	DrawLine(vertices->at(2).screen.x, vertices->at(0).screen.x, vertices->at(2).screen.y, vertices->at(0).screen.y, color);
-	//top
-	DrawLine(vertices->at(4).screen.x, vertices->at(5).screen.x, vertices->at(4).screen.y, vertices->at(5).screen.y, color);
-	DrawLine(vertices->at(5).screen.x, vertices->at(6).screen.x, vertices->at(5).screen.y, vertices->at(6).screen.y, color);
-	DrawLine(vertices->at(6).screen.x, vertices->at(7).screen.x, vertices->at(6).screen.y, vertices->at(7).screen.y, color);
-	DrawLine(vertices->at(7).screen.x, vertices->at(4).screen.x, vertices->at(7).screen.y, vertices->at(4).screen.y, color);
-	//front
-	DrawLine(vertices->at(0).screen.x, vertices->at(4).screen.x, vertices->at(0).screen.y, vertices->at(4).screen.y, color);
-	DrawLine(vertices->at(1).screen.x, vertices->at(5).screen.x, vertices->at(1).screen.y, vertices->at(5).screen.y, color);
-	//back
-	DrawLine(vertices->at(3).screen.x, vertices->at(7).screen.x, vertices->at(3).screen.y, vertices->at(7).screen.y, color);
-	DrawLine(vertices->at(2).screen.x, vertices->at(6).screen.x, vertices->at(2).screen.y, vertices->at(6).screen.y, color);
+DrawLine(vertices->at(2).screen.x, vertices->at(0).screen.x, vertices->at(2).screen.y, vertices->at(0).screen.y, color);
+//top
+DrawLine(vertices->at(4).screen.x, vertices->at(5).screen.x, vertices->at(4).screen.y, vertices->at(5).screen.y, color);
+DrawLine(vertices->at(5).screen.x, vertices->at(6).screen.x, vertices->at(5).screen.y, vertices->at(6).screen.y, color);
+DrawLine(vertices->at(6).screen.x, vertices->at(7).screen.x, vertices->at(6).screen.y, vertices->at(7).screen.y, color);
+DrawLine(vertices->at(7).screen.x, vertices->at(4).screen.x, vertices->at(7).screen.y, vertices->at(4).screen.y, color);
+//front
+DrawLine(vertices->at(0).screen.x, vertices->at(4).screen.x, vertices->at(0).screen.y, vertices->at(4).screen.y, color);
+DrawLine(vertices->at(1).screen.x, vertices->at(5).screen.x, vertices->at(1).screen.y, vertices->at(5).screen.y, color);
+//back
+DrawLine(vertices->at(3).screen.x, vertices->at(7).screen.x, vertices->at(3).screen.y, vertices->at(7).screen.y, color);
+DrawLine(vertices->at(2).screen.x, vertices->at(6).screen.x, vertices->at(2).screen.y, vertices->at(6).screen.y, color);
 }
 
 vec3 Renderer::viewPortVec(vec3 cannonial)
@@ -483,13 +483,13 @@ void Renderer::AntiAlias()
 			_outBuffer[i] = m_outBuffer[i];
 		}
 	}
-	else 
+	else
 	{
 		size_t m_y_idx = 0;
 		for (int y = 0; y < _height; y++)
 		{
 			size_t m_x_idx = 0;
-			for (int x = 0; x < _width ; x++)
+			for (int x = 0; x < _width; x++)
 			{
 				float sumR = 0.0f;
 				float sumG = 0.0f;
@@ -499,12 +499,12 @@ void Renderer::AntiAlias()
 					sumR += m_outBuffer[(m_y_idx * m_width + m_x_idx + j) * 3] + m_outBuffer[((m_y_idx + j) * m_width + m_x_idx) * 3];
 					sumG += m_outBuffer[(m_y_idx * m_width + m_x_idx + j) * 3 + 1] + m_outBuffer[((m_y_idx + j) * m_width + m_x_idx) * 3 + 1];
 					sumB += m_outBuffer[(m_y_idx * m_width + m_x_idx + j) * 3 + 2] + m_outBuffer[((m_y_idx + j) * m_width + m_x_idx) * 3 + 2];
-		
+
 
 				}
-				_outBuffer[INDEX(_width, x, y, 0)] = sumR / (antialiasing_resolution*2);
-				_outBuffer[INDEX(_width, x, y, 1)] = sumG / (antialiasing_resolution*2);
-				_outBuffer[INDEX(_width, x, y, 2)] = sumB / (antialiasing_resolution*2);
+				_outBuffer[INDEX(_width, x, y, 0)] = sumR / (antialiasing_resolution * 2);
+				_outBuffer[INDEX(_width, x, y, 1)] = sumG / (antialiasing_resolution * 2);
+				_outBuffer[INDEX(_width, x, y, 2)] = sumB / (antialiasing_resolution * 2);
 				m_x_idx += antialiasing_resolution;
 			}
 			m_y_idx += antialiasing_resolution;
@@ -532,12 +532,12 @@ void Renderer::CreateBuffers(int width, int height)
 	{
 		m_zbuffer[i] = 10;
 	}
-	
+
 }
 
 void Renderer::CreateLocalBuffer()
 {
-	
+
 }
 
 void Renderer::Bloom()
@@ -556,63 +556,258 @@ void Renderer::Bloom()
 		0.0320697548192923,
 		0.011797803481426415
 	};
-
+	float* brightBuffer = new float[3 * _width * _height];
 	float* horizontalBuffer = new float[3 * _width * _height];
 	float* verticalBuffer = new float[3 * _width * _height];
+
+	for (size_t i = 0; i < _width; i++)
+	{
+		for (size_t j = 0; j < _height; j++)
+		{
+			float brightness = _outBuffer[INDEX(_width, i, j, 0)] + _outBuffer[INDEX(_width, i, j, 1)] + _outBuffer[INDEX(_width, i, j, 2)];
+			if (brightness > bloom_threshold)
+			{
+				brightBuffer[INDEX(_width, i, j, 0)] = _outBuffer[INDEX(_width, i, j, 0)] * weights[0];
+				brightBuffer[INDEX(_width, i, j, 1)] = _outBuffer[INDEX(_width, i, j, 1)] * weights[0];
+				brightBuffer[INDEX(_width, i, j, 2)] = _outBuffer[INDEX(_width, i, j, 2)] * weights[0];
+			}
+			else
+			{
+				brightBuffer[INDEX(_width, i, j, 0)] = 0;
+				brightBuffer[INDEX(_width, i, j, 1)] = 0;
+				brightBuffer[INDEX(_width, i, j, 2)] = 0;
+			}
+		}
+	}
 
 	for (size_t i = 0; i < _width * _height * 3; i++)
 	{
 		horizontalBuffer[i] = 0;
-		verticalBuffer[i] = _outBuffer[i] * weights[0];
 	}
-
 	for (int k = 0; k < 5; k++)
 	{
 		for (int h = 0; h < _height; h++)
 		{
 			for (int w = 0; w < _width; w++)
 			{
-
 				for (int i = 0; i < 11; i++)
-		
 				{
-					if (verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] + verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] + verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] > bloom_threshold)
+					if ((w + offsets[i]) < _width && (w + offsets[i]) >= 0)
 					{
-						if ((w + offsets[i]) < _width && (w + offsets[i]) >= 0)
-						{
-							horizontalBuffer[INDEX(_width, w, h, 0)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] * weights[i];
-							horizontalBuffer[INDEX(_width, w, h, 1)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] * weights[i];
-							horizontalBuffer[INDEX(_width, w, h, 2)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] * weights[i];
-						}
-
+						horizontalBuffer[INDEX(_width, w, h, 0)] += brightBuffer[INDEX(_width, w + offsets[i], h, 0)] * weights[i];
+						horizontalBuffer[INDEX(_width, w, h, 1)] += brightBuffer[INDEX(_width, w + offsets[i], h, 1)] * weights[i];
+						horizontalBuffer[INDEX(_width, w, h, 2)] += brightBuffer[INDEX(_width, w + offsets[i], h, 2)] * weights[i];
 					}
-
 				}
 			}
 		}
 		for (int w = 0; w < _width; w++) {
 			for (int h = 0; h < _height; h++) {
 				for (int i = 0; i < 11; i++) {
-					if ((h + offsets[i]) < _height && (h + offsets[i]) >= 0)
-					{
-						if (horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] + horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] + horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] > bloom_threshold) 
-						{
-							verticalBuffer[INDEX(_width, w, h, 0)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] * weights[i];
-							verticalBuffer[INDEX(_width, w, h, 1)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] * weights[i];
-							verticalBuffer[INDEX(_width, w, h, 2)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] * weights[i];
-						}
+					if ((h + offsets[i]) < _height && (h + offsets[i]) >= 0) {
+						brightBuffer[INDEX(_width, w, h, 0)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] * weights[i];
+						brightBuffer[INDEX(_width, w, h, 1)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] * weights[i];
+						brightBuffer[INDEX(_width, w, h, 2)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] * weights[i];
 					}
 				}
 			}
 		}
 	}
 
-	for (int i = 0; i < _width * _height * 3; i++) {
-		_outBuffer[i] += verticalBuffer[i];
+	for (size_t i = 0; i < _width; i++)
+	{
+		for (size_t j = 0; j < _height; j++)
+		{
+			if (brightBuffer[INDEX(_width, i, j, 0)] > 0 || brightBuffer[INDEX(_width, i, j, 1)] > 0 || brightBuffer[INDEX(_width, i, j, 2)] > 0)
+			{
+				_outBuffer[INDEX(_width, i, j, 0)] += brightBuffer[INDEX(_width, i, j, 0)];
+				_outBuffer[INDEX(_width, i, j, 1)] += brightBuffer[INDEX(_width, i, j, 1)];
+				_outBuffer[INDEX(_width, i, j, 2)] += brightBuffer[INDEX(_width, i, j, 2)];
+
+			}
+		}
 	}
+
+	delete[] brightBuffer;
 	delete[] horizontalBuffer;
 	delete[] verticalBuffer;
 }
+//
+//void Renderer::Bloom()
+//{
+//	const int offsets[11] = { -5,-4,-3,-2,-1,0,1,2,3,4,5 };
+//	const float weights[11] = {
+//		0.011797803481426415,
+//		0.0320697548192923,
+//		0.06980398824247301,
+//		0.1216619992483103,
+//		0.16979299781175633,
+//		0.18974691279348324,
+//		0.16979299781175633,
+//		0.1216619992483103,
+//		0.06980398824247301,
+//		0.0320697548192923,
+//		0.011797803481426415
+//	};
+//
+//	float* horizontalBuffer = new float[3 * _width * _height];
+//	float* verticalBuffer = new float[3 * _width * _height];
+//	float* bloomBuffer = new float[3 * _width * _height];
+//
+//	for (int i = 0; i < _width * _height; i += 3)
+//	{
+//		if (_outBuffer[i] + _outBuffer[i + 1] + _outBuffer[i + 2] > bloom_threshold)
+//		{
+//			bloomBuffer[i] = _outBuffer[i];
+//			bloomBuffer[i+1] = _outBuffer[i + 1];
+//			bloomBuffer[i+2] = _outBuffer[i + 2];
+//		}
+//		else
+//		{
+//			bloomBuffer[i] = 0;
+//			bloomBuffer[i + 1] = 0;
+//			bloomBuffer[i + 2] = 0;
+//		}
+//		
+//	}
+//	
+//
+//	for (size_t i = 0; i < _width * _height * 3; i++)
+//	{
+//		horizontalBuffer[i] = 0;
+//		verticalBuffer[i] = bloomBuffer[i] * weights[0];
+//	}
+//
+//	for (int k = 0; k < 5; k++)
+//	{
+//		for (int h = 0; h < _height; h++)
+//		{
+//			for (int w = 0; w < _width; w++)
+//			{
+//
+//				for (int i = 0; i < 11; i++)
+//
+//				{
+//					if ((w + offsets[i]) < _width && (w + offsets[i]) >= 0)
+//					{
+//						horizontalBuffer[INDEX(_width, w, h, 0)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] * weights[i];
+//						horizontalBuffer[INDEX(_width, w, h, 1)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] * weights[i];
+//						horizontalBuffer[INDEX(_width, w, h, 2)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] * weights[i];
+//					}
+//				}
+//			}
+//		}
+//		for (int w = 0; w < _width; w++)
+//		{
+//			for (int h = 0; h < _height; h++) 
+//			{
+//				for (int i = 0; i < 11; i++) 
+//				{
+//					if ((h + offsets[i]) < _height && (h + offsets[i]) >= 0)
+//					{
+//						verticalBuffer[INDEX(_width, w, h, 0)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] * weights[i];
+//						verticalBuffer[INDEX(_width, w, h, 1)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] * weights[i];
+//						verticalBuffer[INDEX(_width, w, h, 2)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] * weights[i];
+//					}
+//				}
+//			}
+//		}
+//	}
+//
+//
+//	for (size_t i = 0; i < _width; i++)
+//	{
+//		for (size_t j = 0; j < _height; j++)
+//		{
+//			if (verticalBuffer[INDEX(_width, i, j, 0)] > 0 || verticalBuffer[INDEX(_width, i, j, 1)] > 0 || verticalBuffer[INDEX(_width, i, j, 2)] > 0)
+//			{
+//				_outBuffer[INDEX(_width, i, j, 0)] = verticalBuffer[INDEX(_width, i, j, 0)];
+//				_outBuffer[INDEX(_width, i, j, 1)] = verticalBuffer[INDEX(_width, i, j, 1)];
+//				_outBuffer[INDEX(_width, i, j, 2)] = verticalBuffer[INDEX(_width, i, j, 2)];
+//
+//			}
+//		}
+//	}
+//
+//
+//	delete[] bloomBuffer;
+//	delete[] horizontalBuffer;
+//	delete[] verticalBuffer;
+//}
+
+//void Renderer::Bloom()
+//{
+//	const int offsets[11] = { -5,-4,-3,-2,-1,0,1,2,3,4,5 };
+//	const float weights[11] = {
+//		0.011797803481426415,
+//		0.0320697548192923,
+//		0.06980398824247301,
+//		0.1216619992483103,
+//		0.16979299781175633,
+//		0.18974691279348324,
+//		0.16979299781175633,
+//		0.1216619992483103,
+//		0.06980398824247301,
+//		0.0320697548192923,
+//		0.011797803481426415
+//	};
+//
+//	float* horizontalBuffer = new float[3 * _width * _height];
+//	float* verticalBuffer = new float[3 * _width * _height];
+//
+//	for (size_t i = 0; i < _width * _height * 3; i++)
+//	{
+//		horizontalBuffer[i] = 0;
+//		verticalBuffer[i] = _outBuffer[i];
+//	}
+//
+//	for (int k = 0; k < 5; k++)
+//	{
+//		for (int h = 0; h < _height; h++)
+//		{
+//			for (int w = 0; w < _width; w++)
+//			{
+//
+//				for (int i = 0; i < 11; i++)
+//		
+//				{
+//					if (verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] + verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] + verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] > bloom_threshold)
+//					{
+//						if ((w + offsets[i]) < _width && (w + offsets[i]) >= 0)
+//						{
+//							horizontalBuffer[INDEX(_width, w, h, 0)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 0)] * weights[i];
+//							horizontalBuffer[INDEX(_width, w, h, 1)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 1)] * weights[i];
+//							horizontalBuffer[INDEX(_width, w, h, 2)] += verticalBuffer[INDEX(_width, w + offsets[i], h, 2)] * weights[i];
+//						}
+//
+//					}
+//
+//				}
+//			}
+//		}
+//		for (int w = 0; w < _width; w++) {
+//			for (int h = 0; h < _height; h++) {
+//				for (int i = 0; i < 11; i++) {
+//					if ((h + offsets[i]) < _height && (h + offsets[i]) >= 0)
+//					{
+//						if (horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] + horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] + horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] > bloom_threshold) 
+//						{
+//							verticalBuffer[INDEX(_width, w, h, 0)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3] * weights[i];
+//							verticalBuffer[INDEX(_width, w, h, 1)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 1] * weights[i];
+//							verticalBuffer[INDEX(_width, w, h, 2)] += horizontalBuffer[(_width * (h + offsets[i]) + w) * 3 + 2] * weights[i];
+//						}
+//					}
+//				}
+//			}
+//		}
+//	}
+//
+//	for (int i = 0; i < _width * _height * 3; i++) {
+//		_outBuffer[i] += verticalBuffer[i];
+//	}
+//	delete[] horizontalBuffer;
+//	delete[] verticalBuffer;
+//}
 
 
 void Renderer::Blur()
