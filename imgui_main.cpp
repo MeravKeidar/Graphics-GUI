@@ -864,14 +864,18 @@ void transformLights(Scene* scene)
 							scene->lights.at(scene->activeLight)->position.y,
 							scene->lights.at(scene->activeLight)->position.z};
 	ImGui::InputFloat3("Light location", location);
-	scene->lights.at(scene->activeLight)->position = vec4(location[0], location[1], location[2], 1);
+	scene->lights.at(scene->activeLight)->position.x = location[0];
+	scene->lights.at(scene->activeLight)->position.y = location[1];
+	scene->lights.at(scene->activeLight)->position.z = location[2];
 
 	 GLfloat direction[3] = { scene->lights.at(scene->activeLight)->direction.x, 
 									scene->lights.at(scene->activeLight)->direction.y, 
 									scene->lights.at(scene->activeLight)->direction.z };
 	ImGui::Text("Light Direction");
 	ImGui::InputFloat3("Light Direction", direction);
-	scene->lights.at(scene->activeLight)->direction = scene->lights.at(scene->activeLight)->position = vec4(direction[0], direction[1], direction[2], 0);
+	scene->lights.at(scene->activeLight)->direction.x =direction[0];
+	scene->lights.at(scene->activeLight)->direction.y = direction[1];
+	scene->lights.at(scene->activeLight)->direction.z = direction[2];
 	ImGui::Text("Change Light Color");
 	 ImVec4 c = ImVec4(scene->lights.at(scene->activeLight)->color.r, scene->lights.at(scene->activeLight)->color.g, scene->lights.at(scene->activeLight)->color.b, 1.0f);
 	ImGui::ColorPicker4("Color Picker", (float*)&c, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
