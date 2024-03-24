@@ -1,7 +1,6 @@
 #include  "imgui_main.h"
 #include <L2DFileDialog.h>
 
-
 void showInstructions()
 {
 	ImGui::Text("Shortcuts");
@@ -97,7 +96,6 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, S
 		}
 	}
 }
-
 
 bool file_uploaded = false;
 static char* file_dialog_buffer = new char[500];
@@ -212,24 +210,6 @@ void MainMenuBar(Scene* scene)
 				}
 				ImGui::EndMenu();
 			}
-			if (ImGui::MenuItem("Blur"))
-			{
-				if (scene->blur)
-					scene->blur = false;
-				else
-					scene->blur = true;
-					scene->bloom = false;
-			}
-
-			if (ImGui::MenuItem("Bloom"))
-			{
-				if (scene->bloom)
-					scene->bloom = false;
-				else
-					scene->bloom = true;
-					scene->blur = false;
-			}
-
 			
 			ImGui::EndMenu();
 
@@ -341,51 +321,60 @@ void scenePararmeters(Scene* scene)
 {
 	GLfloat a = scene->ambient_scale;
 	ImGui::SliderFloat("Ambient Scale", &a, 0.0, 1.0);
+	static bool change_ambiant = false;
+	ImGui::Checkbox("Change Ambiant Color", &change_ambiant);
+	if (change_ambiant)
+	{
+		static ImVec4 ambient_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		ImGui::ColorPicker4("Ambiant Color Picker", (float*)&ambient_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+		vec4 ambientColor(ambient_color.x, ambient_color.y, ambient_color.z, ambient_color.w);
+		scene->ambient_color = ambientColor;
+	}
 	scene->ambient_scale = a;
 	GLfloat s = scene->normal_scale;
 	ImGui::SliderFloat("Normal Scale", &s, 0.0, 1.0);
 	scene->normal_scale = s;
 
-	if (ImGui::Button("Allow Fog"))
-	{
-		if (scene->m_renderer->fog)
-			scene->m_renderer->fog = false;
-		else
-			scene->m_renderer->fog = true;
-	}
-	static int fog_type_idx = (scene->m_renderer->fog_type == EXP ? 0 : 1);
-	const char* fog_type[] = { "exp", "linear" };
-	ImGui::Combo("Light type", &fog_type_idx, fog_type, 2);
-	if (fog_type_idx == 0) //exp
-	{
-		scene->m_renderer->fog_type = EXP;
-		GLfloat fd = scene->m_renderer->fog_density;
-		ImGui::SliderFloat("Fog density", &fd, 0.0, 1.0);
-		scene->m_renderer->fog_density = fd;
-	}
-	if (fog_type_idx == 1) //linear
-	{
-		scene->m_renderer->fog_type = LINEAR;
-		GLfloat fs = scene->m_renderer->fog_start;
-		ImGui::SliderFloat("Fog starting distance", &fs, 0.0, 1.0);
-		scene->m_renderer->fog_start = fs;
-		GLfloat fe = scene->m_renderer->fog_end;
-		ImGui::SliderFloat("Fog ending distance", &fe, 0.0, 1.0);
-		scene->m_renderer->fog_end = fe;
-	}
+	//if (ImGui::Button("Allow Fog"))
+	//{
+	//	if (scene->m_renderer->fog)
+	//		scene->m_renderer->fog = false;
+	//	else
+	//		scene->m_renderer->fog = true;
+	//}
+	//static int fog_type_idx = (scene->m_renderer->fog_type == EXP ? 0 : 1);
+	//const char* fog_type[] = { "exp", "linear" };
+	//ImGui::Combo("Light type", &fog_type_idx, fog_type, 2);
+	//if (fog_type_idx == 0) //exp
+	//{
+	//	scene->m_renderer->fog_type = EXP;
+	//	GLfloat fd = scene->m_renderer->fog_density;
+	//	ImGui::SliderFloat("Fog density", &fd, 0.0, 1.0);
+	//	scene->m_renderer->fog_density = fd;
+	//}
+	//if (fog_type_idx == 1) //linear
+	//{
+	//	scene->m_renderer->fog_type = LINEAR;
+	//	GLfloat fs = scene->m_renderer->fog_start;
+	//	ImGui::SliderFloat("Fog starting distance", &fs, 0.0, 1.0);
+	//	scene->m_renderer->fog_start = fs;
+	//	GLfloat fe = scene->m_renderer->fog_end;
+	//	ImGui::SliderFloat("Fog ending distance", &fe, 0.0, 1.0);
+	//	scene->m_renderer->fog_end = fe;
+	//}
 
-	static ImVec4 fc = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
-	ImGui::ColorPicker4("Fog Color Picker", (float*)&fc, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-	scene->m_renderer->fog_color = Color(fc.x, fc.y, fc.z);
-	
-	int r = scene->m_renderer->antialiasing_resolution;
-	ImGui::SliderInt("Anti-Aliasing Resolution", &r, 1, 4);
-	scene->ChangeAntiAliasingResolution(r);
+	//static ImVec4 fc = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
+	//ImGui::ColorPicker4("Fog Color Picker", (float*)&fc, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
+	//scene->m_renderer->fog_color = Color(fc.x, fc.y, fc.z);
+	//
+	//int r = scene->m_renderer->antialiasing_resolution;
+	//ImGui::SliderInt("Anti-Aliasing Resolution", &r, 1, 4);
+	//scene->ChangeAntiAliasingResolution(r);
 
 
-	GLfloat b = scene->m_renderer->bloom_threshold;
-	ImGui::SliderFloat("Bloom threshold", &b, 0.0, 3.0);
-	scene->m_renderer->bloom_threshold = b;
+	//GLfloat b = scene->m_renderer->bloom_threshold;
+	//ImGui::SliderFloat("Bloom threshold", &b, 0.0, 3.0);
+	//scene->m_renderer->bloom_threshold = b;
 
 	if (ImGui::Button("OK"))
 	{
@@ -740,15 +729,6 @@ void changeMaterial(Scene* scene)
 	{
 		scene->models.at(scene->activeModel)->colorByPosition();
 	}
-	static bool change_ambiant = false;
-	ImGui::Checkbox("Change Ambiant Color", &change_ambiant);
-	if (change_ambiant)
-	{
-		static ImVec4 ambient_color = ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
-		ImGui::ColorPicker4("Ambiant Color Picker", (float*)&ambient_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-		Color ambientColor(ambient_color.x, ambient_color.y, ambient_color.z);
-		scene->models.at(scene->activeModel)->changeUniformColor(ambientColor);
-	}
 	
 	static bool change_Diffuse = false;
 	ImGui::Checkbox("Change Diffuse Color", &change_Diffuse);
@@ -756,7 +736,7 @@ void changeMaterial(Scene* scene)
 	{
 		static ImVec4 diffuse_color = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
 		ImGui::ColorPicker4("Diffuse Color Picker", (float*)&diffuse_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-		Color diffuseColor(diffuse_color.x, diffuse_color.y, diffuse_color.z);
+		vec4 diffuseColor(diffuse_color.x, diffuse_color.y, diffuse_color.z, diffuse_color.w);
 		scene->models.at(scene->activeModel)->changeUniformDiffuseColor(diffuseColor);
 	}
 
@@ -766,7 +746,7 @@ void changeMaterial(Scene* scene)
 	{
 		static ImVec4 specular_color = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
 		ImGui::ColorPicker4("Specular Color Picker", (float*)&specular_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-		Color specularColor(specular_color.x, specular_color.y, specular_color.z);
+		vec4 specularColor(specular_color.x, specular_color.y, specular_color.z, specular_color.w);
 		scene->models.at(scene->activeModel)->changeUniformSpecularColor(specularColor);
 	}
 
@@ -776,7 +756,7 @@ void changeMaterial(Scene* scene)
 	{
 		static ImVec4 emissive_color = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
 		ImGui::ColorPicker4("Emissive Color Picker", (float*)&emissive_color, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-		Color emissiveColor(emissive_color.x, emissive_color.y, emissive_color.z);
+		vec4 emissiveColor(emissive_color.x, emissive_color.y, emissive_color.z, emissive_color.w);
 		scene->models.at(scene->activeModel)->changeUniformEmissiveColor(emissiveColor);
 	}
 
@@ -793,7 +773,6 @@ void changeMaterial(Scene* scene)
 		change_Diffuse = false;
 		change_emissive = false;
 		change_specular = false;
-		change_ambiant = false;
 		ImGui::CloseCurrentPopup();
 	}
 }
@@ -981,7 +960,6 @@ void showMatriceValues(Scene* scene)
 		ImGui::CloseCurrentPopup();
 	}
 }
-
 
 void showManual()
 {

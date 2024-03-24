@@ -6,63 +6,66 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-#include "Renderer.h"
+
 #include "Camera.h"
 #include "Light.h"
 using namespace std;
+
+enum SHADING {
+	FLAT,
+	GOURAUD,
+	PHONG,
+	MESH
+};
 
 class Model {
 protected:
 	void virtual draw() = 0;
 
 public:
-	MATERIAL material;
-	virtual ~Model() {}
-	mat4 _model_transform;/*
-	vector<PolygonTri> faces;*/
 	vector<Vertex> bounding_box;
 	vector<Vertex> vertices;
-	vector<Normal> normals;
-	vector<Face> faces;
-	vector<Face> view_volume_faces;
+	vector<Vertex> faces;
+	unsigned int vao; 
+	unsigned int vbo;
+
+	virtual ~Model() {}
+	mat4 model_view_matrix;
+	mat4 normal_view_matrix;
+
+	mat4 _model_transform;
 	vec4 _center_of_mass; 
 	mat4 _world_transform;
 	mat4 _normal_world_transform;
 	mat4 _normal_model_transform;
+
 	bool color_by_pos = false;
 	bool color_by_normal = false;
 
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
-	void changeUniformColor(Color color);
-	void changeUniformEmissiveColor(Color color);
-	void changeUniformSpecularColor(Color color);
-	void changeUniformDiffuseColor(Color color);
-	void changeUniformMaterial(MATERIAL material);
+	void changeUniformEmissiveColor(vec4 color);
+	void changeUniformSpecularColor(vec4 color);
+	void changeUniformDiffuseColor(vec4 color);
 	void colorByNormal();
 	void colorByPosition();
 	void updateModel(Camera active_camera);
-	void toScreen(Camera active_camera, Renderer* m_renderer);
-	void clipModel(Camera active_camera);
-	void clipFace(Camera active_camera);
 	bool inViewVolume(Camera active_camera);
 
 };
 
-
 class Scene {
-	
-	//mat4 _world_transform;
+	GLuint programID;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);
 	
 public:
 	void ChangeAntiAliasingResolution(int resolution);
-	Renderer* m_renderer;
-	Scene();
-	Scene(Renderer* renderer) : m_renderer(renderer) {};
+
+	Scene(GLuint program) : programID(program) {};
+	
 	void loadOBJModel(string fileName);
 	void loadAxisModels();
 	void loadPrimModel(string type);
@@ -87,7 +90,6 @@ public:
 	mat4 getCurrentWorldTrasform();
 	mat4 getCurrentCameraTrasform();
 	mat4 getCurrentProjection();
-	vec3 getCurrentViewPort();
 	void setCameraOrtho(const float left, const float right,
 		const float bottom, const float top,
 		const float zNear, const float zFar);
@@ -113,4 +115,5 @@ public:
 	bool bloom = false;
 	GLfloat ambient_scale = 0.2;
 	GLfloat normal_scale = 0.5;
+	vec4 ambient_color = { 0.2,1,0.5 , 1.0};
 };

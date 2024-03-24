@@ -13,7 +13,6 @@
 #include "mat.h"
 #include "InitShader.h"
 #include "Scene.h"
-#include "Renderer.h"
 #include <string>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -22,27 +21,13 @@
 #include <vector>
 #include <iostream>
 
-
 #define BUFFER_OFFSET( offset )   ((GLvoid*) (offset))
 
-
 Scene* scene;
-Renderer* renderer;
+
 
 // keyboard callback
-void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	keyboard(window, key, scancode, action, mods, scene);
-	}
-
-
-void pushVec(vector<GLfloat>* triangle, vec4 vec)
-{
-	for (size_t i = 0; i < 4; i++)
-	{
-		triangle->push_back(vec[i]);
-	}
-}
-
+void keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {keyboard(window, key, scancode, action, mods, scene);}
 
 int my_main() {
 	// Initialize GLFW
@@ -51,8 +36,7 @@ int my_main() {
 		return -1;
 	}
 
-	// Create a GLFWwindow of 512 by 512 pixels, named "CG"
-	GLFWwindow* window = glfwCreateWindow(1024, 1024, "CG", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(512, 512, "CG", NULL, NULL);
 	if (!window) {
 		fprintf(stderr, "Failed to create GLFW window\n");
 		glfwTerminate();
@@ -60,22 +44,23 @@ int my_main() {
 	}
 	
 	glfwMakeContextCurrent(window);
-	glfwSwapInterval(1); // Enable vsync
+	glfwSwapInterval(1); 
 
-	// Initialize GLEW
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) {
 		std::cerr << "Failed to initialize GLEW\n";
 		return -1;
 	}
 	
-	// Setup Dear ImGui context
 	ImguiInit(window);
 	glfwSetKeyCallback(window, keyboardCallback);
-	// Setup scene
-	scene = new Scene();
 
-	//Main loop
+	
+
+	GLuint program = InitShader("vshader.glsl", "fshader.glsl");
+	glUseProgram(program);
+	scene = new Scene(program);
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -86,6 +71,10 @@ int my_main() {
 
 		ImguiFrame();
 		scene->draw();
+		//MeshModel cow("cow.obj");
+		//glBindVertexArray(cow.vao);
+		//glDrawArrays(GL_TRIANGLES, 0, cow.vertices.size());
+		glBindVertexArray(0);
 
 		MainMenuBar(scene);
 		ImguiPopUps(scene);
@@ -100,7 +89,6 @@ int my_main() {
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	delete scene;
-	delete renderer;
 
 	return 0;
 }

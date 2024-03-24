@@ -170,7 +170,6 @@
     <ClCompile Include="imgui_main.cpp" />
     <ClCompile Include="InitShader.cpp" />
     <ClCompile Include="MeshModel.cpp" />
-    <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -192,7 +191,6 @@
     <ClInclude Include="External\ImGui\imstb_truetype.h" />
     <ClInclude Include="imgui_main.h" />
     <ClInclude Include="Light.h" />
-    <ClInclude Include="Renderer.h" />
     <ClInclude Include="InitShader.h" />
     <ClInclude Include="mat.h" />
     <ClInclude Include="MeshModel.h" />

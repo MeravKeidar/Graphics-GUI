@@ -70,7 +70,39 @@ MeshModel::MeshModel(string fileName)
 	_model_transform = mat4(1.0);
 	_normal_world_transform = mat4(1.0);
 	_normal_model_transform = mat4(1.0);
+
 	loadFile(fileName);
+
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+
+	// vertex position
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	// vertex normal
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	// vertex texture coords
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texture));
+	// vertex emissive color
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, emissive_color));
+	// vertex diffuse color
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, diffuse_color));
+	// vertex specular color
+	glEnableVertexAttribArray(5);
+	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, specular_color));
+	// vertex shininess coefficient
+	glEnableVertexAttribArray(6);
+	glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, shininess_coefficient));
+
+	glBindVertexArray(0);
 }
 
 MeshModel::~MeshModel(void)
@@ -82,12 +114,12 @@ void MeshModel::loadFile(string fileName)
 	ifstream ifile(fileName.c_str());
 	//Note: faces is always at the end of file. can directly construct the face sturcture
 	vector<FaceIdcs> tempfaces;
-	/**
-		vector<vec3> vertex_normals;
+
+	vector<vec3> vertex_positions;
+	vector<vec3> vertex_normals;
 	vector<vec3> vertex_textures;
-	vector<vec3> verticesText;
-	vector<vec3> verticesNormal;
-	*/
+	
+	
 	
 	GLfloat min_x = numeric_limits<float>::max();
 	GLfloat min_y = min_x;
@@ -112,7 +144,7 @@ void MeshModel::loadFile(string fileName)
 		if (lineType == "v")
 		{
 			vec3 current_v3 = vec3fFromStream(issLine);
-			vertices.push_back(current_v3);
+			vertex_positions.push_back(current_v3);
 			max_x = max(max_x, current_v3.x);
 			max_y = max(max_y, current_v3.y);
 			max_z = max(max_z, current_v3.z);
@@ -123,7 +155,7 @@ void MeshModel::loadFile(string fileName)
 		}
 		else if (lineType == "vn")
 		{
-			normals.push_back(vec3fFromStream(issLine));
+			vertex_normals.push_back(vec3fFromStream(issLine));
 		}
 		else if (lineType == "vt")
 		{
@@ -146,60 +178,54 @@ void MeshModel::loadFile(string fileName)
 	
 	}
 
-	if (normals.empty())
+	if (vertex_normals.empty())
 	{
 		calculate_vertex_normals = true;
-		for (size_t i = 0; i < vertices.size(); i++)
+		for (size_t i = 0; i < vertex_positions.size(); i++)
 		{
-			normals.push_back(Normal(vec3(0, 0, 0)));
+			vertex_normals.push_back((vec3(0, 0, 0)));
 		}
 	}
 
 	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
 	{
-		Face current_face;
-		current_face.v1 = &vertices.at((*it).v[0] - 1);
-		current_face.v2 = &vertices.at((*it).v[1] - 1);
-		current_face.v3 = &vertices.at((*it).v[2] - 1);
+		vec3 v1 = vertex_positions.at((*it).v[0] - 1);
+		vec3 v2 = vertex_positions.at((*it).v[1] - 1);
+		vec3 v3 = vertex_positions.at((*it).v[2] - 1);
+		vec3 face_normal = normalize(cross((v2 - v1), (v3 - v1)));
+		faces.push_back(Vertex((v1 + v2 + v3) / 3, face_normal));
 
-		vec4 temp_vec = current_face.v1->raw_position + current_face.v2->raw_position + current_face.v3->raw_position;
-		current_face.face_center.raw_position = temp_vec / 3;
-
-		vec3 xi, xj, xk;
-		xi = truncateVec4(current_face.v1->raw_position);
-		xj = truncateVec4(current_face.v2->raw_position);
-		xk = truncateVec4(current_face.v3->raw_position);
-		vec3 normal_direction3 = cross((xj - xi), (xk - xi));
-		normal_direction3 = normalize(normal_direction3);
-		vec4 normal_direction4(normal_direction3.x, normal_direction3.y, normal_direction3.z, 0);
-		current_face.face_normal.original_direction = normal_direction4;
-
+		
 		if (calculate_vertex_normals)
 		{
-			current_face.v1_normal = &normals.at((*it).v[0] - 1);
-			current_face.v1_normal->original_direction += normal_direction4;
-
-			current_face.v2_normal = &normals.at((*it).v[1] - 1);
-			current_face.v2_normal->original_direction += normal_direction4;
-
-			current_face.v3_normal = &normals.at((*it).v[2] - 1);
-			current_face.v3_normal->original_direction += normal_direction4;
+			vertex_normals.at((*it).v[0] - 1) += face_normal;
+			vertex_normals.at((*it).v[1] - 1) += face_normal;
+			vertex_normals.at((*it).v[2] - 1) += face_normal;
+			//saving the index of the normal in normals instead
+			vec3 n1 = ((*it).v[0] - 1, 0, 0);
+			vec3 n2 = ((*it).v[1] - 1, 0, 0);
+			vec3 n3 = ((*it).v[2] - 1, 0, 0);
+			vertices.push_back(Vertex(v1, n1));
+			vertices.push_back(Vertex(v2, n2));
+			vertices.push_back(Vertex(v3, n3));
 		}
 		else
 		{
-			current_face.v1_normal = &normals.at((*it).vn[0] - 1);
-			current_face.v2_normal = &normals.at((*it).vn[1] - 1);
-			current_face.v3_normal = &normals.at((*it).vn[2] - 1);
+			vec3 n1 = vertex_normals.at((*it).vn[0] - 1);
+			vec3 n2 = vertex_normals.at((*it).vn[1] - 1);
+			vec3 n3 = vertex_normals.at((*it).vn[2] - 1);
+			vertices.push_back(Vertex(v1, n1));
+			vertices.push_back(Vertex(v2, n2));
+			vertices.push_back(Vertex(v3, n3));
 		}
 
-		faces.push_back(current_face);
 	}
 
 	if (calculate_vertex_normals)
 	{
-		for (size_t i = 0; i < normals.size(); i++)
+		for (size_t i = 0; i < vertices.size(); i++)
 		{
-			normals.at(i).original_direction = normalize(normals.at(i).original_direction);
+			vertices.at(i).normal = normalize(vertex_normals.at(vertices.at(i).normal.x));
 		}
 	}
 
@@ -207,130 +233,20 @@ void MeshModel::loadFile(string fileName)
 
 }
 
-//All the old code from loadfile here
-	//vec3 normal3 = cross((xj - xi), (xj - xk));
-			//Normal normal(normal3);
-			////add face normal to pool of normals
-			//normals.push_back(normal3);
-			////current_face.face_normal = &(*(normals.end() - 1));
-			////TODO: reconstruct calculating vertex normal logic
-			//Normal custom_vertex_normal(vec3(0));
-			//
-			//if (face_indices.vn[0] != 0)
-			//{
-			//	current_face.v1_normal = &normals.at(face_indices.vn[0] - 1);
-			//	current_face.v2_normal = &normals.at(face_indices.vn[1] - 1);
-			//	current_face.v3_normal = &normals.at(face_indices.vn[2] - 1);
-			//}
-			//else
-			//{
-				/*if (current_face.v1_normal == NULL)
-				{
-					normals.push_back(custom_vertex_normal);
-					current_face.v1_normal = &(*(normals.end() - 1));
-				}
-				current_face.v1_normal->original_direction += current_face.face_normal->original_direction;
-
-				if (current_face.v2_normal == NULL)
-				{
-					normals.push_back(custom_vertex_normal);
-					current_face.v2_normal = &(*(normals.end() - 1));
-				}
-				current_face.v2_normal->original_direction += current_face.face_normal->original_direction;
-
-				if (current_face.v3_normal == NULL)
-				{
-					normals.push_back(custom_vertex_normal);
-					current_face.v3_normal = &(*(normals.end() - 1));
-				}
-				current_face.v3_normal->original_direction += current_face.face_normal->original_direction;*/
-				//}
-
-
-	// the face calculation thingy has to be at the end... 
-	/**
-	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
-	{
-		Face current_face;
-		//calculate face normals
-		vec3 xi, xj, xk, normal;
-
-		xi = vertices.at((*it).v[0] - 1);
-		xj = vertices.at((*it).v[1] - 1);
-		xk = vertices.at((*it).v[2] - 1);
-		normal = cross((xj - xi), (xj - xk));
-		current_face.normal = normalize(normal);
-		current_face.normal.w = 0;
-		current_face.position = ((xi + xj + xk) / 3);
-
-		current_face.v1.position = xi;
-		current_face.v2.position = xj;
-		current_face.v3.position = xk;
-
-		//only add if a texture was given
-		if ((*it).vt[0] != 0)
-		{
-			current_face.v1.texture = vertex_textures.at((*it).vt[0] - 1);
-		}
-		if ((*it).vt[1] != 0)
-		{
-			current_face.v2.texture = vertex_textures.at((*it).vt[1] - 1);
-		}
-		if ((*it).vt[2] != 0)
-		{
-			current_face.v3.texture = vertex_textures.at((*it).vt[2] - 1);
-		}
-
-		if (vertex_normals.empty())
-		{
-			current_face.v1.normal += normal;
-			current_face.v2.normal += normal;
-			current_face.v3.normal += normal;
-		}
-		else
-		{
-			current_face.v1.normal = vertex_normals.at((*it).vn[0] - 1);
-			current_face.v2.normal = vertex_normals.at((*it).vn[1] - 1);
-			current_face.v3.normal = vertex_normals.at((*it).vn[2] - 1);
-		}
-		faces.push_back(current_face);
-	}
-	*/
-	
-
-	//normalize all normals 
-	/**
-			for (size_t i = 0; i < faces.size(); i++)
-	{
-		faces.at(i).v1.normal = normalize(faces.at(i).v1.normal);
-		faces.at(i).v2.normal = normalize(faces.at(i).v2.normal);
-		faces.at(i).v3.normal = normalize(faces.at(i).v3.normal);
-
-		faces.at(i).v1.normal.w = 0;
-		faces.at(i).v2.normal.w = 0;
-		faces.at(i).v3.normal.w = 0;
-	}
-	*/
-
-	//Note: collect min max before bounding box and handing over the values
-	//Assume all vertices of model are in use(otherwise bounding box would give illusion of bigger than needed)
-	
-
-
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
 {
+	glBindVertexArray(vao);
+	glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+	glBindVertexArray(0);
 }
-
 
 MeshModel::MeshModel()
 {
-	 
 	_world_transform = mat4(1.0);
 	_model_transform = mat4(1.0);
 	_normal_world_transform = mat4(1.0);
 	_normal_model_transform = mat4(1.0);
-	
 }
 
 void MeshModel::boundingBox(GLfloat min_x, GLfloat min_y, GLfloat min_z, GLfloat max_x, GLfloat max_y, GLfloat max_z)
@@ -354,9 +270,6 @@ void MeshModel::boundingBox(GLfloat min_x, GLfloat min_y, GLfloat min_z, GLfloat
 	_world_transform = TranslationMat(-model_center) * _world_transform;
 	_normal_world_transform = TranslationMat(-model_center) * _normal_world_transform;
 }
-
-
-
 
 void PrimMeshModel::Tetrahedron()
 {
@@ -600,7 +513,6 @@ void PrimMeshModel::Cube()
 
 }
 
-
 PrimMeshModel::PrimMeshModel(string type)
 {
 	if (type == "tetrahedron")
@@ -612,25 +524,3 @@ PrimMeshModel::PrimMeshModel(string type)
 		Cube();
 	}
 }
-
-//vec3 xi, xj, xk;
-//xi = truncateVec4(current_face.v1->raw_position);
-//xj = truncateVec4(current_face.v2->raw_position);
-//xk = truncateVec4(current_face.v3->raw_position);
-//vec4 normal_direction = (cross((xj - xi), (xj - xk)), 0);
-//normal_direction = normalize(normal_direction);
-//current_face.face_normal.original_direction = normal_direction;
-//
-//if (calculate_vertex_normals)
-//{
-//	current_face.v1_normal->original_direction += normal_direction;
-//	current_face.v2_normal->original_direction += normal_direction;
-//	current_face.v3_normal->original_direction += normal_direction;
-//}
-//else
-//{
-//	current_face.v1_normal = &normals.at(face_indices.vn[0] - 1);
-//	current_face.v2_normal = &normals.at(face_indices.vn[1] - 1);
-//	current_face.v3_normal = &normals.at(face_indices.vn[2] - 1);
-//}
-//faces.push_back(current_face);

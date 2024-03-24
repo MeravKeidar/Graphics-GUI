@@ -48,10 +48,9 @@ struct Color {
 };
 
 struct MATERIAL {
-	Color ambient_color = { 0.2,1,0.5 };
-	Color emissive_color = { 0,0,0 };
-	Color diffuse_color = { 0.2,0.2,0.2 };
-	Color specular_color = { 0.2,0.2,0.2 };
+	Color emissive_color = {0,0,0};
+	Color diffuse_color = {0.2,0.2,0.2};
+	Color specular_color = {0.2,0.2,0.2};
 	GLfloat shininess_coefficient = 100; 
 };
 
@@ -61,60 +60,67 @@ Color interpulateColor(Color v1_color, Color v2_color, Color v3_color, GLfloat d
 
 struct Vertex
 {
-	vec4 raw_position; //original position in world frame
-	vec4 view_position;  // position in view frame (after transformation amd camera matrix multiplication)
-	vec4 projected; 
-	vec3 canonical; // after devision by w
-	vec3 screen; // in screen coordinates
-	vec3 texture = vec3(0);
-	int texture_x = 0;
-	int texture_y = 0;
-	MATERIAL material;
+	vec3 position;
+	vec3 normal;
+	vec2 texture;
+	vec4 emissive_color;
+	vec4 diffuse_color;
+	vec4 specular_color;
+	GLfloat shininess_coefficient; 
 
-	Vertex(vec3 new_vec) { raw_position.x = new_vec.x;
-	raw_position.y = new_vec.y;
-	raw_position.z = new_vec.z;
-	raw_position.w = 1;
+
+	//vec4 raw_position; //original position in world frame
+	//vec4 view_position;  // position in view frame (after transformation amd camera matrix multiplication)
+	//vec4 projected; 
+	//vec3 canonical; // after devision by w
+	//vec3 screen; // in screen coordinates
+	//vec3 texture = vec3(0);
+	//int texture_x = 0;
+	//int texture_y = 0;
+	Vertex(vec3 new_position) :position(new_position) ,emissive_color(0.0f, 0.0f, 0.0f, 0.0f),
+		diffuse_color(0.2f, 0.2f, 0.2f, 1.0f),
+		specular_color(0.2f, 0.2f, 0.2f, 1.0f),
+		shininess_coefficient(100.0f), normal(0, 0, 0) {
 	};
-
+	Vertex(vec3 new_position, vec3 new_normal) :position(new_position), normal(new_normal){};
 	Vertex() {};
 };
 
-struct Normal
-{
-	vec4 original_direction; //original position in world frame
-	vec4 view_direction;  // position in view frame (after transformation amd camera matrix multiplication)
-	//vec4 projected; // No meaning to projection a normal 
-	//vec3 screen; // after devision by w in screen coordinates
-	
-	Normal() {
-		original_direction = (0, 0, 0, 0);
-	};
-	Normal(vec3 new_vec) {
-		vec3 normal = normalize(new_vec);
-		original_direction.x = normal.x;
-		original_direction.y = normal.y;
-		original_direction.z = normal.z;
-		original_direction.w = 0;
-	};
-};
-
-struct Face
-{
-	Vertex* v1 = NULL;
-	Vertex* v2 = NULL;
-	Vertex* v3 = NULL;
-	Vertex face_center;
-
-	Normal* v1_normal = NULL;
-	Normal* v2_normal = NULL;
-	Normal* v3_normal = NULL;
-	Normal face_normal;
-
-
-	Face() {};
-};
-
+//struct Normal
+//{
+//	vec4 original_direction; //original position in world frame
+//	vec4 view_direction;  // position in view frame (after transformation amd camera matrix multiplication)
+//	//vec4 projected; // No meaning to projection a normal 
+//	//vec3 screen; // after devision by w in screen coordinates
+//	
+//	Normal() {
+//		original_direction = (0, 0, 0, 0);
+//	};
+//	Normal(vec3 new_vec) {
+//		vec3 normal = normalize(new_vec);
+//		original_direction.x = normal.x;
+//		original_direction.y = normal.y;
+//		original_direction.z = normal.z;
+//		original_direction.w = 0;
+//	};
+//};
+//
+//struct Face
+//{
+//	Vertex* v1 = NULL;
+//	Vertex* v2 = NULL;
+//	Vertex* v3 = NULL;
+//	Vertex face_center;
+//
+//	Normal* v1_normal = NULL;
+//	Normal* v2_normal = NULL;
+//	Normal* v3_normal = NULL;
+//	Normal face_normal;
+//
+//
+//	Face() {};
+//};
+//
 
 
 class Light
