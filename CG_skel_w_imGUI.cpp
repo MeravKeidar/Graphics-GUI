@@ -52,15 +52,15 @@ int my_main() {
 		return -1;
 	}
 	
-	ImguiInit(window);
-	glfwSetKeyCallback(window, keyboardCallback);
-
-	
-
 	GLuint program = InitShader("vshader.glsl", "fshader.glsl");
 	glUseProgram(program);
-	scene = new Scene(program);
-
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	scene = new Scene();
+	scene->programID = program;
+	ImguiInit(window);
+	glfwSetKeyCallback(window, keyboardCallback);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -68,19 +68,19 @@ int my_main() {
 		if (error != GL_NO_ERROR) {
 			std::cerr << "OpenGL error: " << error << std::endl;
 		}
-
+		int framebufferWidth, framebufferHeight;
+		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
+		glViewport(0, 0, min(framebufferWidth,framebufferHeight), min(framebufferWidth, framebufferHeight));
+		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
 		ImguiFrame();
 		scene->draw();
-		//MeshModel cow("cow.obj");
-		//glBindVertexArray(cow.vao);
-		//glDrawArrays(GL_TRIANGLES, 0, cow.vertices.size());
-		glBindVertexArray(0);
-
 		MainMenuBar(scene);
 		ImguiPopUps(scene);
-	
 		ImGui::Render();
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	
+		
 		glfwSwapBuffers(window);
 	}
 

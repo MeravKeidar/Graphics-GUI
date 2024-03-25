@@ -20,18 +20,18 @@ enum SHADING {
 
 class Model {
 protected:
-	void virtual draw() = 0;
-
+	
+	
 public:
 	vector<Vertex> bounding_box;
 	vector<Vertex> vertices;
 	vector<Vertex> faces;
 	unsigned int vao; 
 	unsigned int vbo;
+	GLuint programID = 0;
 
 	virtual ~Model() {}
-	mat4 model_view_matrix;
-	mat4 normal_view_matrix;
+
 
 	mat4 _model_transform;
 	vec4 _center_of_mass; 
@@ -42,9 +42,12 @@ public:
 	bool color_by_pos = false;
 	bool color_by_normal = false;
 
+	void virtual draw() = 0; 
+	void virtual setVertexAttributes() = 0;
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
+	void changeUniformShininess(GLfloat coefficient);
 	void changeUniformEmissiveColor(vec4 color);
 	void changeUniformSpecularColor(vec4 color);
 	void changeUniformDiffuseColor(vec4 color);
@@ -56,16 +59,14 @@ public:
 };
 
 class Scene {
-	GLuint programID;
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);
 	
 public:
+	GLuint programID = 0;
 	void ChangeAntiAliasingResolution(int resolution);
-
-	Scene(GLuint program) : programID(program) {};
-	
+	Scene();
 	void loadOBJModel(string fileName);
 	void loadAxisModels();
 	void loadPrimModel(string type);

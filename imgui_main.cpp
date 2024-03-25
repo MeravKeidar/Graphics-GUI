@@ -148,7 +148,7 @@ void MainMenuBar(Scene* scene)
 				scene->loadOBJModel("obj_files/pawn.obj");
 			}
 			if (ImGui::MenuItem("Tetrahedron")) {
-				scene->loadPrimModel("tetrahedron");
+				scene->loadOBJModel("obj_files/tetrahedron.obj");
 			}
 			if (ImGui::MenuItem("Cow")) {
 				scene->loadOBJModel("obj_files/cow.obj");
@@ -760,12 +760,12 @@ void changeMaterial(Scene* scene)
 		scene->models.at(scene->activeModel)->changeUniformEmissiveColor(emissiveColor);
 	}
 
-	 GLfloat shininess_slide = scene->models.at(scene->activeModel)->material.shininess_coefficient;
+	static GLfloat shininess_slide = 50;
 	ImGui::SliderFloat("Shininess coefficient", &shininess_slide, 0, 100);
-	scene->models.at(scene->activeModel)->material.shininess_coefficient = shininess_slide;
-	GLfloat shininess = scene->models.at(scene->activeModel)->material.shininess_coefficient;
+	scene->models.at(scene->activeModel)->changeUniformShininess(shininess_slide);
+	static GLfloat shininess = 50;
 	ImGui::InputFloat("Shininess", &shininess);
-	scene->models.at(scene->activeModel)->material.shininess_coefficient = shininess;
+	scene->models.at(scene->activeModel)->changeUniformShininess(shininess);
 
 
 	if (ImGui::Button("OK"))

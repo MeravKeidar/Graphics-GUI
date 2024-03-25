@@ -68,16 +68,7 @@ struct Vertex
 	vec4 specular_color;
 	GLfloat shininess_coefficient; 
 
-
-	//vec4 raw_position; //original position in world frame
-	//vec4 view_position;  // position in view frame (after transformation amd camera matrix multiplication)
-	//vec4 projected; 
-	//vec3 canonical; // after devision by w
-	//vec3 screen; // in screen coordinates
-	//vec3 texture = vec3(0);
-	//int texture_x = 0;
-	//int texture_y = 0;
-	Vertex(vec3 new_position) :position(new_position) ,emissive_color(0.0f, 0.0f, 0.0f, 0.0f),
+	Vertex(vec3 new_position) :position(new_position) ,emissive_color(0.0f, 1.0f, 1.0f, 0.0f),
 		diffuse_color(0.2f, 0.2f, 0.2f, 1.0f),
 		specular_color(0.2f, 0.2f, 0.2f, 1.0f),
 		shininess_coefficient(100.0f), normal(0, 0, 0) {

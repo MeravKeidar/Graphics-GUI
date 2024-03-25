@@ -2,6 +2,8 @@
 #include "Scene.h"
 #include "MeshModel.h"
 #include <string>
+#include "InitShader.h"
+#include <GLFW/glfw3.h>
 
 using namespace std;
 Color c_white{ 1, 1, 1 };
@@ -42,6 +44,14 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 
 	_model_transform = r * _model_transform;
 	_normal_model_transform = r * _normal_model_transform;
+}
+
+void Model::changeUniformShininess(GLfloat coefficient)
+{
+	for (auto it = vertices.begin(); it != vertices.end(); it++)
+	{
+		(*it).shininess_coefficient = coefficient;
+	}
 }
 
 void Model::changeUniformEmissiveColor(vec4 color)
@@ -95,8 +105,8 @@ void Model::colorByPosition()
 
 void Scene::loadOBJModel(string fileName)
 {
-	MeshModel* model = new MeshModel(fileName);
-
+	MeshModel* model = new MeshModel(fileName, programID);
+	std::cout << "Program" << model->programID << std::endl;
 	models.push_back(model);
 
 	nModels++;
@@ -106,7 +116,7 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
-	
+	model->programID = programID;
 	models.push_back(model);
 	nModels++;
 	activeModel++;
@@ -225,7 +235,6 @@ bool Model::inViewVolume(Camera active_camera)
 	return true;
 }
 
-
 void Scene::ChangeAntiAliasingResolution(int resolution)
 {
 	//m_renderer->antialiasing_resolution = resolution;
@@ -234,12 +243,7 @@ void Scene::ChangeAntiAliasingResolution(int resolution)
 
 void Scene::draw()
 {
-	/*m_renderer->ClearColorBuffer();
-	m_renderer->ClearDepthBuffer();
-	m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y - 20 );*/
-	/*if (displayCameras)
-		drawCameras();*/
-
+	
 	for (size_t i = 0; i <lights.size(); i++)
 	{
 		Light* current_light = lights.at(i);
@@ -247,7 +251,7 @@ void Scene::draw()
 		current_light->view_position = ProjectionMatrix * current_light->position; 
 		current_light->view_direction = ProjectionMatrix * current_light->direction;
 	}
-
+	
 	for (auto model_it = models.begin(); model_it  != models.end(); model_it++)
 	{
 		drawModel(*model_it);
@@ -265,8 +269,7 @@ void Scene::draw()
 			drawboundingBox((*model_it));
 		}
 	}
-	
-	//m_renderer->SwapBuffers();
+
 }
 
 void Scene::changeShading(SHADING shading_type)
@@ -286,19 +289,20 @@ void Scene::drawboundingBox(Model* model)
 
 void Scene::drawModel(Model* model)
 {
-	model->model_view_matrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
-	model->normal_view_matrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
+	mat4 model_view_matrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
+	mat4 normal_view_matrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
 
-	GLuint projectionMatID = glGetUniformLocation(programID, "projection");
-	glUniformMatrix4fv(projectionMatID, 1, GL_FALSE, &(cameras.at(activeCamera)->projection)[0][0]);
-	GLuint modelViewMatrixID = glGetUniformLocation(programID, "modelview");
-	glUniformMatrix4fv(modelViewMatrixID, 1, GL_FALSE, &(model->model_view_matrix)[0][0]);
-	GLuint normalViewMatrixID = glGetUniformLocation(programID, "normalMat");
-	glUniformMatrix4fv(normalViewMatrixID, 1, GL_FALSE, &(model->normal_view_matrix)[0][0]);
-	
-	glBindVertexArray(model->vao);
-	glDrawArrays(GL_TRIANGLES, 0, model->vertices.size());
-	glBindVertexArray(0);
+	GLuint projectionMat_loc = glGetUniformLocation(programID, "projection");
+	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, &(cameras.at(activeCamera)->projection)[0][0]);
+	GLuint modelViewMatrix_loc = glGetUniformLocation(programID, "modelview");
+	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, &(model_view_matrix)[0][0]);
+	GLuint normalViewMatrix_loc = glGetUniformLocation(programID, "normalMat");
+	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, &(normal_view_matrix)[0][0]);
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR) {
+		std::cerr << "OpenGL error while drawing model in scene : " << error << std::endl;
+	}
+	model->draw();
 
 }
 
@@ -344,8 +348,35 @@ void Scene::drawFaceNormals(Model* model)
 
 void Scene::drawDemo()
 {
-	//m_renderer->SetDemoBuffer();
-	//m_renderer->SwapBuffers();
+	const int pnum = 3;
+	static const GLfloat points[pnum][4] = {
+		{-0.1, -0.1f, 0.0f,1.0f},
+		{0.1f, -0.1f, 0.0f,1.0f},
+		{0.0f,  0.1f, 0.0f,1.0f}
+	};
+
+	GLuint program = InitShader("minimal_vshader.glsl",
+		"minimal_fshader.glsl");
+
+	glUseProgram(program);
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(points),
+		points, GL_STATIC_DRAW);
+
+
+	GLuint loc = glGetAttribLocation(program, "vPosition");
+	glEnableVertexAttribArray(loc);
+	glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glClear(GL_COLOR_BUFFER_BIT);
+	glDrawArrays(GL_LINE_LOOP, 0, pnum);
 }
 
 void Camera::Zoom(GLfloat scale) {
@@ -594,6 +625,7 @@ void Scene::Reset()
 
 void Scene::addModel(Model* model)
 {
+	model->programID = programID;
 	models.push_back(model);
 	nModels++; 
 	activeModel++;

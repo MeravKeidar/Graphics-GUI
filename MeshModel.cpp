@@ -64,45 +64,16 @@ vec2 vec2fFromStream(std::istream& aStream)
 	return vec2(x, y);
 }
 
-MeshModel::MeshModel(string fileName)
+MeshModel::MeshModel(string fileName, GLuint program)
 {
+	programID = program;
 	_world_transform = mat4(1.0);
 	_model_transform = mat4(1.0);
 	_normal_world_transform = mat4(1.0);
 	_normal_model_transform = mat4(1.0);
 
 	loadFile(fileName);
-
-	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
-
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-
-	// vertex position
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-	// vertex normal
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-	// vertex texture coords
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texture));
-	// vertex emissive color
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, emissive_color));
-	// vertex diffuse color
-	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, diffuse_color));
-	// vertex specular color
-	glEnableVertexAttribArray(5);
-	glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, specular_color));
-	// vertex shininess coefficient
-	glEnableVertexAttribArray(6);
-	glVertexAttribPointer(6, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, shininess_coefficient));
-
-	glBindVertexArray(0);
+	setVertexAttributes();
 }
 
 MeshModel::~MeshModel(void)
@@ -117,7 +88,7 @@ void MeshModel::loadFile(string fileName)
 
 	vector<vec3> vertex_positions;
 	vector<vec3> vertex_normals;
-	vector<vec3> vertex_textures;
+	vector<vec2> vertex_textures;
 	
 	
 	
@@ -159,13 +130,10 @@ void MeshModel::loadFile(string fileName)
 		}
 		else if (lineType == "vt")
 		{
-			//TODO: avoid for now from textures
-			//vertex_textures.push_back(vec3fFromStream(issLine));
+			vertex_textures.push_back(vec2fFromStream(issLine));
 		}
 		else if (lineType == "f")
 		{
-			//Note: down the line the face normal for drawing and for calculation(acquired via averaging vertex normals) are not the same -- they should be...
-			//Note: keep textures for later
 			FaceIdcs face_indices(issLine);
 			tempfaces.push_back(face_indices);
 			
@@ -192,6 +160,13 @@ void MeshModel::loadFile(string fileName)
 		vec3 v1 = vertex_positions.at((*it).v[0] - 1);
 		vec3 v2 = vertex_positions.at((*it).v[1] - 1);
 		vec3 v3 = vertex_positions.at((*it).v[2] - 1);
+		vec3 n1;
+		vec3 n2;
+		vec3 n3;
+		vec2 t1(0,0);
+		vec2 t2(0, 0);
+		vec2 t3(0, 0);
+
 		vec3 face_normal = normalize(cross((v2 - v1), (v3 - v1)));
 		faces.push_back(Vertex((v1 + v2 + v3) / 3, face_normal));
 
@@ -202,23 +177,29 @@ void MeshModel::loadFile(string fileName)
 			vertex_normals.at((*it).v[1] - 1) += face_normal;
 			vertex_normals.at((*it).v[2] - 1) += face_normal;
 			//saving the index of the normal in normals instead
-			vec3 n1 = ((*it).v[0] - 1, 0, 0);
-			vec3 n2 = ((*it).v[1] - 1, 0, 0);
-			vec3 n3 = ((*it).v[2] - 1, 0, 0);
+			n1 = ((*it).v[0] - 1, 0, 0);
+			n2 = ((*it).v[1] - 1, 0, 0);
+			n3 = ((*it).v[2] - 1, 0, 0);
 			vertices.push_back(Vertex(v1, n1));
 			vertices.push_back(Vertex(v2, n2));
 			vertices.push_back(Vertex(v3, n3));
 		}
 		else
 		{
-			vec3 n1 = vertex_normals.at((*it).vn[0] - 1);
-			vec3 n2 = vertex_normals.at((*it).vn[1] - 1);
-			vec3 n3 = vertex_normals.at((*it).vn[2] - 1);
+			n1 = vertex_normals.at((*it).vn[0] - 1);
+			n2 = vertex_normals.at((*it).vn[1] - 1);
+			n3 = vertex_normals.at((*it).vn[2] - 1);
 			vertices.push_back(Vertex(v1, n1));
 			vertices.push_back(Vertex(v2, n2));
 			vertices.push_back(Vertex(v3, n3));
 		}
 
+		if (!vertex_textures.empty())
+		{
+			t1 = vertex_textures.at((*it).vt[0] - 1);
+			t2 = vertex_textures.at((*it).vt[1] - 1);
+			t3 = vertex_textures.at((*it).vt[2] - 1);
+		}
 	}
 
 	if (calculate_vertex_normals)
@@ -233,11 +214,55 @@ void MeshModel::loadFile(string fileName)
 
 }
 
+void MeshModel::setVertexAttributes()
+{
+	glGenVertexArrays(1, &vao);
+	glGenBuffers(1, &vbo);
+	glBindVertexArray(vao);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+
+	// vertex position
+	GLuint position_loc = glGetAttribLocation(programID, "vPosition");
+	glEnableVertexAttribArray(position_loc);
+	glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+	GLenum perror = glGetError();
+	// vertex normal
+	GLuint normal_loc = glGetAttribLocation(programID, "vNormal");
+	glEnableVertexAttribArray(normal_loc);
+	glVertexAttribPointer(normal_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	GLenum nerror = glGetError();
+	// vertex texture coords
+	GLuint texture_loc = glGetAttribLocation(programID, "vTextureCoord");
+	glEnableVertexAttribArray(texture_loc);
+	glVertexAttribPointer(texture_loc, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texture));
+	// vertex emissive color
+	GLuint emissive_color_loc = glGetAttribLocation(programID, "vEmissive_color");
+	glEnableVertexAttribArray(emissive_color_loc);
+	glVertexAttribPointer(emissive_color_loc, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, emissive_color));
+	// vertex diffuse color
+	GLuint diffuse_color_loc = glGetAttribLocation(programID, "vDiffuse_color");
+	glEnableVertexAttribArray(diffuse_color_loc);
+	glVertexAttribPointer(diffuse_color_loc, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, diffuse_color));
+	// vertex specular color
+	GLuint specular_color_loc = glGetAttribLocation(programID, "vSpecular_color");
+	glEnableVertexAttribArray(specular_color_loc);
+	glVertexAttribPointer(specular_color_loc, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, specular_color));
+	// vertex shininess coefficient
+	GLuint shininess_loc = glGetAttribLocation(programID, "vShininess_coefficient");
+	glEnableVertexAttribArray(shininess_loc);
+	glVertexAttribPointer(shininess_loc, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, shininess_coefficient));
+	glBindVertexArray(0);
+	GLenum error = glGetError();
+	
+}
+
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
 {
 	glBindVertexArray(vao);
-	glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+
+	glDrawArrays(GL_TRIANGLES, 0, vertices.size() * sizeof(Vertex));
 	glBindVertexArray(0);
 }
 
