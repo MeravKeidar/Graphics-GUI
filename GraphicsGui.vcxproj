@@ -223,6 +223,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </Object>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="GouraudFragShader.glsl" />
+    <None Include="GouraudVertexShader.glsl" />
+    <None Include="PhongFragShader.glsl" />
+    <None Include="PhongVertexShader.glsl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

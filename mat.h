@@ -600,6 +600,17 @@ vec4 mvmult(const mat4& a, const vec4& b)
     return c;
 }
 
+inline
+void matToArray(GLfloat* a, const mat4& mat)
+{
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            a[j + 4 * i] = mat[j][i];
+        }
+    }
+}
 //----------------------------------------------------------------------------
 //
 //  Rotation matrix generators

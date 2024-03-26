@@ -48,6 +48,7 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 
 void Model::changeUniformShininess(GLfloat coefficient)
 {
+
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).shininess_coefficient = coefficient;
@@ -56,30 +57,40 @@ void Model::changeUniformShininess(GLfloat coefficient)
 
 void Model::changeUniformEmissiveColor(vec4 color)
 {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).emissive_color = color;
 	}
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Model::changeUniformSpecularColor(vec4 color)
 {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).specular_color = color;
 	}
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Model::changeUniformDiffuseColor(vec4 color) 
 {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).diffuse_color = color;
 	}
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Model::colorByNormal()
 {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	color_by_normal = true;
 	color_by_pos = false;
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
@@ -88,11 +99,15 @@ void Model::colorByNormal()
 		vec4 color(abs((*it).normal.x), abs((*it).normal.y), abs((*it).normal.z), 1);
 		(*it).diffuse_color = color;
 		(*it).specular_color = color;
+		(*it).emissive_color = 0.25 * color;
 	}
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Model::colorByPosition()
 {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	color_by_normal = false;
 	color_by_pos = true;
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
@@ -100,12 +115,15 @@ void Model::colorByPosition()
 		vec4 color(abs((*it).position.x), abs((*it).position.y), abs((*it).position.z), 1);
 		(*it).diffuse_color = color;
 		(*it).specular_color = color;
+		(*it).emissive_color = 0.25 * color;
 	}
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Scene::loadOBJModel(string fileName)
 {
-	MeshModel* model = new MeshModel(fileName, programID);
+	MeshModel* model = new MeshModel(fileName, ActiveProgramID);
 	std::cout << "Program" << model->programID << std::endl;
 	models.push_back(model);
 
@@ -116,7 +134,7 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
-	model->programID = programID;
+	model->programID = ActiveProgramID;
 	models.push_back(model);
 	nModels++;
 	activeModel++;
@@ -243,19 +261,43 @@ void Scene::ChangeAntiAliasingResolution(int resolution)
 
 void Scene::draw()
 {
-	
-	for (size_t i = 0; i <lights.size(); i++)
+	GLfloat projection[16];
+	matToArray(projection, cameras.at(activeCamera)->projection);
+	GLuint projectionMat_loc = glGetUniformLocation(ActiveProgramID, "projection");
+	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, projection);
+
+	GLfloat cameraMat[16];
+	matToArray(cameraMat, cameras.at(activeCamera)->cTransform);
+	GLuint cameraMat_loc = glGetUniformLocation(ActiveProgramID, "cameraMat");
+	glUniformMatrix4fv(cameraMat_loc, 1, GL_FALSE, cameraMat);
+
+	GLuint nLights_loc = glGetUniformLocation(ActiveProgramID, "nLights");
+	glUniform1i(nLights_loc, nLights);
+
+	vec4 res_ambient = ambient_color * ambient_scale;
+	GLuint ambient_color_loc = glGetUniformLocation(ActiveProgramID, "ambient_color");
+	glUniform4fv(ambient_color_loc,1, &(res_ambient[0]));
+
+	for (int i = 0; i < nLights; ++i) {
+		std::string lightName = "lights[" + std::to_string(i) + "]";
+		glUniform4fv(glGetUniformLocation(ActiveProgramID, (lightName + ".color").c_str()), 1, &(lights.at(i)->color[0]));
+		glUniform1f(glGetUniformLocation(ActiveProgramID, (lightName + ".intensity").c_str()), lights.at(i)->intensity);
+		glUniform4fv(glGetUniformLocation(ActiveProgramID, (lightName + ".direction").c_str()), 1, &(lights.at(i)->direction[0]));
+		glUniform1i(glGetUniformLocation(ActiveProgramID, (lightName + ".light_type").c_str()), lights.at(i)->light_type);
+		glUniform4fv(glGetUniformLocation(ActiveProgramID, (lightName + ".position").c_str()), 1, &(lights.at(i)->position[0]));
+	}
+
+	/*for (size_t i = 0; i <lights.size(); i++)
 	{
 		Light* current_light = lights.at(i);
 		mat4 ProjectionMatrix = cameras.at(activeCamera)->cTransform;
 		current_light->view_position = ProjectionMatrix * current_light->position; 
 		current_light->view_direction = ProjectionMatrix * current_light->direction;
-	}
+	}*/
 	
 	for (auto model_it = models.begin(); model_it  != models.end(); model_it++)
 	{
 		drawModel(*model_it);
-
 		if (displayFnormal) 
 		{
 			drawFaceNormals((*model_it));
@@ -274,7 +316,48 @@ void Scene::draw()
 
 void Scene::changeShading(SHADING shading_type)
 {
-	//m_renderer->shadingType = shading_type; 
+	if (shading_type == MESH)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+	else if (shading_type == FLAT)
+	{
+		ActiveProgramID = FlatProgramID;
+		for (auto model_it = models.begin(); model_it != models.end(); model_it++)
+		{
+			(*model_it)->programID = FlatProgramID;
+		}
+		glUseProgram(ActiveProgramID);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+	}
+
+	else if (shading_type == GOURAUD)
+	{
+		ActiveProgramID = GouraudProgramID;
+		for (auto model_it = models.begin(); model_it != models.end(); model_it++)
+		{
+			(*model_it)->programID = GouraudProgramID;
+		}
+		glUseProgram(ActiveProgramID);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+	}
+
+	else if (shading_type == PHONG)
+	{
+		ActiveProgramID = PhongProgramID;
+		for (auto model_it = models.begin(); model_it != models.end(); model_it++)
+		{
+			(*model_it)->programID = PhongProgramID;
+		}
+		glUseProgram(ActiveProgramID);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glEnable(GL_DEPTH_TEST);
+		glDepthFunc(GL_LESS);
+	}
 }
 
 void Scene::drawboundingBox(Model* model)
@@ -291,13 +374,17 @@ void Scene::drawModel(Model* model)
 {
 	mat4 model_view_matrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
 	mat4 normal_view_matrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
+	GLfloat model_view[16];
+	matToArray(model_view, model_view_matrix);
+	GLfloat normal_view[16];
+	matToArray(normal_view, normal_view_matrix);
+	
 
-	GLuint projectionMat_loc = glGetUniformLocation(programID, "projection");
-	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, &(cameras.at(activeCamera)->projection)[0][0]);
-	GLuint modelViewMatrix_loc = glGetUniformLocation(programID, "modelview");
-	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, &(model_view_matrix)[0][0]);
-	GLuint normalViewMatrix_loc = glGetUniformLocation(programID, "normalMat");
-	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, &(normal_view_matrix)[0][0]);
+	
+	GLuint modelViewMatrix_loc = glGetUniformLocation(ActiveProgramID, "modelview");
+	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, model_view);
+	GLuint normalViewMatrix_loc = glGetUniformLocation(ActiveProgramID, "normalMat");
+	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR) {
 		std::cerr << "OpenGL error while drawing model in scene : " << error << std::endl;
@@ -308,6 +395,7 @@ void Scene::drawModel(Model* model)
 
 void Scene::drawVertexNormals(Model* model)
 {
+
 	/*mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
 	for (auto face_it = model->faces.begin(); face_it != model->faces.end(); face_it++)
 	{
@@ -625,7 +713,7 @@ void Scene::Reset()
 
 void Scene::addModel(Model* model)
 {
-	model->programID = programID;
+	model->programID = ActiveProgramID;
 	models.push_back(model);
 	nModels++; 
 	activeModel++;
@@ -702,7 +790,7 @@ mat4 Scene::getCurrentProjection()
 }
 
 
-void Scene::addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type, Color color)
+void Scene::addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type, vec4 color)
 {
 	Light * new_light = new Light();
 	new_light->position = vec4(location.x, location.y, location.z, 1);

@@ -217,8 +217,9 @@ void MeshModel::loadFile(string fileName)
 void MeshModel::setVertexAttributes()
 {
 	glGenVertexArrays(1, &vao);
-	glGenBuffers(1, &vbo);
 	glBindVertexArray(vao);
+
+	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
 
@@ -226,12 +227,10 @@ void MeshModel::setVertexAttributes()
 	GLuint position_loc = glGetAttribLocation(programID, "vPosition");
 	glEnableVertexAttribArray(position_loc);
 	glVertexAttribPointer(position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-	GLenum perror = glGetError();
 	// vertex normal
 	GLuint normal_loc = glGetAttribLocation(programID, "vNormal");
 	glEnableVertexAttribArray(normal_loc);
 	glVertexAttribPointer(normal_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
-	GLenum nerror = glGetError();
 	// vertex texture coords
 	GLuint texture_loc = glGetAttribLocation(programID, "vTextureCoord");
 	glEnableVertexAttribArray(texture_loc);
@@ -253,7 +252,6 @@ void MeshModel::setVertexAttributes()
 	glEnableVertexAttribArray(shininess_loc);
 	glVertexAttribPointer(shininess_loc, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, shininess_coefficient));
 	glBindVertexArray(0);
-	GLenum error = glGetError();
 	
 }
 
@@ -261,7 +259,6 @@ void MeshModel::setVertexAttributes()
 void MeshModel::draw()
 {
 	glBindVertexArray(vao);
-
 	glDrawArrays(GL_TRIANGLES, 0, vertices.size() * sizeof(Vertex));
 	glBindVertexArray(0);
 }

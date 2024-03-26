@@ -63,18 +63,15 @@ struct Vertex
 	vec3 position;
 	vec3 normal;
 	vec2 texture;
-	vec4 emissive_color;
-	vec4 diffuse_color;
-	vec4 specular_color;
-	GLfloat shininess_coefficient; 
+	vec4 emissive_color = (0.1, 0.1, 0.1, 0.2);
+	vec4 diffuse_color = (1,1,1,0.2);
+	vec4 specular_color = (1, 1, 1, 0.2);
+	GLfloat shininess_coefficient = 10; 
 
-	Vertex(vec3 new_position) :position(new_position) ,emissive_color(0.0f, 1.0f, 1.0f, 0.0f),
-		diffuse_color(0.2f, 0.2f, 0.2f, 1.0f),
-		specular_color(0.2f, 0.2f, 0.2f, 1.0f),
-		shininess_coefficient(100.0f), normal(0, 0, 0) {
+	Vertex(vec3 new_position) :position(new_position), normal(0, 0, 0) {
 	};
-	Vertex(vec3 new_position, vec3 new_normal) :position(new_position), normal(new_normal){};
-	Vertex() {};
+	Vertex(vec3 new_position, vec3 new_normal) :position(new_position), normal(new_normal) {};
+	Vertex(): normal(0, 0, 0) {};
 };
 
 //struct Normal
@@ -117,15 +114,11 @@ struct Vertex
 class Light
 {
 public:
-	Color color = { 1.0, 1.0, 1.0 }; //white by default 
+	vec4 color = { 1.0, 1.0, 1.0 , 1.0 }; //white by default 
 	GLfloat intensity = 1;
-	LIGHT_TYPE light_type;
 	vec4 direction;
-	vec4 view_direction;
-	//location is the loaded location after transformations
+	int light_type;
 	vec4 position;
-	//location after projection + w division
-	vec4 view_position;
-	Light() : position(0, 1, 0, 1), direction(0, -1, 0, 0), intensity(0.5) {light_type = POINT_LIGHT;};
+	Light() : position(0, 1, 0, 1), direction(0, -1, 0, 0), intensity(0.5) { light_type = 0; };
 
 };

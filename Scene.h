@@ -55,7 +55,6 @@ public:
 	void colorByPosition();
 	void updateModel(Camera active_camera);
 	bool inViewVolume(Camera active_camera);
-
 };
 
 class Scene {
@@ -64,14 +63,17 @@ class Scene {
 	void drawboundingBox(Model* model);
 	
 public:
-	GLuint programID = 0;
+	GLuint FlatProgramID = 0;
+	GLuint GouraudProgramID = 0;
+	GLuint PhongProgramID = 0;
+	GLuint ActiveProgramID = 0;
 	void ChangeAntiAliasingResolution(int resolution);
 	Scene();
 	void loadOBJModel(string fileName);
 	void loadAxisModels();
 	void loadPrimModel(string type);
 	void addCamera(const vec4& eye, const vec4& at, const vec4& up);
-	void addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type,Color color = Color(1,1,1));
+	void addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type,vec4 color = vec4(1,1,1,1));
 	void draw();
 	void drawDemo();
 	void drawCameras();
@@ -116,5 +118,5 @@ public:
 	bool bloom = false;
 	GLfloat ambient_scale = 0.2;
 	GLfloat normal_scale = 0.5;
-	vec4 ambient_color = { 0.2,1,0.5 , 1.0};
+	vec4 ambient_color = { 0.1,0.1,0.1,1.0};
 };

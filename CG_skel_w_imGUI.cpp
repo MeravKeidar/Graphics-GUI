@@ -51,13 +51,18 @@ int my_main() {
 		std::cerr << "Failed to initialize GLEW\n";
 		return -1;
 	}
-	
-	GLuint program = InitShader("vshader.glsl", "fshader.glsl");
-	glUseProgram(program);
+
+	scene = new Scene();
+	GLuint PhongProgram = InitShader("PhongVertexshader.glsl", "PhongFragShader.glsl");
+	scene->PhongProgramID = PhongProgram;
+	GLuint GouraudProgram = InitShader("GouraudVertexshader.glsl", "GouraudFragShader.glsl");
+	scene->GouraudProgramID = GouraudProgram;
+	GLuint FlatProgram = InitShader("FlatVertexshader.glsl", "FlatFragShader.glsl");
+	scene->FlatProgramID = FlatProgram;
+	glUseProgram(FlatProgram);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	scene = new Scene();
-	scene->programID = program;
+	scene->ActiveProgramID = FlatProgram;
 	ImguiInit(window);
 	glfwSetKeyCallback(window, keyboardCallback);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -70,7 +75,7 @@ int my_main() {
 		}
 		int framebufferWidth, framebufferHeight;
 		glfwGetFramebufferSize(window, &framebufferWidth, &framebufferHeight);
-		glViewport(0, 0, min(framebufferWidth,framebufferHeight), min(framebufferWidth, framebufferHeight));
+		glViewport(0, 0, max(framebufferWidth,framebufferHeight), max(framebufferWidth, framebufferHeight));
 		glClear(GL_COLOR_BUFFER_BIT);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		ImguiFrame();

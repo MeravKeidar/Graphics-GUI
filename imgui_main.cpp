@@ -874,9 +874,9 @@ void transformLights(Scene* scene)
 	scene->lights.at(scene->activeLight)->direction.y = direction[1];
 	scene->lights.at(scene->activeLight)->direction.z = direction[2];
 	ImGui::Text("Change Light Color");
-	 ImVec4 c = ImVec4(scene->lights.at(scene->activeLight)->color.r, scene->lights.at(scene->activeLight)->color.g, scene->lights.at(scene->activeLight)->color.b, 1.0f);
+	ImVec4 c = ImVec4(scene->lights.at(scene->activeLight)->color.x, scene->lights.at(scene->activeLight)->color.y, scene->lights.at(scene->activeLight)->color.z, 1.0f);
 	ImGui::ColorPicker4("Color Picker", (float*)&c, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-	scene->lights.at(scene->activeLight)->color = Color(c.x, c.y, c.z);
+	scene->lights.at(scene->activeLight)->color = vec4(c.x, c.y, c.z,c.w);
 	 GLfloat light_intensity = scene->lights.at(scene->activeLight)->intensity;
 	ImGui::Text("Change Light Intensity");
 	ImGui::InputFloat("light intensity", &light_intensity);
@@ -915,7 +915,7 @@ void addLight(Scene* scene)
 		{
 			new_type = PARALLEL_LIGHT;
 		}
-		Color color(new_c.x,new_c.y,new_c.z);
+		vec4 color(new_c.x,new_c.y,new_c.z, new_c.w);
 		scene->addLight(vec4(new_location[0], new_location[1], new_location[2],1), vec4(new_direction[0], new_direction[1], new_direction[2],0), new_type, color);
 		ImGui::CloseCurrentPopup();
 	}
