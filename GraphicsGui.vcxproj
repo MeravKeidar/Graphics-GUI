@@ -224,6 +224,7 @@
     </Object>
   </ItemGroup>
   <ItemGroup>
+    <None Include="FlatVertexShader.glsl" />
     <None Include="GouraudFragShader.glsl" />
     <None Include="GouraudVertexShader.glsl" />
     <None Include="PhongFragShader.glsl" />

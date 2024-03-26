@@ -763,7 +763,7 @@ void changeMaterial(Scene* scene)
 	static GLfloat shininess_slide = 50;
 	ImGui::SliderFloat("Shininess coefficient", &shininess_slide, 0, 100);
 	scene->models.at(scene->activeModel)->changeUniformShininess(shininess_slide);
-	static GLfloat shininess = 50;
+	GLfloat shininess = shininess_slide;
 	ImGui::InputFloat("Shininess", &shininess);
 	scene->models.at(scene->activeModel)->changeUniformShininess(shininess);
 

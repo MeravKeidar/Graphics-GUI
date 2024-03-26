@@ -48,11 +48,13 @@ void Model::Rotate(const int hinge, const GLfloat theta)
 
 void Model::changeUniformShininess(GLfloat coefficient)
 {
-
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		(*it).shininess_coefficient = coefficient;
 	}
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void Model::changeUniformEmissiveColor(vec4 color)
@@ -124,7 +126,7 @@ void Model::colorByPosition()
 void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName, ActiveProgramID);
-	std::cout << "Program" << model->programID << std::endl;
+	model->shading_type = shading_type;
 	models.push_back(model);
 
 	nModels++;
@@ -134,6 +136,7 @@ void Scene::loadOBJModel(string fileName)
 void Scene::loadPrimModel(string type)
 {
 	PrimMeshModel* model = new PrimMeshModel(type);
+	model->shading_type = shading_type;
 	model->programID = ActiveProgramID;
 	models.push_back(model);
 	nModels++;
@@ -322,10 +325,12 @@ void Scene::changeShading(SHADING shading_type)
 	}
 	else if (shading_type == FLAT)
 	{
+		shading_type = shading_type;
 		ActiveProgramID = FlatProgramID;
 		for (auto model_it = models.begin(); model_it != models.end(); model_it++)
 		{
 			(*model_it)->programID = FlatProgramID;
+			(*model_it)->setVertexAttributes();
 		}
 		glUseProgram(ActiveProgramID);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -335,10 +340,12 @@ void Scene::changeShading(SHADING shading_type)
 
 	else if (shading_type == GOURAUD)
 	{
+		shading_type = shading_type;
 		ActiveProgramID = GouraudProgramID;
 		for (auto model_it = models.begin(); model_it != models.end(); model_it++)
 		{
 			(*model_it)->programID = GouraudProgramID;
+			(*model_it)->setVertexAttributes();
 		}
 		glUseProgram(ActiveProgramID);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -348,10 +355,12 @@ void Scene::changeShading(SHADING shading_type)
 
 	else if (shading_type == PHONG)
 	{
+		shading_type = shading_type;
 		ActiveProgramID = PhongProgramID;
 		for (auto model_it = models.begin(); model_it != models.end(); model_it++)
 		{
 			(*model_it)->programID = PhongProgramID;
+			(*model_it)->setVertexAttributes();
 		}
 		glUseProgram(ActiveProgramID);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -713,6 +722,7 @@ void Scene::Reset()
 
 void Scene::addModel(Model* model)
 {
+	model->shading_type = shading_type;
 	model->programID = ActiveProgramID;
 	models.push_back(model);
 	nModels++; 

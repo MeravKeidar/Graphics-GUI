@@ -62,6 +62,8 @@ struct Vertex
 {
 	vec3 position;
 	vec3 normal;
+	vec3 face_position;
+	vec3 face_normal;
 	vec2 texture;
 	vec4 emissive_color = (0.1, 0.1, 0.1, 0.2);
 	vec4 diffuse_color = (1,1,1,0.2);
@@ -70,7 +72,9 @@ struct Vertex
 
 	Vertex(vec3 new_position) :position(new_position), normal(0, 0, 0) {
 	};
-	Vertex(vec3 new_position, vec3 new_normal) :position(new_position), normal(new_normal) {};
+	Vertex(vec3 new_position, vec3 new_normal,vec3 f_position, vec3 f_normal) :position(new_position), normal(new_normal) , face_position(f_position), face_normal(f_normal)
+	
+	{};
 	Vertex(): normal(0, 0, 0) {};
 };
 

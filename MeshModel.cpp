@@ -168,7 +168,7 @@ void MeshModel::loadFile(string fileName)
 		vec2 t3(0, 0);
 
 		vec3 face_normal = normalize(cross((v2 - v1), (v3 - v1)));
-		faces.push_back(Vertex((v1 + v2 + v3) / 3, face_normal));
+		vec3 face_position = (v1 + v2 + v3) / 3;
 
 		
 		if (calculate_vertex_normals)
@@ -180,18 +180,18 @@ void MeshModel::loadFile(string fileName)
 			n1 = ((*it).v[0] - 1, 0, 0);
 			n2 = ((*it).v[1] - 1, 0, 0);
 			n3 = ((*it).v[2] - 1, 0, 0);
-			vertices.push_back(Vertex(v1, n1));
-			vertices.push_back(Vertex(v2, n2));
-			vertices.push_back(Vertex(v3, n3));
+			vertices.push_back(Vertex(v1, n1,face_position,face_normal));
+			vertices.push_back(Vertex(v2, n2, face_position, face_normal));
+			vertices.push_back(Vertex(v3, n3, face_position, face_normal));
 		}
 		else
 		{
 			n1 = vertex_normals.at((*it).vn[0] - 1);
 			n2 = vertex_normals.at((*it).vn[1] - 1);
 			n3 = vertex_normals.at((*it).vn[2] - 1);
-			vertices.push_back(Vertex(v1, n1));
-			vertices.push_back(Vertex(v2, n2));
-			vertices.push_back(Vertex(v3, n3));
+			vertices.push_back(Vertex(v1, n1, face_position, face_normal));
+			vertices.push_back(Vertex(v2, n2, face_position, face_normal));
+			vertices.push_back(Vertex(v3, n3, face_position, face_normal));
 		}
 
 		if (!vertex_textures.empty())
@@ -231,6 +231,14 @@ void MeshModel::setVertexAttributes()
 	GLuint normal_loc = glGetAttribLocation(programID, "vNormal");
 	glEnableVertexAttribArray(normal_loc);
 	glVertexAttribPointer(normal_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+	// vertex face position
+	GLuint face_position_loc = glGetAttribLocation(programID, "vFacePosition");
+	glEnableVertexAttribArray(face_position_loc);
+	glVertexAttribPointer(face_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, face_position));
+	// vertex face normal
+	GLuint face_normal_loc = glGetAttribLocation(programID, "vFaceNormal");
+	glEnableVertexAttribArray(face_normal_loc);
+	glVertexAttribPointer(face_normal_loc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, face_normal));
 	// vertex texture coords
 	GLuint texture_loc = glGetAttribLocation(programID, "vTextureCoord");
 	glEnableVertexAttribArray(texture_loc);

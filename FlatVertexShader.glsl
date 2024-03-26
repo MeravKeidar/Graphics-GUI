@@ -3,6 +3,8 @@
 in vec3 vPosition;
 in vec3 vNormal;
 in vec2 vTextureCoord;
+in vec3 vFacePosition;
+in vec3 vFaceNormal;
 
 in vec4 vEmissive_color;
 in vec4 vDiffuse_color;
@@ -49,7 +51,8 @@ void main()
 {
     vec4 view_pos = modelview * vec4(vPosition, 1.0);
     gl_Position = projection * view_pos;
-    vec3 view_normal = normalize((normalMat * vec4(vNormal, 0.0)).xyz);
+    vec3 face_view_normal = normalize((normalMat * vec4(vFaceNormal, 0.0)).xyz);
+    vec4 face_view_pos = modelview * vec4(vFacePosition, 1.0);
 
     vec4 color = vEmissive_color+ambient_color;
     
@@ -59,14 +62,14 @@ void main()
         if (lights[i].light_type == 0)
         {
             vec4 lightpos = (cameraMat * lights[i].position);
-            l = normalize((lightpos - view_pos).xyz);
+            l = normalize((lightpos - face_view_pos).xyz);
         }
         else if (lights[i].light_type == 1)
         {
             vec4 lightdir = (cameraMat * lights[i].direction);
             l = normalize(lightdir.xyz);
         }
-        color += calcColor(l, view_normal, view_pos.xyz, lights[i].intensity, lights[i].color,vDiffuse_color,vSpecular_color,vShininess_coefficient);
+        color += calcColor(l, face_view_normal, face_view_pos.xyz, lights[i].intensity, lights[i].color,vDiffuse_color,vSpecular_color,vShininess_coefficient);
     }
    
     vfragColor.x = min(color.x,1);

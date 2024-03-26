@@ -23,6 +23,7 @@ protected:
 	
 	
 public:
+	
 	vector<Vertex> bounding_box;
 	vector<Vertex> vertices;
 	vector<Vertex> faces;
@@ -41,7 +42,7 @@ public:
 
 	bool color_by_pos = false;
 	bool color_by_normal = false;
-
+	SHADING shading_type;
 	void virtual draw() = 0; 
 	void virtual setVertexAttributes() = 0;
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
@@ -63,6 +64,7 @@ class Scene {
 	void drawboundingBox(Model* model);
 	
 public:
+	SHADING shading_type = FLAT;
 	GLuint FlatProgramID = 0;
 	GLuint GouraudProgramID = 0;
 	GLuint PhongProgramID = 0;

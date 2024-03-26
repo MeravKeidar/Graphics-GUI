@@ -157,9 +157,10 @@
     </Object>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PhongVertexShader.glsl" />
     <None Include="PhongFragShader.glsl" />
-    <None Include="GouraudVertexShader.glsl" />
     <None Include="GouraudFragShader.glsl" />
+    <None Include="PhongVertexShader.glsl" />
+    <None Include="GouraudVertexShader.glsl" />
+    <None Include="FlatVertexShader.glsl" />
   </ItemGroup>
 </Project>
