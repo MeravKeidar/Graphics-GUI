@@ -2,7 +2,6 @@
 
 in vec4 view_pos;
 in vec3 view_normal;
-in vec2 texCoord;
 
 in vec4 emissive_color;
 in vec4 diffuse_color;
@@ -23,6 +22,7 @@ struct Light {
 
 uniform Light lights[15];
 
+out vec4 FragColor;
 
 vec4 calcColor(vec3 lightDir, vec3 normal, vec3 pos, float light_intensity, vec4 light_color, vec4 diffuse_color, vec4 specular_color, float shininess_coefficient)
 {
@@ -38,7 +38,6 @@ vec4 calcColor(vec3 lightDir, vec3 normal, vec3 pos, float light_intensity, vec4
     return diffuse + specular;
 }
 
-out vec4 FragColor;
 
 void main() 
 { 
@@ -63,5 +62,5 @@ void main()
     color.y = min(color.y,1);
     color.z = min(color.z,1);
     color.w = 1;
-    FragColor  = color;
+    FragColor = color;
 } 

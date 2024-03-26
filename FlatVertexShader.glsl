@@ -50,6 +50,7 @@ void main()
     vec4 view_pos = modelview * vec4(vPosition, 1.0);
     gl_Position = projection * view_pos;
     vec3 view_normal = normalize((normalMat * vec4(vNormal, 0.0)).xyz);
+
     vec4 color = vEmissive_color+ambient_color;
     
     for (int i = 0; i < nLights; i++)

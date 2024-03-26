@@ -16,7 +16,6 @@ uniform mat4 normalMat;
 
 out vec4 view_pos;
 out vec3 view_normal;
-out vec2 texCoord;
 
 out vec4 emissive_color;
 out vec4 diffuse_color;
@@ -29,7 +28,6 @@ void main()
     view_pos = modelview * vec4(vPosition, 1.0);
     gl_Position = projection * view_pos;
     view_normal = normalize((normalMat * vec4(vNormal, 0.0)).xyz);
-    texCoord = vTextureCoord;
 
     emissive_color = vEmissive_color; 
     diffuse_color = vDiffuse_color;
