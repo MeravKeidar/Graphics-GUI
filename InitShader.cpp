@@ -4,6 +4,7 @@
 //#include "GL/freeglut_ext.h"
 #include "InitShader.h"
 #include <iostream>
+#include <windows.h>
 // Create a NULL-terminated string by reading the provided file
 static char* readShaderSource(const char* shaderFile)
 {
@@ -17,13 +18,16 @@ static char* readShaderSource(const char* shaderFile)
 	fseek(fp, 0L, SEEK_END);
 	long size = ftell(fp);
 
+
 	fseek(fp, 0L, SEEK_SET);
 	char* buf = new char[size + 1];
-	fread(buf, 1, size, fp);
 
+	fread(buf, 1, size, fp);
+	std::string temp(buf);
+	size = 1 + temp.find_last_of('}');
 	buf[size] = '\0';
 	fclose(fp);
-
+	int k = 0;
 	return buf;
 }
 
@@ -45,6 +49,7 @@ GLuint InitShader(const char* vShaderFile, const char* fShaderFile)
 	for (int i = 0; i < 2; ++i) {
 		Shader& s = shaders[i];
 		s.source = readShaderSource(s.filename);
+				
 		if (shaders[i].source == NULL) {
 			std::cerr << "Failed to read " << s.filename << std::endl;
 			exit(EXIT_FAILURE);
@@ -63,6 +68,7 @@ GLuint InitShader(const char* vShaderFile, const char* fShaderFile)
 			char* logMsg = new char[logSize];
 			glGetShaderInfoLog(shader, logSize, NULL, logMsg);
 			std::cerr << logMsg << std::endl;
+			//std::cerr << s.source << std::endl;
 			delete[] logMsg;
 
 			exit(EXIT_FAILURE);
