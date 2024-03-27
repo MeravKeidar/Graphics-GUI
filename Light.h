@@ -78,6 +78,16 @@ struct Vertex
 	Vertex(): normal(0, 0, 0) {};
 };
 
+
+struct minimalVertex
+{
+	vec3 position;
+	vec3 normal;
+	minimalVertex(vec3 new_position) : position(new_position), normal(0, 0, 0) {};
+	minimalVertex(vec3 new_position, vec3 new_normal) :position(new_position), normal(new_normal){};
+	minimalVertex() : position(0, 0, 0),normal(0, 0, 0) {};
+};
+
 //struct Normal
 //{
 //	vec4 original_direction; //original position in world frame

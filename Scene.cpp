@@ -127,6 +127,7 @@ void Scene::loadOBJModel(string fileName)
 {
 	MeshModel* model = new MeshModel(fileName, ActiveProgramID);
 	model->shading_type = shading_type;
+	model->normal_programID = NormalProgramID;
 	models.push_back(model);
 
 	nModels++;
@@ -138,6 +139,7 @@ void Scene::loadPrimModel(string type)
 	PrimMeshModel* model = new PrimMeshModel(type);
 	model->shading_type = shading_type;
 	model->programID = ActiveProgramID;
+	model->normal_programID = NormalProgramID;
 	models.push_back(model);
 	nModels++;
 	activeModel++;
@@ -264,6 +266,7 @@ void Scene::ChangeAntiAliasingResolution(int resolution)
 
 void Scene::draw()
 {
+	//glUseProgram(ActiveProgramID);
 	GLfloat projection[16];
 	matToArray(projection, cameras.at(activeCamera)->projection);
 	GLuint projectionMat_loc = glGetUniformLocation(ActiveProgramID, "projection");
@@ -290,14 +293,6 @@ void Scene::draw()
 		glUniform4fv(glGetUniformLocation(ActiveProgramID, (lightName + ".position").c_str()), 1, &(lights.at(i)->position[0]));
 	}
 
-	/*for (size_t i = 0; i <lights.size(); i++)
-	{
-		Light* current_light = lights.at(i);
-		mat4 ProjectionMatrix = cameras.at(activeCamera)->cTransform;
-		current_light->view_position = ProjectionMatrix * current_light->position; 
-		current_light->view_direction = ProjectionMatrix * current_light->direction;
-	}*/
-	
 	for (auto model_it = models.begin(); model_it  != models.end(); model_it++)
 	{
 		drawModel(*model_it);
@@ -388,59 +383,81 @@ void Scene::drawModel(Model* model)
 	GLfloat normal_view[16];
 	matToArray(normal_view, normal_view_matrix);
 	
-
-	
 	GLuint modelViewMatrix_loc = glGetUniformLocation(ActiveProgramID, "modelview");
 	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, model_view);
 	GLuint normalViewMatrix_loc = glGetUniformLocation(ActiveProgramID, "normalMat");
 	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) {
-		std::cerr << "OpenGL error while drawing model in scene : " << error << std::endl;
-	}
+
+
 	model->draw();
 
 }
 
 void Scene::drawVertexNormals(Model* model)
 {
+	glUseProgram(NormalProgramID);
 
-	/*mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
-	for (auto face_it = model->faces.begin(); face_it != model->faces.end(); face_it++)
-	{
-		vec4 v1_dest = (*face_it).v1->view_position + (normal_scale * (*face_it).v1_normal->view_direction);
-		v1_dest = ProjectionMatrix * v1_dest;
-		vec3 screen_v1_dest(v1_dest.x / v1_dest.w, v1_dest.y / v1_dest.w, v1_dest.z / v1_dest.w);
-		screen_v1_dest = m_renderer->viewPortVec(screen_v1_dest);
-		m_renderer->DrawLine((*face_it).v1->screen.x, screen_v1_dest.x, (*face_it).v1->screen.y, screen_v1_dest.y, c_blue);
+	mat4 model_view_matrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
+	mat4 normal_view_matrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
+	GLfloat model_view[16];
+	matToArray(model_view, model_view_matrix);
+	GLfloat normal_view[16];
+	matToArray(normal_view, normal_view_matrix);
 
-		vec4 v2_dest = (*face_it).v2->view_position + (normal_scale * (*face_it).v2_normal->view_direction);
-		v2_dest = ProjectionMatrix * v2_dest;
-		vec3 screen_v2_dest(v2_dest.x / v2_dest.w, v2_dest.y / v2_dest.w, v2_dest.z / v2_dest.w);
-		screen_v2_dest = m_renderer->viewPortVec(screen_v2_dest);
-		m_renderer->DrawLine((*face_it).v2->screen.x, screen_v2_dest.x, (*face_it).v2->screen.y, screen_v2_dest.y, c_blue);
+	GLuint modelViewMatrix_loc = glGetUniformLocation(NormalProgramID, "modelview");
+	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, model_view);
+	GLuint normalViewMatrix_loc = glGetUniformLocation(NormalProgramID, "normalMat");
+	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
+	GLfloat projection[16];
+	matToArray(projection, cameras.at(activeCamera)->projection);
+	GLuint projectionMat_loc = glGetUniformLocation(NormalProgramID, "projection");
+	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, projection);
+	GLuint normal_scale_loc = glGetUniformLocation(NormalProgramID, "normal_scale");
+	glUniform1f(normal_scale_loc,normal_scale);
+	
+	vec4 color(0.0,0.7,0.7,1.0);
+	GLuint color_loc = glGetUniformLocation(NormalProgramID, "color");
+	glUniform4fv(color_loc, 1, &(color[0]));
 
-		vec4 v3_dest = (*face_it).v3->view_position + (normal_scale * (*face_it).v3_normal->view_direction);
-		v3_dest = ProjectionMatrix * v3_dest;
-		vec3 screen_v3_dest(v3_dest.x / v3_dest.w, v3_dest.y / v3_dest.w, v3_dest.z / v3_dest.w);
-		screen_v3_dest = m_renderer->viewPortVec(screen_v3_dest);
-		m_renderer->DrawLine((*face_it).v3->screen.x, screen_v3_dest.x, (*face_it).v3->screen.y, screen_v3_dest.y, c_blue);
-	}*/
+	model->setNormalsVertexAttributes(); 
+	glBindVertexArray((model)->vertex_normal_vao);
+	glDrawArrays(GL_LINES, 0, model->vertices_and_normals.size());
+	glBindVertexArray(0);
+	glUseProgram(ActiveProgramID);
+
 }
 
 void Scene::drawFaceNormals(Model* model)
 {
-	/*mat4 ModelViewMatrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
-	mat4 NormalViewMatrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
-	mat4 ProjectionMatrix = cameras.at(activeCamera)->projection;
-	for (auto face_it = model->faces.begin(); face_it != model->faces.end(); face_it++)
-	{
-		vec4 dest = (*face_it).face_center.view_position + (normal_scale * (*face_it).face_normal.view_direction);
-		dest = ProjectionMatrix * dest;
-		vec3 screen_dest((dest.x / dest.w), (dest.y / dest.w), (dest.z / dest.w));
-		screen_dest = m_renderer->viewPortVec(screen_dest);
-		m_renderer->DrawLine((*face_it).face_center.screen.x, screen_dest.x, (*face_it).face_center.screen.y, screen_dest.y, c_blue);
-	}*/
+	glUseProgram(NormalProgramID);
+
+	mat4 model_view_matrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
+	mat4 normal_view_matrix = cameras.at(activeCamera)->cTransform * (model->_normal_world_transform * model->_normal_model_transform);
+	GLfloat model_view[16];
+	matToArray(model_view, model_view_matrix);
+	GLfloat normal_view[16];
+	matToArray(normal_view, normal_view_matrix);
+
+	GLuint modelViewMatrix_loc = glGetUniformLocation(NormalProgramID, "modelview");
+	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, model_view);
+	GLuint normalViewMatrix_loc = glGetUniformLocation(NormalProgramID, "normalMat");
+	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
+	GLfloat projection[16];
+	matToArray(projection, cameras.at(activeCamera)->projection);
+	GLuint projectionMat_loc = glGetUniformLocation(NormalProgramID, "projection");
+	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, projection);
+	GLuint normal_scale_loc = glGetUniformLocation(NormalProgramID, "normal_scale");
+	glUniform1f(normal_scale_loc, normal_scale);
+
+	vec4 color(0.7, 0.0, 0.7, 1.0);
+	GLuint color_loc = glGetUniformLocation(NormalProgramID, "color");
+	glUniform4fv(color_loc, 1, &(color[0]));
+
+	model->setNormalsVertexAttributes();
+	glBindVertexArray((model)->face_normal_vao);
+	glDrawArrays(GL_LINES, 0, model->faces.size());
+	glBindVertexArray(0);
+	glUseProgram(ActiveProgramID);
 }
 
 void Scene::drawDemo()
@@ -724,6 +741,7 @@ void Scene::addModel(Model* model)
 {
 	model->shading_type = shading_type;
 	model->programID = ActiveProgramID;
+	model->normal_programID = NormalProgramID;
 	models.push_back(model);
 	nModels++; 
 	activeModel++;

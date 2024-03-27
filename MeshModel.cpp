@@ -170,7 +170,9 @@ void MeshModel::loadFile(string fileName)
 		vec3 face_normal = normalize(cross((v2 - v1), (v3 - v1)));
 		vec3 face_position = (v1 + v2 + v3) / 3;
 
-		
+		faces.push_back(minimalVertex(face_position)); // for drawing normal origin
+		faces.push_back(minimalVertex(face_position, face_normal));  // for drawing normal dest
+
 		if (calculate_vertex_normals)
 		{
 			vertex_normals.at((*it).v[0] - 1) += face_normal;
@@ -192,6 +194,13 @@ void MeshModel::loadFile(string fileName)
 			vertices.push_back(Vertex(v1, n1, face_position, face_normal));
 			vertices.push_back(Vertex(v2, n2, face_position, face_normal));
 			vertices.push_back(Vertex(v3, n3, face_position, face_normal));
+
+			vertices_and_normals.push_back(minimalVertex(v1)); // for drawing normal origin
+			vertices_and_normals.push_back(minimalVertex(v1,n1));  // for drawing normal dest
+			vertices_and_normals.push_back(minimalVertex(v2)); // for drawing normal origin
+			vertices_and_normals.push_back(minimalVertex(v2, n2));  // for drawing normal dest
+			vertices_and_normals.push_back(minimalVertex(v3)); // for drawing normal origin
+			vertices_and_normals.push_back(minimalVertex(v3, n3));  // for drawing normal dest
 		}
 
 		if (!vertex_textures.empty())
@@ -207,8 +216,11 @@ void MeshModel::loadFile(string fileName)
 		for (size_t i = 0; i < vertices.size(); i++)
 		{
 			vertices.at(i).normal = normalize(vertex_normals.at(vertices.at(i).normal.x));
+			vertices_and_normals.push_back(minimalVertex(vertices.at(i).position)); // for drawing normal origin
+			vertices_and_normals.push_back(minimalVertex(vertices.at(i).position, vertices.at(i).normal));  // for drawing normal dest
 		}
 	}
+
 
 	boundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
 
@@ -218,11 +230,9 @@ void MeshModel::setVertexAttributes()
 {
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
-
 	glGenBuffers(1, &vbo);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
-
 	// vertex position
 	GLuint position_loc = glGetAttribLocation(programID, "vPosition");
 	glEnableVertexAttribArray(position_loc);
@@ -260,8 +270,44 @@ void MeshModel::setVertexAttributes()
 	glEnableVertexAttribArray(shininess_loc);
 	glVertexAttribPointer(shininess_loc, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, shininess_coefficient));
 	glBindVertexArray(0);
-	
+
 }
+
+void MeshModel::setNormalsVertexAttributes()
+{
+	glGenVertexArrays(1, &vertex_normal_vao);
+	glBindVertexArray(vertex_normal_vao);
+	glGenBuffers(1, &vertex_normal_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_normal_vbo);
+	glBufferData(GL_ARRAY_BUFFER, vertices_and_normals.size() * sizeof(minimalVertex), &vertices_and_normals[0], GL_STATIC_DRAW);
+	// vertex position
+	GLuint vertex_normal_position_loc = glGetAttribLocation(normal_programID, "vPosition");
+	glEnableVertexAttribArray(vertex_normal_position_loc);
+	glVertexAttribPointer(vertex_normal_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)0);
+	// vertex normal
+	GLuint vertex_normal_loc = glGetAttribLocation(normal_programID, "vNormal");
+	glEnableVertexAttribArray(vertex_normal_loc);
+	glVertexAttribPointer(vertex_normal_loc, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)offsetof(minimalVertex, normal));
+	glBindVertexArray(0);
+
+	glGenVertexArrays(1, &face_normal_vao);
+	glBindVertexArray(face_normal_vao);
+	glGenBuffers(1, &face_normal_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, face_normal_vbo);
+	glBufferData(GL_ARRAY_BUFFER, faces.size() * sizeof(minimalVertex), &faces[0], GL_STATIC_DRAW);
+	// vertex position
+	GLuint face_normal_position_loc = glGetAttribLocation(normal_programID, "vPosition");
+	glEnableVertexAttribArray(face_normal_position_loc);
+	glVertexAttribPointer(face_normal_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)0);
+	// vertex normal
+	GLuint face_normal_loc = glGetAttribLocation(normal_programID, "vNormal");
+	glEnableVertexAttribArray(face_normal_loc);
+	glVertexAttribPointer(face_normal_loc, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)offsetof(minimalVertex, normal));
+	glBindVertexArray(0);
+	
+
+}
+
 
 //send the renderer the geometry and transformations of the model, and any other information the renderer might require to draw the model.//
 void MeshModel::draw()
@@ -299,6 +345,21 @@ void MeshModel::boundingBox(GLfloat min_x, GLfloat min_y, GLfloat min_z, GLfloat
 
 	_world_transform = TranslationMat(-model_center) * _world_transform;
 	_normal_world_transform = TranslationMat(-model_center) * _normal_world_transform;
+
+	glGenVertexArrays(1, &bounding_box_vao);
+	glBindVertexArray(bounding_box_vao);
+	glGenBuffers(1, &bounding_box_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, bounding_box_vbo);
+	glBufferData(GL_ARRAY_BUFFER, bounding_box.size() * sizeof(minimalVertex), &bounding_box[0], GL_STATIC_DRAW);
+	// vertex position
+	GLuint box_position_loc = glGetAttribLocation(normal_programID, "vPosition");
+	glEnableVertexAttribArray(box_position_loc);
+	glVertexAttribPointer(box_position_loc, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)0);
+	// box normal - its zero and ugly but im lazy 
+	GLuint box_normal_loc = glGetAttribLocation(normal_programID, "vNormal");
+	glEnableVertexAttribArray(box_normal_loc);
+	glVertexAttribPointer(box_normal_loc, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)offsetof(minimalVertex, normal));
+	glBindVertexArray(0);
 }
 
 void PrimMeshModel::Tetrahedron()

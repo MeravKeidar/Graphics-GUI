@@ -53,6 +53,8 @@ int my_main() {
 	}
 
 	scene = new Scene();
+	GLuint NormalProgram = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
+	scene->NormalProgramID = NormalProgram;
 	GLuint PhongProgram = InitShader("PhongVertexshader.glsl", "PhongFragShader.glsl");
 	scene->PhongProgramID = PhongProgram;
 	GLuint GouraudProgram = InitShader("GouraudVertexshader.glsl", "GouraudFragShader.glsl");

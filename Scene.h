@@ -23,13 +23,20 @@ protected:
 	
 	
 public:
-	
-	vector<Vertex> bounding_box;
 	vector<Vertex> vertices;
-	vector<Vertex> faces;
+	vector<minimalVertex> faces;
+	vector<minimalVertex> vertices_and_normals;
+	vector<minimalVertex> bounding_box;
 	unsigned int vao; 
 	unsigned int vbo;
 	GLuint programID = 0;
+	GLuint normal_programID = 0;
+	unsigned int vertex_normal_vao;
+	unsigned int vertex_normal_vbo;
+	unsigned int face_normal_vao;
+	unsigned int face_normal_vbo;
+	unsigned int bounding_box_vao;
+	unsigned int bounding_box_vbo;
 
 	virtual ~Model() {}
 
@@ -45,6 +52,8 @@ public:
 	SHADING shading_type;
 	void virtual draw() = 0; 
 	void virtual setVertexAttributes() = 0;
+	void virtual setNormalsVertexAttributes() = 0;
+	//void virtual setBoxVertexAttributes() = 0;
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
@@ -68,6 +77,7 @@ public:
 	GLuint FlatProgramID = 0;
 	GLuint GouraudProgramID = 0;
 	GLuint PhongProgramID = 0;
+	GLuint NormalProgramID = 0;
 	GLuint ActiveProgramID = 0;
 	void ChangeAntiAliasingResolution(int resolution);
 	Scene();

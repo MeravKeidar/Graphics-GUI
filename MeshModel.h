@@ -19,8 +19,10 @@ public:
 	MeshModel(string fileName, GLuint program);
 	~MeshModel(void);
 	void loadFile(string fileName);
+	//void setBoxVertexAttributes();
 	void draw();
 	void setVertexAttributes();
+	void setNormalsVertexAttributes();
 	
 };
 
