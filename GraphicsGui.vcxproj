@@ -196,6 +196,7 @@
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="texture_map.h" />
     <ClInclude Include="vec.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
@@ -229,6 +230,9 @@
     <None Include="GouraudVertexShader.glsl" />
     <None Include="PhongFragShader.glsl" />
     <None Include="PhongVertexShader.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="cow_tex.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

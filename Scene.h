@@ -37,6 +37,7 @@ public:
 	unsigned int face_normal_vbo;
 	unsigned int bounding_box_vao;
 	unsigned int bounding_box_vbo;
+	unsigned int textureID;
 
 	virtual ~Model() {}
 

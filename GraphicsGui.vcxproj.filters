@@ -140,6 +140,9 @@
     <ClInclude Include="Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="texture_map.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Library Include="External\GLEW\lib\glew32s.lib" />
@@ -162,5 +165,10 @@
     <None Include="PhongVertexShader.glsl" />
     <None Include="GouraudVertexShader.glsl" />
     <None Include="FlatVertexShader.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="cow_tex.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

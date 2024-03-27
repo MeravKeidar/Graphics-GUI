@@ -389,6 +389,13 @@ void Scene::drawModel(Model* model)
 	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
 
 
+	GLuint textureMap_loc = glGetUniformLocation(ActiveProgramID, "textureMap");
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, model->textureID); 
+
+	// Set texture uniform to texture unit 0
+	glUniform1i(textureMap_loc, 0);
+
 	model->draw();
 
 }

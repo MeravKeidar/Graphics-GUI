@@ -2,7 +2,7 @@
 
 in vec3 vPosition;
 in vec3 vNormal;
-in vec2 vTextureCoord;
+in vec2 vTextureCoord; // Add texture coordinates input
 in vec3 vFacePosition;
 in vec3 vFaceNormal;
 
@@ -11,9 +11,8 @@ in vec4 vDiffuse_color;
 in vec4 vSpecular_color;
 in float vShininess_coefficient;
 
-
-
 out vec4 vfragColor;
+out vec2 TexCoord; // Output texture coordinates to fragment shader
 
 uniform mat4 projection;
 uniform mat4 modelview;
@@ -21,6 +20,7 @@ uniform mat4 normalMat;
 uniform mat4 cameraMat;
 uniform int nLights;
 uniform vec4 ambient_color;
+uniform sampler2D textureMap;
 
 struct Light {
     vec4 color;
@@ -31,7 +31,6 @@ struct Light {
 };
 
 uniform Light lights[15];
-
 
 vec4 calcColor(vec3 lightDir, vec3 normal, vec3 pos, float light_intensity, vec4 light_color, vec4 diffuse_color, vec4 specular_color, float shininess_coefficient)
 {
@@ -54,6 +53,10 @@ void main()
     vec3 face_view_normal = normalize((normalMat * vec4(vFaceNormal, 0.0)).xyz);
     vec4 face_view_pos = modelview * vec4(vFacePosition, 1.0);
 
+    // Pass texture coordinates to fragment shader
+    TexCoord = vTextureCoord;
+
+    //vec4 texColor = texture(textureMap, vTextureCoord);
     vec4 color = vEmissive_color+ambient_color;
     
     for (int i = 0; i < nLights; i++)
