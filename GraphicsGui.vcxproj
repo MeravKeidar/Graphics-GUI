@@ -200,7 +200,6 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="textures\stb_image.h" />
-    <ClInclude Include="texture_map.h" />
     <ClInclude Include="vec.h" />
     <ClInclude Include="Vertex.h" />
   </ItemGroup>
@@ -229,14 +228,20 @@
     </Object>
   </ItemGroup>
   <ItemGroup>
+    <None Include="FlatFragShader.glsl" />
     <None Include="FlatVertexShader.glsl" />
     <None Include="GouraudFragShader.glsl" />
     <None Include="GouraudVertexShader.glsl" />
+    <None Include="minimal_fshader.glsl" />
+    <None Include="minimal_vshader.glsl" />
     <None Include="PhongFragShader.glsl" />
     <None Include="PhongVertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="cow_tex.jpg" />
+    <Image Include="textures\blub_texture.png" />
+    <Image Include="textures\bob_diffuse.png" />
+    <Image Include="textures\spot_texture.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
