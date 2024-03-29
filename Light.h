@@ -72,8 +72,8 @@ struct Vertex
 
 	Vertex(vec3 new_position) :position(new_position), normal(0, 0, 0) {
 	};
-	Vertex(vec3 new_position, vec3 new_normal,vec3 f_position, vec3 f_normal) :position(new_position), normal(new_normal) , face_position(f_position), face_normal(f_normal)
-	
+	Vertex(vec3 new_position, vec3 new_normal,vec3 f_position, vec3 f_normal, vec2 new_texture) :
+		position(new_position), normal(new_normal) , face_position(f_position), face_normal(f_normal), texture(new_texture)
 	{};
 	Vertex(): normal(0, 0, 0) {};
 };

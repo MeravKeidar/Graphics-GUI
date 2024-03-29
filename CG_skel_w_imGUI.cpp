@@ -18,6 +18,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include  "imgui_main.h"
+#include "Texture.h""
 #include <vector>
 #include <iostream>
 
@@ -36,7 +37,7 @@ int my_main() {
 		return -1;
 	}
 
-	GLFWwindow* window = glfwCreateWindow(512, 512, "CG", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1024, 1024, "CG", NULL, NULL);
 	if (!window) {
 		fprintf(stderr, "Failed to create GLFW window\n");
 		glfwTerminate();

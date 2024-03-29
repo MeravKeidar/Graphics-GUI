@@ -9,6 +9,8 @@
 
 #include "Camera.h"
 #include "Light.h"
+#include "Texture.h"
+
 using namespace std;
 
 enum SHADING {
@@ -19,6 +21,7 @@ enum SHADING {
 };
 
 class Model {
+private:
 protected:
 	
 	
@@ -37,11 +40,9 @@ public:
 	unsigned int face_normal_vbo;
 	unsigned int bounding_box_vao;
 	unsigned int bounding_box_vbo;
-	unsigned int textureID;
-
+	std::string texture_path;
+	bool use_texture = false;
 	virtual ~Model() {}
-
-
 	mat4 _model_transform;
 	vec4 _center_of_mass; 
 	mat4 _world_transform;
@@ -54,7 +55,7 @@ public:
 	void virtual draw() = 0; 
 	void virtual setVertexAttributes() = 0;
 	void virtual setNormalsVertexAttributes() = 0;
-	//void virtual setBoxVertexAttributes() = 0;
+	void virtual setBoundingBoxAttributes() = 0;
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
@@ -62,6 +63,7 @@ public:
 	void changeUniformEmissiveColor(vec4 color);
 	void changeUniformSpecularColor(vec4 color);
 	void changeUniformDiffuseColor(vec4 color);
+	void uploadTexture(const std::string& path);
 	void colorByNormal();
 	void colorByPosition();
 	void updateModel(Camera active_camera);
@@ -72,6 +74,7 @@ class Scene {
 	void drawModel(Model* model);
 	void drawFaceNormals(Model* model);
 	void drawboundingBox(Model* model);
+	
 	
 public:
 	SHADING shading_type = FLAT;

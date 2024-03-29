@@ -84,6 +84,25 @@ void keyboard(GLFWwindow* window, int key, int scancode, int action, int mods, S
 		scene->scaleModel(0.9, 0.9, 0.9);
 	}
 
+	//rotate model
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		scene->RotateModel(0, 10);
+	}
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		scene->RotateModel(0, -10);
+	}
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		scene->RotateModel(1, 10);
+	}
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		scene->RotateModel(2, 10);
+	}
+	
+
 	if (action == GLFW_PRESS) {
 		if (key == GLFW_KEY_EQUAL && mods == GLFW_MOD_CONTROL) {
 			scene->cameras.at(scene->activeCamera)->Zoom(0.1);
@@ -147,8 +166,8 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Pawn")) {
 				scene->loadOBJModel("obj_files/pawn.obj");
 			}
-			if (ImGui::MenuItem("Tetrahedron")) {
-				scene->loadOBJModel("obj_files/tetrahedron.obj");
+			if (ImGui::MenuItem("Cube")) {
+				scene->loadOBJModel("obj_files/cube.obj");
 			}
 			if (ImGui::MenuItem("Cow")) {
 				scene->loadOBJModel("obj_files/cow.obj");
@@ -158,6 +177,22 @@ void MainMenuBar(Scene* scene)
 			}
 			if (ImGui::MenuItem("chain")) {
 				scene->loadOBJModel("obj_files/chain.obj");
+			}
+			if (ImGui::MenuItem("spot")) {
+				scene->loadOBJModel("obj_files/spot_triangulated.obj");
+				scene->models.at(scene->activeModel)->uploadTexture("textures/spot_texture.png");
+	
+			}
+			if (ImGui::MenuItem("blub")) {
+				scene->loadOBJModel("obj_files/blub_triangulated.obj");
+				scene->models.at(scene->activeModel)->uploadTexture("textures/blub_texture.png");
+
+			}
+
+			if (ImGui::MenuItem("bob")) {
+				scene->loadOBJModel("obj_files/bob_tri.obj");
+				scene->models.at(scene->activeModel)->uploadTexture("textures/bob_diffuse.png");
+
 			}
 			
 			ImGui::EndMenu();
@@ -766,6 +801,7 @@ void changeMaterial(Scene* scene)
 	GLfloat shininess = shininess_slide;
 	ImGui::InputFloat("Shininess", &shininess);
 	scene->models.at(scene->activeModel)->changeUniformShininess(shininess);
+
 
 
 	if (ImGui::Button("OK"))

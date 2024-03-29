@@ -7,6 +7,7 @@ in vec4 emissive_color;
 in vec4 diffuse_color;
 in vec4 specular_color;
 in float shininess_coefficient;
+in vec2 vTexCoord; 
 
 uniform mat4 cameraMat;
 uniform int nLights;
@@ -21,6 +22,9 @@ struct Light {
 };
 
 uniform Light lights[15];
+
+uniform sampler2D u_Texture;
+uniform int use_texture;
 
 out vec4 FragColor;
 
@@ -62,5 +66,14 @@ void main()
     color.y = min(color.y,1);
     color.z = min(color.z,1);
     color.w = 1;
-    FragColor = color;
+
+    if (use_texture==1)
+	{
+		vec4 textureColor = texture(u_Texture, vTexCoord); 
+		FragColor  = color * textureColor;
+	}
+	else
+	{
+		FragColor  = color;
+	}
 } 

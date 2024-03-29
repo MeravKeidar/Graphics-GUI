@@ -1,13 +1,14 @@
 #version 330 core
 
-in vec3 vPosition;
-in vec3 vNormal;
-in vec2 vTextureCoord;
-
-in vec4 vEmissive_color;
-in vec4 vDiffuse_color;
-in vec4 vSpecular_color;
-in float vShininess_coefficient;
+layout(location = 0) in vec3 vPosition;
+layout(location = 1) in vec3 vNormal;
+layout(location = 2) in vec2 vTextureCoord;
+layout(location = 3) in vec3 vFacePosition;
+layout(location = 4) in vec3 vFaceNormal;
+layout(location = 5) in vec4 vEmissive_color;
+layout(location = 6) in vec4 vDiffuse_color;
+layout(location = 7) in vec4 vSpecular_color;
+layout(location = 8) in float vShininess_coefficient;
 
 
 uniform mat4 projection;
@@ -16,6 +17,7 @@ uniform mat4 normalMat;
 
 out vec4 view_pos;
 out vec3 view_normal;
+out vec2 vTexCoord;
 
 out vec4 emissive_color;
 out vec4 diffuse_color;
@@ -33,4 +35,6 @@ void main()
     diffuse_color = vDiffuse_color;
     specular_color = vSpecular_color;
     shininess_coefficient = vShininess_coefficient;
+
+    vTexCoord = vTextureCoord;
 }

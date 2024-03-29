@@ -4,6 +4,7 @@
 #include <string>
 #include "InitShader.h"
 #include <GLFW/glfw3.h>
+#include "Texture.h""
 
 using namespace std;
 Color c_white{ 1, 1, 1 };
@@ -158,115 +159,19 @@ void Scene::addCamera(const vec4& eye, const vec4& at, const vec4& up)
 	activeCamera++;
 }
 
-void Model::updateModel(Camera active_camera)
+void Model::uploadTexture(const std::string& path)
 {
-
-
-	/*for (auto vertex_it = vertices.begin(); vertex_it != vertices.end(); vertex_it++)
-	{
-		(*vertex_it).view_position = ModelViewMatrix * (*vertex_it).raw_position;
-		(*vertex_it).projected = active_camera.projection * (*vertex_it).view_position;
-	}
-
-	for (auto normal_it = normals.begin(); normal_it != normals.end(); normal_it++)
-	{
-		(*normal_it).original_direction.w = 0;
-		(*normal_it).view_direction = NormalViewMatrix * (*normal_it).original_direction;
-		(*normal_it).view_direction.w = 0;
-	}
-	for (auto face_it = faces.begin(); face_it != faces.end(); face_it++)
-	{
-		(*face_it).face_normal.original_direction.w = 0;
-		(*face_it).face_normal.view_direction = NormalViewMatrix * (*face_it).face_normal.original_direction;
-		(*face_it).face_normal.view_direction.w = 0;
-		(*face_it).face_center.view_position = ModelViewMatrix * (*face_it).face_center.raw_position;
-		(*face_it).face_center.projected = active_camera.projection * (*face_it).face_center.view_position;
-	}*/
+	texture_path = path;
+	use_texture = true;
 }
 
-bool Model::inViewVolume(Camera active_camera)
-{
-	//mat4 ModelViewMatrix = active_camera.cTransform * (_world_transform * _model_transform);
-	//for (auto box_it = bounding_box.begin(); box_it != bounding_box.end(); box_it++)
-	//{
-	//	(*box_it).view_position = ModelViewMatrix * (*box_it).raw_position;
-	//	(*box_it).projected = active_camera.projection * (*box_it).view_position;
-	//	if (((*box_it).projected.w > -epsilon) && ((*box_it).projected.w < epsilon))
-	//		(*box_it).projected.w = epsilon;
-	//	(*box_it).canonical.x = (*box_it).projected.x / (*box_it).projected.w; //not really screen but just after devision by w
-	//	(*box_it).canonical.y = (*box_it).projected.y / (*box_it).projected.w;
-	//	(*box_it).canonical.z = (*box_it).projected.z / (*box_it).projected.w;
-	//}
-	//vec3 min = bounding_box[0].screen;
-	//vec3 max = bounding_box[0].screen;
-	//for (auto box_it = bounding_box.begin(); box_it != bounding_box.end(); box_it++)
-	//{
-	//	if ((*box_it).screen.x < min.x)
-	//		min.x = (*box_it).screen.x;
-	//	if ((*box_it).screen.x > max.x)
-	//		max.x = (*box_it).screen.x;
-
-	//	if ((*box_it).screen.y < min.y)
-	//		min.y = (*box_it).screen.y;
-	//	if ((*box_it).screen.y > max.y)
-	//		max.y = (*box_it).screen.y;
-
-	//	if ((*box_it).screen.z < min.z)
-	//		min.z = (*box_it).screen.z;
-	//	if ((*box_it).screen.z > max.z)
-	//		max.z = (*box_it).screen.z;
-	//}
-
-	//if ((min.x > -1 && min.x < 1) || (max.x > -1 && max.x < 1)) // x in the view volume 
-	//{
-	//	if ((min.y > -1 && min.y < 1) || (max.y > -1 && max.y < 1)) // y in  view volume 
-	//	{
-	//		if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
-	//			return true;
-	//		else if (min.z < -1 && max.z > 1) //z consists view volume 
-	//			return true;
-	//	}
-	//	else if ((min.y < -1 && max.y > 1)) // y consists view volume
-	//	{
-	//		if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
-	//			return true;
-	//		else if (min.z < -1 && max.z > 1) //z consists view volume 
-	//			return true;
-
-	//	}
-	//}
-
-	//else if ((min.x < -1 && max.x > 1)) // x consists view volume 
-	//{
-	//	if ((min.y > -1 && min.y < 1) || (max.y > -1 && max.y < 1)) // y in  view volume 
-	//	{
-	//		if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
-	//			return true;
-	//		else if (min.z < -1 && max.z > 1) //z consists view volume 
-	//			return true;
-	//	}
-	//	else if ((min.y < -1 && max.y > 1)) // y consists view volume
-	//	{
-	//		if ((min.z > -1 && min.z < 1) || (max.z > -1 && max.z < 1)) // z in view volume 
-	//			return true;
-	//		else if (min.z < -1 && max.z > 1) //z consists view volume 
-	//			return true;
-
-	//	}
-	//}
-	//return false;
-	return true;
-}
-
-void Scene::ChangeAntiAliasingResolution(int resolution)
-{
-	//m_renderer->antialiasing_resolution = resolution;
-	//m_renderer->Reshape(ImGui::GetMainViewport()->Size.x, ImGui::GetMainViewport()->Size.y - 20);
-}
 
 void Scene::draw()
 {
-	//glUseProgram(ActiveProgramID);
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR) {
+		std::cerr << "OpenGL error setting scene uniforms: " << error << std::endl;
+	}
 	GLfloat projection[16];
 	matToArray(projection, cameras.at(activeCamera)->projection);
 	GLuint projectionMat_loc = glGetUniformLocation(ActiveProgramID, "projection");
@@ -292,6 +197,7 @@ void Scene::draw()
 		glUniform1i(glGetUniformLocation(ActiveProgramID, (lightName + ".light_type").c_str()), lights.at(i)->light_type);
 		glUniform4fv(glGetUniformLocation(ActiveProgramID, (lightName + ".position").c_str()), 1, &(lights.at(i)->position[0]));
 	}
+
 
 	for (auto model_it = models.begin(); model_it  != models.end(); model_it++)
 	{
@@ -329,8 +235,6 @@ void Scene::changeShading(SHADING shading_type)
 		}
 		glUseProgram(ActiveProgramID);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
 	}
 
 	else if (shading_type == GOURAUD)
@@ -344,8 +248,6 @@ void Scene::changeShading(SHADING shading_type)
 		}
 		glUseProgram(ActiveProgramID);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
 	}
 
 	else if (shading_type == PHONG)
@@ -359,19 +261,50 @@ void Scene::changeShading(SHADING shading_type)
 		}
 		glUseProgram(ActiveProgramID);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glEnable(GL_DEPTH_TEST);
-		glDepthFunc(GL_LESS);
+
 	}
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
 
 void Scene::drawboundingBox(Model* model)
 {
-	/*for (auto box_it = model->bounding_box.begin(); box_it != model->bounding_box.end(); box_it++)
-	{
-		(*box_it).screen = m_renderer->viewPortVec((*box_it).screen);
-	}
-	Color box_color(0.3,0.3,0.4);
-	m_renderer->DrawBox(&(model->bounding_box), box_color);*/
+	glUseProgram(NormalProgramID);
+
+	mat4 model_view_matrix = cameras.at(activeCamera)->cTransform * (model->_world_transform * model->_model_transform);
+	mat4 normal_view_matrix(0.0f);
+	GLfloat model_view[16];
+	matToArray(model_view, model_view_matrix);
+	GLfloat normal_view[16];
+	matToArray(normal_view, normal_view_matrix);
+
+	GLuint modelViewMatrix_loc = glGetUniformLocation(NormalProgramID, "modelview");
+	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, model_view);
+	GLuint normalViewMatrix_loc = glGetUniformLocation(NormalProgramID, "normalMat");
+	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
+	GLfloat projection[16];
+	matToArray(projection, cameras.at(activeCamera)->projection);
+	GLuint projectionMat_loc = glGetUniformLocation(NormalProgramID, "projection");
+	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, projection);
+	GLuint normal_scale_loc = glGetUniformLocation(NormalProgramID, "normal_scale");
+	glUniform1f(normal_scale_loc, normal_scale);
+
+	vec4 color(0.7, 0.7, 0.0, 1.0);
+	GLuint color_loc = glGetUniformLocation(NormalProgramID, "color");
+	glUniform4fv(color_loc, 1, &(color[0]));
+
+	model->setBoundingBoxAttributes();
+	glBindVertexArray((model)->bounding_box_vao);
+	glDrawArrays(GL_LINES, 0, model->bounding_box.size());
+	glBindVertexArray(0);
+	glUseProgram(ActiveProgramID);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
 
 void Scene::drawModel(Model* model)
@@ -388,14 +321,18 @@ void Scene::drawModel(Model* model)
 	GLuint normalViewMatrix_loc = glGetUniformLocation(ActiveProgramID, "normalMat");
 	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
 
+	Texture texture(model->texture_path, ActiveProgramID);
+	texture.bind();
+	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_Texture"), 0);
 
-	GLuint textureMap_loc = glGetUniformLocation(ActiveProgramID, "textureMap");
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, model->textureID); 
-
-	// Set texture uniform to texture unit 0
-	glUniform1i(textureMap_loc, 0);
-
+	if (model->use_texture == true)
+	{
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_texture"), 1);
+	}
+	else
+	{
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_texture"), 0);
+	}
 	model->draw();
 
 }
@@ -431,7 +368,10 @@ void Scene::drawVertexNormals(Model* model)
 	glDrawArrays(GL_LINES, 0, model->vertices_and_normals.size());
 	glBindVertexArray(0);
 	glUseProgram(ActiveProgramID);
-
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
 
 void Scene::drawFaceNormals(Model* model)
@@ -465,6 +405,10 @@ void Scene::drawFaceNormals(Model* model)
 	glDrawArrays(GL_LINES, 0, model->faces.size());
 	glBindVertexArray(0);
 	glUseProgram(ActiveProgramID);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
 
 void Scene::drawDemo()

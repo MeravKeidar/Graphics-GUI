@@ -171,6 +171,8 @@
     <ClCompile Include="InitShader.cpp" />
     <ClCompile Include="MeshModel.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="textures\stb_image.cpp" />
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AxisObj.h" />
@@ -196,6 +198,8 @@
     <ClInclude Include="MeshModel.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="textures\stb_image.h" />
     <ClInclude Include="texture_map.h" />
     <ClInclude Include="vec.h" />
     <ClInclude Include="Vertex.h" />
