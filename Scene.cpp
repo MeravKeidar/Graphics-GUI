@@ -217,6 +217,12 @@ void Scene::draw()
 		{
 			drawboundingBox((*model_it));
 		}
+		
+	}
+
+	if (displayCameras)
+	{
+		drawCameras();
 	}
 
 	if (draw_sky_box)
@@ -311,8 +317,7 @@ void Scene::drawboundingBox(Model* model)
 	glUseProgram(ActiveProgramID);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	
 }
 
 void Scene::drawModel(Model* model)
@@ -830,20 +835,65 @@ void Scene::LookAtModel()
 
 void Scene::drawCameras()
 {
-	//mat4 Tc = cameras.at(activeCamera)->cTransform;
-	//mat4 P = cameras.at(activeCamera)->projection;
-	//vec4 modified_eye;
-	//vec3 modified_eye_3d;
-	//for (size_t i = 0; i < nCameras; i++)
-	//{
-	//	if (i == activeCamera)
-	//		continue;
-	//	modified_eye = P * (Tc * cameras.at(i)->eye);  //Projection
-	//	modified_eye_3d = (modified_eye.x, modified_eye.y);
-	//	modified_eye_3d = m_renderer->viewPortVec(modified_eye_3d);//View-port
-	//	m_renderer->DrawLine(modified_eye_3d[0] - 10, modified_eye_3d[0] + 10, modified_eye_3d[1], modified_eye_3d[1],c_yellow);
-	//	m_renderer->DrawLine(modified_eye_3d[0], modified_eye_3d[0], modified_eye_3d[1] - 10, modified_eye_3d[1] + 10, c_yellow);
-	//}
+	if (nCameras == 1)
+	{
+		return;
+	}
+	glUseProgram(NormalProgramID);
+
+	mat4 model_view_matrix = cameras.at(activeCamera)->cTransform;
+	mat4 normal_view_matrix(0.0f);
+	GLfloat model_view[16];
+	matToArray(model_view, model_view_matrix);
+	GLfloat normal_view[16];
+	matToArray(normal_view, normal_view_matrix);
+	GLuint modelViewMatrix_loc = glGetUniformLocation(NormalProgramID, "modelview");
+	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, model_view);
+	GLuint normalViewMatrix_loc = glGetUniformLocation(NormalProgramID, "normalMat");
+	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
+	GLfloat projection[16];
+	matToArray(projection, cameras.at(activeCamera)->projection);
+	GLuint projectionMat_loc = glGetUniformLocation(NormalProgramID, "projection");
+	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, projection);
+	GLuint normal_scale_loc = glGetUniformLocation(NormalProgramID, "normal_scale");
+	glUniform1f(normal_scale_loc, normal_scale);
+	vec4 color(0.0, 0.7, 0.0, 1.0);
+	GLuint color_loc = glGetUniformLocation(NormalProgramID, "color");
+	glUniform4fv(color_loc, 1, &(color[0]));
+
+	vector<minimalVertex> buff;
+	for (size_t i = 0; i < nCameras; i++)
+		{
+			if (i == activeCamera)
+				continue;
+			vec3 p1(cameras.at(i)->eye.x -0.05, cameras.at(i)->eye.y, cameras.at(i)->eye.z);
+			vec3 p2(cameras.at(i)->eye.x + 0.05, cameras.at(i)->eye.y, cameras.at(i)->eye.z);
+			vec3 p3(cameras.at(i)->eye.x, cameras.at(i)->eye.y - 0.05, cameras.at(i)->eye.z);
+			vec3 p4(cameras.at(i)->eye.x , cameras.at(i)->eye.y + 0.05, cameras.at(i)->eye.z);
+			buff.push_back(minimalVertex(p1));
+			buff.push_back(minimalVertex(p2));
+			buff.push_back(minimalVertex(p3));
+			buff.push_back(minimalVertex(p4));
+			
+		}
+	GLuint cVAO, cVBO;
+	glGenVertexArrays(1, &cVAO);
+	glGenBuffers(1, &cVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, cVBO);
+	glBufferData(GL_ARRAY_BUFFER, buff.size() * sizeof(minimalVertex), &buff[0], GL_STATIC_DRAW);
+	glBindVertexArray(cVAO);
+	// vertex position
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)0);
+	// vertex normal
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(minimalVertex), (void*)offsetof(minimalVertex, normal));
+	glDrawArrays(GL_LINES, 0, buff.size());
+	glBindVertexArray(0);
+	glUseProgram(ActiveProgramID);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	
 	
 }
 
