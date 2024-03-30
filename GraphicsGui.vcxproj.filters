@@ -179,7 +179,7 @@
     <None Include="minimal_vshader.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="cow_tex.jpg">
+    <Image Include="textures\cow_tex.jpg">
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="textures\blub_texture.png">

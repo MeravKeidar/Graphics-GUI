@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <limits>
+#include <cmath>
 using namespace std;
 
 struct FaceIdcs
@@ -63,6 +64,19 @@ vec2 vec2fFromStream(std::istream& aStream)
 	return vec2(x, y);
 }
 
+float texCoordinatesSphericalYZ(float normal_y, float normal_z)
+{
+	return std::atan((abs(normal_z) / normal_y)/ M_PI);
+}
+
+float texCoordinatesSphericalXZ(float normal_x, float normal_z)
+{
+	float temp = std::atan(((-normal_x)/normal_z));
+	if (normal_z < 0)
+		temp += M_PI;
+	return temp / (2 * M_PI);
+}
+
 MeshModel::MeshModel(string fileName, GLuint program)
 {
 	texture_path = "";
@@ -94,7 +108,7 @@ MeshModel::~MeshModel(void)
 	
 }
 
-void MeshModel::loadFile(string fileName)
+void MeshModel::loadFile(string fileName, bool default_projection_tex)
 {
 	ifstream ifile(fileName.c_str());
 	//Note: faces is always at the end of file. can directly construct the face sturcture
@@ -174,6 +188,7 @@ void MeshModel::loadFile(string fileName)
 		calculate_vertex_textures = true;
 	}
 
+	_center_of_mass = vec4((min_x + max_x) / 2, (min_y + max_y) / 2, (min_z + max_z) / 2, 1);
 	for (vector<FaceIdcs>::iterator it = tempfaces.begin(); it != tempfaces.end(); ++it)
 	{
 		vec3 v1 = vertex_positions.at((*it).v[0] - 1);
@@ -192,17 +207,6 @@ void MeshModel::loadFile(string fileName)
 		faces.push_back(minimalVertex(face_position)); // for drawing normal origin
 		faces.push_back(minimalVertex(face_position, face_normal));  // for drawing normal dest
 
-		if (calculate_vertex_textures == false)
-		{
-			t1 = vertex_textures.at((*it).vt[0] - 1);
-			t2 = vertex_textures.at((*it).vt[1] - 1);
-			t3 = vertex_textures.at((*it).vt[2] - 1);
-		}
-		if (calculate_vertex_textures)
-		{
-			//add logic 
-		}
-
 		if (calculate_vertex_normals)
 		{
 			vertex_normals.at((*it).v[0] - 1) += face_normal;
@@ -212,18 +216,13 @@ void MeshModel::loadFile(string fileName)
 			n1 = ((*it).v[0] - 1, 0, 0);
 			n2 = ((*it).v[1] - 1, 0, 0);
 			n3 = ((*it).v[2] - 1, 0, 0);
-			vertices.push_back(Vertex(v1, n1,face_position,face_normal, t1));
-			vertices.push_back(Vertex(v2, n2, face_position, face_normal,t2));
-			vertices.push_back(Vertex(v3, n3, face_position, face_normal,t3));
+
 		}
 		else
 		{
 			n1 = vertex_normals.at((*it).vn[0] - 1);
 			n2 = vertex_normals.at((*it).vn[1] - 1);
 			n3 = vertex_normals.at((*it).vn[2] - 1);
-			vertices.push_back(Vertex(v1, n1, face_position, face_normal,t1));
-			vertices.push_back(Vertex(v2, n2, face_position, face_normal,t2));
-			vertices.push_back(Vertex(v3, n3, face_position, face_normal,t3));
 
 			vertices_and_normals.push_back(minimalVertex(v1)); // for drawing normal origin
 			vertices_and_normals.push_back(minimalVertex(v1,n1));  // for drawing normal dest
@@ -232,6 +231,34 @@ void MeshModel::loadFile(string fileName)
 			vertices_and_normals.push_back(minimalVertex(v3)); // for drawing normal origin
 			vertices_and_normals.push_back(minimalVertex(v3, n3));  // for drawing normal dest
 		}
+
+		if (calculate_vertex_textures == false)
+		{
+			t1 = vertex_textures.at((*it).vt[0] - 1);
+			t2 = vertex_textures.at((*it).vt[1] - 1);
+			t3 = vertex_textures.at((*it).vt[2] - 1);
+		}
+		else
+		{
+			if (default_projection_tex)
+			{
+				t1 = vec2((v1.x - min_x) / (max_x - min_x), (v1.y - min_y) / (max_y - min_y));
+				t2 = vec2((v2.x - min_x) / (max_x - min_x), (v2.y - min_y) / (max_y - min_y));
+				t3 = vec2((v3.x - min_x) / (max_x - min_x), (v3.y - min_y) / (max_y - min_y));
+			}
+			else
+			{
+
+				float temp_x, temp_y, temp_z;
+				temp_x = v1.x 
+				t1 = vec2(texCoordinatesSphericalYZ( normal_y, float normal_z))
+
+			}
+		}
+
+		vertices.push_back(Vertex(v1, n1, face_position, face_normal, t1));
+		vertices.push_back(Vertex(v2, n2, face_position, face_normal, t2));
+		vertices.push_back(Vertex(v3, n3, face_position, face_normal, t3));
 	}
 
 	if (calculate_vertex_normals)

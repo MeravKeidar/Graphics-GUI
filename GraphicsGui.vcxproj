@@ -238,7 +238,7 @@
     <None Include="PhongVertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="cow_tex.jpg" />
+    <Image Include="textures\cow_tex.jpg" />
     <Image Include="textures\blub_texture.png" />
     <Image Include="textures\bob_diffuse.png" />
     <Image Include="textures\spot_texture.png" />

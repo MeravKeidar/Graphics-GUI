@@ -17,7 +17,7 @@ public:
 	MeshModel();
 	MeshModel(string fileName, GLuint program);
 	~MeshModel(void);
-	void loadFile(string fileName);
+	void loadFile(string fileName,bool default_projection_tex = true);
 	void genBuffers();
 	void setBoundingBoxAttributes();
 	void draw();

@@ -171,6 +171,7 @@ void MainMenuBar(Scene* scene)
 			}
 			if (ImGui::MenuItem("Cow")) {
 				scene->loadOBJModel("obj_files/cow.obj");
+				scene->models.at(scene->activeModel)->uploadTexture("textures/cow_tex.png");
 			}
 			if (ImGui::MenuItem("Bunny")) {
 				scene->loadOBJModel("obj_files/Bunny.obj");
