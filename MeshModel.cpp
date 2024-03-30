@@ -118,16 +118,15 @@ void MeshModel::loadFile(string fileName, bool default_projection_tex)
 	vector<vec3> vertex_normals;
 	vector<vec2> vertex_textures;
 	
-	
-	
-	GLfloat min_x = numeric_limits<float>::max();
-	GLfloat min_y = min_x;
-	GLfloat min_z = min_x;
-	GLfloat max_x = numeric_limits<float>::min();
-	GLfloat max_y = max_x;
-	GLfloat max_z = max_x;
+	min_x = numeric_limits<float>::max();
+	min_y = min_x;
+	min_z = min_x;
+	max_x = numeric_limits<float>::min();
+	max_y = max_x;
+	max_z = max_x;
+
 	bool calculate_vertex_normals = false;
-	bool calculate_vertex_textures = false;
+	calculate_vertex_textures = false;
 	while (!ifile.eof())
 	{
 		// get line
@@ -240,20 +239,9 @@ void MeshModel::loadFile(string fileName, bool default_projection_tex)
 		}
 		else
 		{
-			if (default_projection_tex)
-			{
-				t1 = vec2((v1.x - min_x) / (max_x - min_x), (v1.y - min_y) / (max_y - min_y));
-				t2 = vec2((v2.x - min_x) / (max_x - min_x), (v2.y - min_y) / (max_y - min_y));
-				t3 = vec2((v3.x - min_x) / (max_x - min_x), (v3.y - min_y) / (max_y - min_y));
-			}
-			else
-			{
-
-				float temp_x, temp_y, temp_z;
-				temp_x = v1.x 
-				t1 = vec2(texCoordinatesSphericalYZ( normal_y, float normal_z))
-
-			}
+			t1 = vec2((v1.x - min_x) / (max_x - min_x), (v1.y - min_y) / (max_y - min_y));
+			t2 = vec2((v2.x - min_x) / (max_x - min_x), (v2.y - min_y) / (max_y - min_y));
+			t3 = vec2((v3.x - min_x) / (max_x - min_x), (v3.y - min_y) / (max_y - min_y));
 		}
 
 		vertices.push_back(Vertex(v1, n1, face_position, face_normal, t1));
@@ -271,9 +259,58 @@ void MeshModel::loadFile(string fileName, bool default_projection_tex)
 		}
 	}
 
-
+	calculateTangent();
 	boundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
 
+}
+
+void MeshModel::calculateTextureCoordinates(int mod)
+{
+	if (calculate_vertex_textures == false)
+	{
+		return;
+	}
+
+	for (size_t i = 0; i < vertices.size(); i ++)
+	{
+		if (mod == 0)
+		{
+			vertices.at(i).texture = vec2((vertices.at(i).position.x - min_x) / (max_x - min_x), (vertices.at(i).position.y - min_y) / (max_y - min_y));
+		}
+		else
+		{
+			float temp_x, temp_y, temp_z;
+			temp_x = vertices.at(i).position.x;
+			vertices.at(i).texture = vec2(texCoordinatesSphericalYZ(vertices.at(i).normal.y, vertices.at(i).normal.z));
+		}
+	}
+	calculateTangent();
+}
+
+void MeshModel::calculateTangent()
+{
+	for (size_t i = 0; i < vertices.size()-3; i+=3)
+	{
+		vec3 edge1 = vertices.at(i+1).position - vertices.at(i).position;
+		vec3 edge2 = vertices.at(i+2).position - vertices.at(i).position;
+		vec2 deltaUV1 = vertices.at(i+1).texture - vertices.at(i).texture;
+		vec2 deltaUV2 = vertices.at(i+2).texture - vertices.at(i).texture;
+
+		float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+		vertices.at(i).aTangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+		vertices.at(i).aTangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+		vertices.at(i).aTangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+		vertices.at(i).aBitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+		vertices.at(i).aBitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+		vertices.at(i).aBitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+		vertices.at(i + 1).aTangent = vertices.at(i).aTangent;
+		vertices.at(i + 1).aBitangent = vertices.at(i).aBitangent;
+		vertices.at(i + 2).aTangent = vertices.at(i).aTangent;
+		vertices.at(i + 2).aBitangent = vertices.at(i).aBitangent;
+	}
 }
 
 void MeshModel::genBuffers()
@@ -340,6 +377,12 @@ void MeshModel::setVertexAttributes()
 	// vertex shininess coefficient
 	glEnableVertexAttribArray(8);
 	glVertexAttribPointer(8, 1, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, shininess_coefficient));
+	// tengent
+	glEnableVertexAttribArray(9);
+	glVertexAttribPointer(9, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, aTangent));
+	// Bitengent
+	glEnableVertexAttribArray(9);
+	glVertexAttribPointer(9, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, aBitangent));
 	glBindVertexArray(0);
 
 }

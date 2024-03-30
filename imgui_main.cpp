@@ -144,6 +144,7 @@ bool add_light = false;
 bool transform_lights = false;
 bool change_material = false;
 bool change_scene_parameters = false;
+bool change_texture = false; 
 
 void MainMenuBar(Scene* scene)
 {
@@ -171,7 +172,7 @@ void MainMenuBar(Scene* scene)
 			}
 			if (ImGui::MenuItem("Cow")) {
 				scene->loadOBJModel("obj_files/cow.obj");
-				scene->models.at(scene->activeModel)->uploadTexture("textures/cow_tex.png");
+				
 			}
 			if (ImGui::MenuItem("Bunny")) {
 				scene->loadOBJModel("obj_files/Bunny.obj");
@@ -334,6 +335,10 @@ void MainMenuBar(Scene* scene)
 				change_material = true;
 			}
 
+			if (ImGui::MenuItem("Change Model Texture")) {
+				change_texture = true;
+			}
+
 			ImGui::EndMenu();
 			
 		}
@@ -371,46 +376,6 @@ void scenePararmeters(Scene* scene)
 	ImGui::SliderFloat("Normal Scale", &s, 0.0, 1.0);
 	scene->normal_scale = s;
 
-	//if (ImGui::Button("Allow Fog"))
-	//{
-	//	if (scene->m_renderer->fog)
-	//		scene->m_renderer->fog = false;
-	//	else
-	//		scene->m_renderer->fog = true;
-	//}
-	//static int fog_type_idx = (scene->m_renderer->fog_type == EXP ? 0 : 1);
-	//const char* fog_type[] = { "exp", "linear" };
-	//ImGui::Combo("Light type", &fog_type_idx, fog_type, 2);
-	//if (fog_type_idx == 0) //exp
-	//{
-	//	scene->m_renderer->fog_type = EXP;
-	//	GLfloat fd = scene->m_renderer->fog_density;
-	//	ImGui::SliderFloat("Fog density", &fd, 0.0, 1.0);
-	//	scene->m_renderer->fog_density = fd;
-	//}
-	//if (fog_type_idx == 1) //linear
-	//{
-	//	scene->m_renderer->fog_type = LINEAR;
-	//	GLfloat fs = scene->m_renderer->fog_start;
-	//	ImGui::SliderFloat("Fog starting distance", &fs, 0.0, 1.0);
-	//	scene->m_renderer->fog_start = fs;
-	//	GLfloat fe = scene->m_renderer->fog_end;
-	//	ImGui::SliderFloat("Fog ending distance", &fe, 0.0, 1.0);
-	//	scene->m_renderer->fog_end = fe;
-	//}
-
-	//static ImVec4 fc = ImVec4(0.2f, 0.2f, 0.2f, 0.2f);
-	//ImGui::ColorPicker4("Fog Color Picker", (float*)&fc, ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_AlphaPreview);
-	//scene->m_renderer->fog_color = Color(fc.x, fc.y, fc.z);
-	//
-	//int r = scene->m_renderer->antialiasing_resolution;
-	//ImGui::SliderInt("Anti-Aliasing Resolution", &r, 1, 4);
-	//scene->ChangeAntiAliasingResolution(r);
-
-
-	//GLfloat b = scene->m_renderer->bloom_threshold;
-	//ImGui::SliderFloat("Bloom threshold", &b, 0.0, 3.0);
-	//scene->m_renderer->bloom_threshold = b;
 
 	if (ImGui::Button("OK"))
 	{
@@ -524,6 +489,17 @@ void ImguiPopUps(Scene* scene)
 	if (ImGui::BeginPopupModal("Change Material", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		changeMaterial(scene);
+		ImGui::EndPopup();
+	}
+
+	if (change_texture)
+	{
+		ImGui::OpenPopup("Change Texture");
+		change_texture = false;
+	}
+	if (ImGui::BeginPopupModal("Change Texture", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		changeTexture(scene);
 		ImGui::EndPopup();
 	}
 }
@@ -753,6 +729,79 @@ void addCamera(Scene* scene)
 	}
 }
 
+void changeTexture(Scene* scene)
+{
+
+	if (scene->nModels == 0)
+		ImGui::CloseCurrentPopup();
+	if (ImGui::Button("Disable Texture"))
+	{
+		scene->models.at(scene->activeModel)->use_texture = false;
+		scene->models.at(scene->activeModel)->marble_texture = false;
+	}
+
+	if (ImGui::Button("Disable Normal Map"))
+	{
+		scene->models.at(scene->activeModel)->use_normal_mapping = false;
+	}
+
+
+	if (ImGui::Button("Brick Texture"))
+	{
+		scene->models.at(scene->activeModel)->uploadTexture("textures/brickwall.jpg");
+		scene->models.at(scene->activeModel)->uploadNormalMap("textures/brickwall_normal.jpg.png");
+	}
+
+	if (ImGui::Button("Spot Texture"))
+	{
+		scene->models.at(scene->activeModel)->uploadTexture("textures/spot_texture.png");
+		scene->models.at(scene->activeModel)->use_normal_mapping = false;
+	}
+	if (ImGui::Button("Cow Texture"))
+	{
+		scene->models.at(scene->activeModel)->uploadTexture("textures/cow_tex.png");
+		scene->models.at(scene->activeModel)->use_normal_mapping = false;
+	}
+	if (ImGui::Button("bob Texture"))
+	{
+		scene->models.at(scene->activeModel)->uploadTexture("textures/bob_diffuse.png");
+		scene->models.at(scene->activeModel)->use_normal_mapping = false;
+	}
+	if (ImGui::Button("blub Texture"))
+	{
+		scene->models.at(scene->activeModel)->uploadTexture("textures/blub_texture.png");
+		scene->models.at(scene->activeModel)->use_normal_mapping = false;
+	}
+
+	if (ImGui::Button("marble Texture"))
+	{
+		if (scene->models.at(scene->activeModel)->marble_texture == true)
+		{
+			scene->models.at(scene->activeModel)->marble_texture = false;
+		}
+		else {
+			scene->models.at(scene->activeModel)->marble_texture = true;
+			scene->models.at(scene->activeModel)->use_normal_mapping = false;
+		}	
+	}
+
+	static bool change_coords = false;
+	ImGui::Checkbox("Change texture Coordinates", &change_coords);
+
+	if (change_coords)
+	{
+		static int idx = 0;
+		const char* texture_type[] = { "Planar", "Parallel" };
+		ImGui::Combo("Texture coordinates type", &idx, texture_type, 2);
+		scene->models.at(scene->activeModel)->calculateTextureCoordinates(idx);
+	}
+	
+	if (ImGui::Button("OK"))
+	{
+		ImGui::CloseCurrentPopup();
+	}
+}
+
 void changeMaterial(Scene* scene)
 {
 	if (scene->nModels == 0)
@@ -953,7 +1002,7 @@ void addLight(Scene* scene)
 			new_type = PARALLEL_LIGHT;
 		}
 		vec4 color(new_c.x,new_c.y,new_c.z, new_c.w);
-		scene->addLight(vec4(new_location[0], new_location[1], new_location[2],1), vec4(new_direction[0], new_direction[1], new_direction[2],0), new_type, color);
+		scene->addLight(vec4(new_location[0], new_location[1], new_location[2],1), vec4(new_direction[0], new_direction[1], new_direction[2],0), new_type, color, new_intensity);
 		ImGui::CloseCurrentPopup();
 	}
 }

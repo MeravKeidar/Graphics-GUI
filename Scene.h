@@ -22,8 +22,14 @@ enum SHADING {
 
 class Model {
 private:
-protected:
 	
+protected:
+	GLfloat min_x;
+	GLfloat min_y;
+	GLfloat min_z;
+	GLfloat max_x;
+	GLfloat max_y;
+	GLfloat max_z;
 	
 public:
 	vector<Vertex> vertices;
@@ -41,21 +47,27 @@ public:
 	unsigned int bounding_box_vao;
 	unsigned int bounding_box_vbo;
 	std::string texture_path;
+	std::string normal_map_path;
 	bool use_texture = false;
+	bool marble_texture = false;
+	bool use_normal_mapping = false;
+
 	virtual ~Model() {}
 	mat4 _model_transform;
 	vec4 _center_of_mass; 
 	mat4 _world_transform;
 	mat4 _normal_world_transform;
 	mat4 _normal_model_transform;
+	bool calculate_vertex_textures;
+	
 
-	bool color_by_pos = false;
-	bool color_by_normal = false;
 	SHADING shading_type;
 	void virtual draw() = 0; 
 	void virtual setVertexAttributes() = 0;
 	void virtual setNormalsVertexAttributes() = 0;
 	void virtual setBoundingBoxAttributes() = 0;
+	void virtual calculateTextureCoordinates(int mod) = 0;
+	void virtual calculateTangent() = 0;
 	void Translate(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Scale(const GLfloat x, const GLfloat y, const GLfloat z);
 	void Rotate(const int hinge, const GLfloat theta);
@@ -64,6 +76,7 @@ public:
 	void changeUniformSpecularColor(vec4 color);
 	void changeUniformDiffuseColor(vec4 color);
 	void uploadTexture(const std::string& path);
+	void uploadNormalMap(const std::string& path);
 	void colorByNormal();
 	void colorByPosition();
 	void updateModel(Camera active_camera);
@@ -83,13 +96,14 @@ public:
 	GLuint PhongProgramID = 0;
 	GLuint NormalProgramID = 0;
 	GLuint ActiveProgramID = 0;
+	
 	void ChangeAntiAliasingResolution(int resolution);
 	Scene();
 	void loadOBJModel(string fileName);
 	void loadAxisModels();
 	void loadPrimModel(string type);
 	void addCamera(const vec4& eye, const vec4& at, const vec4& up);
-	void addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type,vec4 color = vec4(1,1,1,1));
+	void addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type, vec4 color, GLfloat lightIntensity);
 	void draw();
 	void drawDemo();
 	void drawCameras();

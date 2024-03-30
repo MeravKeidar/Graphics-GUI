@@ -94,8 +94,7 @@ void Model::changeUniformDiffuseColor(vec4 color)
 void Model::colorByNormal()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	color_by_normal = true;
-	color_by_pos = false;
+
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		
@@ -111,8 +110,7 @@ void Model::colorByNormal()
 void Model::colorByPosition()
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	color_by_normal = false;
-	color_by_pos = true;
+
 	for (auto it = vertices.begin(); it != vertices.end(); it++)
 	{
 		vec4 color(abs((*it).position.x), abs((*it).position.y), abs((*it).position.z), 1);
@@ -165,6 +163,11 @@ void Model::uploadTexture(const std::string& path)
 	use_texture = true;
 }
 
+void Model::uploadNormalMap(const std::string& path)
+{
+	normal_map_path = path;
+	use_normal_mapping = true;
+}
 
 void Scene::draw()
 {
@@ -322,17 +325,28 @@ void Scene::drawModel(Model* model)
 	glUniformMatrix4fv(normalViewMatrix_loc, 1, GL_FALSE, normal_view);
 
 	Texture texture(model->texture_path, ActiveProgramID);
+	Texture normal_map(model->normal_map_path, ActiveProgramID);
 	texture.bind();
+	normal_map.bind(1);
 	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_Texture"), 0);
+	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_NormalMap"), 1);
 
 	if (model->use_texture == true)
-	{
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_texture"), 1);
-	}
 	else
-	{
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_texture"), 0);
-	}
+
+	if (model->use_normal_mapping == true)
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_normal_mapping"), 1);
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_normal_mapping"), 0);
+
+	if (model->marble_texture == true)
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "marble_texture"), 1);
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "marble_texture"), 0);
+
+
 	model->draw();
 
 }
@@ -654,7 +668,7 @@ Scene::Scene()
 	//m_renderer = new Renderer(512,512);
 	//m_renderer = new Renderer(glfwGetVideoMode(glfwGetPrimaryMonitor())->width, glfwGetVideoMode(glfwGetPrimaryMonitor())->height - 20);
 	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
-	addLight(vec3(-1, 1, 0), vec3(0, -1, 0), POINT_LIGHT);
+	addLight(vec3(0, 0, 0), vec3(0, -10, -0.5), PARALLEL_LIGHT, vec4(1,1,1,1), 1);
 
 }
 
@@ -769,13 +783,14 @@ mat4 Scene::getCurrentProjection()
 }
 
 
-void Scene::addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type, vec4 color)
+void Scene::addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type, vec4 color, GLfloat lightIntensity)
 {
 	Light * new_light = new Light();
 	new_light->position = vec4(location.x, location.y, location.z, 1);
 	new_light->direction = vec4(direction.x, direction.y, direction.z, 0);
 	new_light->light_type = light_type;
 	new_light->color = color;
+	new_light->color = lightIntensity;
 	lights.push_back(new_light);
 	activeLight++;
 	nLights++;

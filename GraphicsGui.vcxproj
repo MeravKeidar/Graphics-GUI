@@ -234,6 +234,7 @@
     <None Include="GouraudVertexShader.glsl" />
     <None Include="minimal_fshader.glsl" />
     <None Include="minimal_vshader.glsl" />
+    <None Include="noise3D.glsl" />
     <None Include="PhongFragShader.glsl" />
     <None Include="PhongVertexShader.glsl" />
   </ItemGroup>

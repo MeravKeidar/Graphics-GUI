@@ -29,3 +29,4 @@ void showManual();
 void addLight(Scene* scene);
 void transformLights(Scene* scene);
 void changeMaterial(Scene* scene);
+void changeTexture(Scene* scene);

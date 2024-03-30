@@ -69,6 +69,8 @@ struct Vertex
 	vec4 diffuse_color = (1,1,1,0.2);
 	vec4 specular_color = (1, 1, 1, 0.2);
 	GLfloat shininess_coefficient = 10; 
+	vec3 aTangent;
+	vec3 aBitangent;
 
 	Vertex(vec3 new_position) :position(new_position), normal(0, 0, 0) {
 	};
@@ -129,10 +131,10 @@ class Light
 {
 public:
 	vec4 color = { 1.0, 1.0, 1.0 , 1.0 }; //white by default 
-	GLfloat intensity = 1;
+	GLfloat intensity = 2;
 	vec4 direction;
 	int light_type;
 	vec4 position;
-	Light() : position(0, 1, 0, 1), direction(0, -1, 0, 0), intensity(0.5) { light_type = 0; };
+	Light() : position(0, 1, 0, 1), direction(0, -1, 0, 0), intensity(1.0) { light_type = 0; };
 
 };
