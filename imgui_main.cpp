@@ -762,7 +762,7 @@ void changeTexture(Scene* scene)
 	if (ImGui::Button("Brick Texture"))
 	{
 		scene->models.at(scene->activeModel)->uploadTexture("textures/brickwall.jpg");
-		scene->models.at(scene->activeModel)->uploadNormalMap("textures/brickwall_normal.jpg.png");
+		scene->models.at(scene->activeModel)->uploadNormalMap("textures/brickwall_normal.jpg");
 	}
 
 	if (ImGui::Button("Spot Texture"))
@@ -785,10 +785,12 @@ void changeTexture(Scene* scene)
 		scene->models.at(scene->activeModel)->uploadTexture("textures/blub_texture.png");
 		scene->models.at(scene->activeModel)->use_normal_mapping = false;
 	}
-	if (ImGui::Button("Normal Map Texture"))
+	if (ImGui::Button("Gravel Texture"))
 	{
-		scene->models.at(scene->activeModel)->uploadNormalMap("textures/NormalMap.png");
+		scene->models.at(scene->activeModel)->uploadTexture("textures/Gravel_001_BaseColor.jpg");
+		scene->models.at(scene->activeModel)->uploadNormalMap("textures/Gravel_001_Normal.jpg");
 	}
+
 
 	if (ImGui::Button("marble Texture"))
 	{
