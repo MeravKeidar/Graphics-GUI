@@ -150,8 +150,6 @@ public:
 	bool displayFnormal = false;
 	bool displayCameras = false;
 	bool displayBoundingBox = false;
-	bool blur = false;
-	bool bloom = false;
 	GLfloat ambient_scale = 0.2;
 	GLfloat normal_scale = 0.5;
 	vec4 ambient_color = { 0.1,0.1,0.1,1.0};

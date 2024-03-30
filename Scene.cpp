@@ -333,9 +333,10 @@ void Scene::drawModel(Model* model)
 	Texture normal_map(model->normal_map_path, ActiveProgramID);
 	texture.bind();
 	normal_map.bind(1);
+	skyTexture.bind(2);
 	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_Texture"), 0);
 	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_NormalMap"), 1);
-
+	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_skybox"), 2);
 	if (model->use_texture == true)
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_texture"), 1);
 	else
@@ -350,7 +351,12 @@ void Scene::drawModel(Model* model)
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "marble_texture"), 1);
 	else
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "marble_texture"), 0);
-
+	if (model->enviromental_mapping == true)
+	{
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "enviromental_mapping"), 1);
+	}
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "enviromental_mapping"), 0);
 
 	model->draw();
 
@@ -530,7 +536,7 @@ void Scene::drawSkyBox()
 	glDepthFunc(GL_LEQUAL);
 	glUseProgram(skyBoxProgramID);
 	
-	mat4 view_matrix = cameras.at(activeCamera)->cTransform;
+	mat4 view_matrix = cameras.at(activeCamera)->cTransform * cameras.at(activeCamera)->skyBoxMat;
 	view_matrix[0][3] = 0; view_matrix[1][3] = 0; view_matrix[2][3] = 0; view_matrix[3][3] = 1;
 	view_matrix[3][0] = 0; view_matrix[3][1] = 0; view_matrix[3][2] = 0;
 	GLfloat view[16];
@@ -568,6 +574,8 @@ void Camera::Zoom(GLfloat scale) {
 	else {
 		Frustum(_left, _right, _bottom, _top, _zNear, _zFar);
 	}
+	mat4 s = ScalingMat(1.0f - scale);
+	skyBoxMat = s * skyBoxMat;
 }
 
 void Scene::moveModel(const GLfloat x, const GLfloat y, const GLfloat z,int mod)
@@ -790,6 +798,14 @@ void Scene::Reset()
 	nModels = 0;
 	nCameras = 0;
 	nLights = 0;
+	draw_sky_box = false;
+	displayVnormal = false;
+	displayFnormal = false;
+	displayCameras = false;
+	displayBoundingBox = false;
+	ambient_scale = 0.2;
+	normal_scale = 0.5;
+	ambient_color = { 0.1,0.1,0.1,1.0 };
 	addCamera(vec4(0, 0, 0, 0), vec4(0, 0, -1, 0), vec4(0, 1, 0, 0));
 	changeShading(FLAT);
 }
@@ -873,7 +889,6 @@ mat4 Scene::getCurrentProjection()
 		return mat4(0);
 	return cameras.at(activeCamera)->projection;
 }
-
 
 void Scene::addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type, vec4 color, GLfloat lightIntensity)
 {

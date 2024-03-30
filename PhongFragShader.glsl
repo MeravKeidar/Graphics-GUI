@@ -29,6 +29,8 @@ uniform int use_texture;
 uniform int marble_texture;
 uniform sampler2D u_NormalMap;
 uniform int use_normal_mapping;
+uniform samplerCube u_skybox; 
+uniform int enviromental_mapping; 
 
 out vec4 FragColor;
 
@@ -212,5 +214,10 @@ void main()
    }
    else{
     FragColor  = color;
+   }
+   if (enviromental_mapping == 1)
+   {
+     vec3 R = reflect(normalize(view_pos.xyz), normalize(view_normal));
+     FragColor = vec4(texture(u_skybox, R).rgb, 1.0);
    }
 } 

@@ -25,6 +25,8 @@ uniform int nLights;
 uniform vec4 ambient_color;
 uniform sampler2D u_NormalMap;
 uniform int use_normal_mapping; 
+uniform samplerCube u_skybox; 
+uniform int enviromental_mapping; 
 
 struct Light {
     vec4 color;
@@ -93,4 +95,10 @@ void main()
     vfragColor.y = min(color.y,1);
     vfragColor.z = min(color.z,1);
     vfragColor.w = 1;
+
+    if (enviromental_mapping == 1)
+   {
+     vec3 R = reflect(normalize(face_view_pos.xyz), normalize(face_view_normal));
+     vfragColor = vec4(texture(u_skybox, R).rgb, 1.0);
+   }
 }

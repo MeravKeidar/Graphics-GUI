@@ -13,7 +13,8 @@ class Camera {
 public:
 	mat4 projection;
 	mat4 cTransform;
-	Camera() : cTransform(mat4(1.0)), projection(mat4(1.0)) {}
+	mat4 skyBoxMat;
+	Camera() : cTransform(mat4(1.0)), projection(mat4(1.0)), skyBoxMat(1.0) {}
 	void setTransformation(const mat4& transform);
 	void LookAt(const vec4& eye, const vec4& at, const vec4& up);
 	void Ortho(const float left, const float right,
