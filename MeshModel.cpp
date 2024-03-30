@@ -66,15 +66,16 @@ vec2 vec2fFromStream(std::istream& aStream)
 
 float texCoordinatesSphericalYZ(float normal_y, float normal_z)
 {
-	return std::atan((abs(normal_z) / normal_y)/ M_PI);
+	return atan2(abs(normal_z), normal_y)/M_PI;
+
 }
 
 float texCoordinatesSphericalXZ(float normal_x, float normal_z)
 {
-	float temp = std::atan(((-normal_x)/normal_z));
-	if (normal_z < 0)
-		temp += M_PI;
-	return temp / (2 * M_PI);
+	float res = std::atan2((-normal_x),normal_z);
+	if (res < 0)
+		res += 2 * M_PI;
+	return res / (2 * M_PI);
 }
 
 MeshModel::MeshModel(string fileName, GLuint program)
@@ -239,9 +240,9 @@ void MeshModel::loadFile(string fileName, bool default_projection_tex)
 		}
 		else
 		{
-			t1 = vec2((v1.x - min_x) / (max_x - min_x), (v1.y - min_y) / (max_y - min_y));
-			t2 = vec2((v2.x - min_x) / (max_x - min_x), (v2.y - min_y) / (max_y - min_y));
-			t3 = vec2((v3.x - min_x) / (max_x - min_x), (v3.y - min_y) / (max_y - min_y));
+				t1 = vec2((v1.x - min_x) / (max_x - min_x), (v1.y - min_y) / (max_y - min_y));
+				t2 = vec2((v2.x - min_x) / (max_x - min_x), (v2.y - min_y) / (max_y - min_y));
+				t3 = vec2((v3.x - min_x) / (max_x - min_x), (v3.y - min_y) / (max_y - min_y));		
 		}
 
 		vertices.push_back(Vertex(v1, n1, face_position, face_normal, t1));
@@ -280,11 +281,16 @@ void MeshModel::calculateTextureCoordinates(int mod)
 		else
 		{
 			float temp_x, temp_y, temp_z;
-			temp_x = vertices.at(i).position.x;
-			vertices.at(i).texture = vec2(texCoordinatesSphericalYZ(vertices.at(i).normal.y, vertices.at(i).normal.z));
+			temp_x = vertices.at(i).position.x - _center_of_mass.x;
+			temp_y = vertices.at(i).position.y - _center_of_mass.y;
+			temp_z = vertices.at(i).position.z - _center_of_mass.z;
+			vertices.at(i).texture = vec2(texCoordinatesSphericalXZ(temp_x,temp_z),texCoordinatesSphericalYZ(temp_y,temp_z));
 		}
 	}
+	genBuffers();
 	calculateTangent();
+
+	setVertexAttributes();
 }
 
 void MeshModel::calculateTangent()

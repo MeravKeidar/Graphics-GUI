@@ -167,6 +167,9 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Pawn")) {
 				scene->loadOBJModel("obj_files/pawn.obj");
 			}
+			if (ImGui::MenuItem("sphere")) {
+				scene->loadOBJModel("obj_files/sphere.obj");
+			}
 			if (ImGui::MenuItem("Cube")) {
 				scene->loadOBJModel("obj_files/cube.obj");
 			}
