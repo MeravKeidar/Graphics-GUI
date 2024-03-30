@@ -6,10 +6,10 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
-
 #include "Camera.h"
 #include "Light.h"
 #include "Texture.h"
+
 
 using namespace std;
 
@@ -51,6 +51,7 @@ public:
 	bool use_texture = false;
 	bool marble_texture = false;
 	bool use_normal_mapping = false;
+	bool enviromental_mapping = false;
 
 	virtual ~Model() {}
 	mat4 _model_transform;
@@ -94,9 +95,12 @@ public:
 	GLuint FlatProgramID = 0;
 	GLuint GouraudProgramID = 0;
 	GLuint PhongProgramID = 0;
+	GLuint skyBoxProgramID = 0;
 	GLuint NormalProgramID = 0;
 	GLuint ActiveProgramID = 0;
-	
+	GLuint skyboxVAO, skyboxVBO;
+	CubeTexture skyTexture;
+	bool draw_sky_box = false;
 	void ChangeAntiAliasingResolution(int resolution);
 	Scene();
 	void loadOBJModel(string fileName);
@@ -106,6 +110,8 @@ public:
 	void addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light_type, vec4 color, GLfloat lightIntensity);
 	void draw();
 	void drawDemo();
+	void drawSkyBox();
+	void genSkyBox();
 	void drawCameras();
 	void drawVertexNormals(Model* model);
 	void zoomOnModel(GLfloat scale);

@@ -9,6 +9,8 @@ layout(location = 5) in vec4 vEmissive_color;
 layout(location = 6) in vec4 vDiffuse_color;
 layout(location = 7) in vec4 vSpecular_color;
 layout(location = 8) in float vShininess_coefficient;
+layout(location = 9) in vec3 vTangent;
+layout(location = 10) in vec3 vBitangent;
 
 
 uniform mat4 projection;
@@ -18,6 +20,7 @@ uniform mat4 normalMat;
 out vec4 view_pos;
 out vec3 view_normal;
 out vec2 vTexCoord;
+out mat3 TBN;
 
 out vec4 emissive_color;
 out vec4 diffuse_color;
@@ -35,6 +38,12 @@ void main()
     diffuse_color = vDiffuse_color;
     specular_color = vSpecular_color;
     shininess_coefficient = vShininess_coefficient;
+
+    vec3 T = normalize(vec3(modelview * vec4(vTangent,   0.0)));
+    vec3 B = normalize(vec3(modelview * vec4(vBitangent, 0.0)));
+    vec3 N = normalize(vec3(modelview * vec4(vNormal,    0.0)));
+    TBN = mat3(T, B, N); 
+
 
     vTexCoord = vTextureCoord;
 }

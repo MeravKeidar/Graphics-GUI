@@ -219,9 +219,15 @@ void MainMenuBar(Scene* scene)
 					else
 						scene->displayFnormal = true;
 				}
+				
 				ImGui::EndMenu();
 			}
-
+			if (ImGui::MenuItem("SkyBox")) {
+				if (scene->draw_sky_box)
+					scene->draw_sky_box = false;
+				else
+					scene->draw_sky_box = true;
+			}
 			if (ImGui::MenuItem("Reset scene"))
 			{
 				scene->Reset(); 
@@ -337,6 +343,13 @@ void MainMenuBar(Scene* scene)
 
 			if (ImGui::MenuItem("Change Model Texture")) {
 				change_texture = true;
+			}
+
+			if (ImGui::MenuItem("Enviormental mapping")) {
+				if (scene->draw_sky_box && !scene->models.at(scene->activeModel)->enviromental_mapping)
+					scene->models.at(scene->activeModel)->enviromental_mapping = true;
+				else
+					scene->models.at(scene->activeModel)->enviromental_mapping = false;
 			}
 
 			ImGui::EndMenu();
@@ -759,7 +772,7 @@ void changeTexture(Scene* scene)
 	}
 	if (ImGui::Button("Cow Texture"))
 	{
-		scene->models.at(scene->activeModel)->uploadTexture("textures/cow_tex.png");
+		scene->models.at(scene->activeModel)->uploadTexture("textures/cow_tex.png"); 
 		scene->models.at(scene->activeModel)->use_normal_mapping = false;
 	}
 	if (ImGui::Button("bob Texture"))
@@ -771,6 +784,10 @@ void changeTexture(Scene* scene)
 	{
 		scene->models.at(scene->activeModel)->uploadTexture("textures/blub_texture.png");
 		scene->models.at(scene->activeModel)->use_normal_mapping = false;
+	}
+	if (ImGui::Button("Normal Map Texture"))
+	{
+		scene->models.at(scene->activeModel)->uploadNormalMap("textures/NormalMap.png");
 	}
 
 	if (ImGui::Button("marble Texture"))

@@ -25,6 +25,8 @@ uniform int nLights;
 uniform vec4 ambient_color;
 uniform sampler2D u_NormalMap;
 uniform int use_normal_mapping; 
+uniform samplerCube skybox;
+uniform int use_enviormental_mapping; 
 
 struct Light {
     vec4 color;
@@ -35,6 +37,7 @@ struct Light {
 };
 
 uniform Light lights[15];
+
 
 vec4 calcColor(vec3 lightDir, vec3 normal, vec3 pos, float light_intensity, vec4 light_color, vec4 diffuse_color, vec4 specular_color, float shininess_coefficient)
 {
@@ -54,30 +57,18 @@ void main()
 {
     view_pos = modelview * vec4(vPosition, 1.0);
     gl_Position = projection * view_pos;
-    vec3 face_view_normal = normalize((normalMat * vec4(vFaceNormal, 0.0)).xyz);
-    mat3 TBN;
+
+    vec3 view_normal = normalize((normalMat * vec4(vNormal, 0.0)).xyz);
     if (use_normal_mapping == 1)
     {
-        vec3 T = normalize(vec3(modelview * vec4(vTangent,   0.0)));
-        vec3 B = normalize(vec3(modelview * vec4(vBitangent, 0.0)));
-        vec3 N = normalize(vec3(modelview * vec4(vFaceNormal,    0.0)));
-        TBN = transpose(mat3(T, B, N));
-        face_view_normal = texture(u_NormalMap, vTexCoord).rgb;
-        face_view_normal = face_view_normal * 2.0 - 1.0; 
+       
+        view_normal = texture(u_NormalMap, vTexCoord).rgb;
+        view_normal = view_normal * 2.0 - 1.0;   
+       
     }
-
-    //face_view_normal = normalize((normalMat * vec4(vFaceNormal, 0.0)).xyz);
-    vec4 face_view_pos = modelview * vec4(vFacePosition, 1.0);
-    if (use_normal_mapping == 1)
-    {
-        face_view_pos = vec4( TBN * face_view_pos.xyz, 1.0);
-    }
-
-
-    vTexCoord = vTextureCoord;
-
     vec4 color = vEmissive_color+ambient_color;
     
+    vTexCoord = vTextureCoord;
 
     for (int i = 0; i < nLights; i++)
     {
@@ -85,23 +76,25 @@ void main()
         if (lights[i].light_type == 0)
         {
             vec4 lightpos = (cameraMat * lights[i].position);
-            l = normalize((lightpos - face_view_pos).xyz);
+            l = normalize((lightpos - view_pos).xyz);
         }
         else if (lights[i].light_type == 1)
         {
             vec4 lightdir = (cameraMat * lights[i].direction);
             l = normalize(lightdir.xyz);
         }
-        
-        if (use_normal_mapping == 1)
-        {
-            l = TBN * l;
-        }
-        color += calcColor(l, face_view_normal, face_view_pos.xyz, lights[i].intensity, lights[i].color,vDiffuse_color,vSpecular_color,vShininess_coefficient);
+        color += calcColor(l, view_normal, view_pos.xyz, lights[i].intensity, lights[i].color,vDiffuse_color,vSpecular_color,vShininess_coefficient);
     }
    
     vfragColor.x = min(color.x,1);
     vfragColor.y = min(color.y,1);
     vfragColor.z = min(color.z,1);
     vfragColor.w = 1;
+
+    if (use_enviormental_mapping == 1)
+    {
+        vec3 I = normalize(view_pos.xyz);
+        vec3 R = reflect(I, normalize(view_normal.xyz));
+        vfragColor = vec4(texture(skybox, R).rgb, 1.0);
+    }
 }

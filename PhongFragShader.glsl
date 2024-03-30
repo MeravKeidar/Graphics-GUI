@@ -8,6 +8,7 @@ in vec4 diffuse_color;
 in vec4 specular_color;
 in float shininess_coefficient;
 in vec2 vTexCoord; 
+in mat3 TBN;
 
 uniform mat4 cameraMat;
 uniform int nLights;
@@ -26,6 +27,8 @@ uniform Light lights[15];
 uniform sampler2D u_Texture;
 uniform int use_texture;
 uniform int marble_texture;
+uniform sampler2D u_NormalMap;
+uniform int use_normal_mapping;
 
 out vec4 FragColor;
 
@@ -166,6 +169,14 @@ void main()
 { 
     vec4 color = emissive_color+ambient_color;
     
+    vec3 normal = view_normal;
+    if (use_normal_mapping == 1)
+    {
+        normal = texture(u_NormalMap, vTexCoord).rgb;
+        normal = view_normal * 2.0 - 1.0;
+        //normal = normalize(TBN * view_normal); 
+    }
+
     for (int i = 0; i < nLights; i++)
     {
         vec3 l;
@@ -179,7 +190,7 @@ void main()
             vec4 lightdir = (cameraMat * lights[i].direction);
             l = normalize(lightdir.xyz);
         }
-        color += calcColor(l, view_normal, view_pos.xyz, lights[i].intensity, lights[i].color,diffuse_color,specular_color,shininess_coefficient);
+        color += calcColor(l, normal, view_pos.xyz, lights[i].intensity, lights[i].color,diffuse_color,specular_color,shininess_coefficient);
     }
     color.x = min(color.x,1);
     color.y = min(color.y,1);

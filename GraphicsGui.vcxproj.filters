@@ -178,6 +178,8 @@
     <None Include="minimal_fshader.glsl" />
     <None Include="minimal_vshader.glsl" />
     <None Include="noise3D.glsl" />
+    <None Include="skyboxFragShader.glsl" />
+    <None Include="skyboxVertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="textures\cow_tex.jpg">

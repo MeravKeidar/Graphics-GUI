@@ -4,7 +4,7 @@
 #include <string>
 #include "InitShader.h"
 #include <GLFW/glfw3.h>
-#include "Texture.h""
+
 
 using namespace std;
 Color c_white{ 1, 1, 1 };
@@ -201,7 +201,7 @@ void Scene::draw()
 		glUniform4fv(glGetUniformLocation(ActiveProgramID, (lightName + ".position").c_str()), 1, &(lights.at(i)->position[0]));
 	}
 
-
+	
 	for (auto model_it = models.begin(); model_it  != models.end(); model_it++)
 	{
 		drawModel(*model_it);
@@ -217,6 +217,11 @@ void Scene::draw()
 		{
 			drawboundingBox((*model_it));
 		}
+	}
+
+	if (draw_sky_box)
+	{
+		drawSkyBox();
 	}
 
 }
@@ -384,8 +389,7 @@ void Scene::drawVertexNormals(Model* model)
 	glUseProgram(ActiveProgramID);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+	
 }
 
 void Scene::drawFaceNormals(Model* model)
@@ -456,6 +460,94 @@ void Scene::drawDemo()
 
 	glClear(GL_COLOR_BUFFER_BIT);
 	glDrawArrays(GL_LINE_LOOP, 0, pnum);
+}
+
+void Scene::genSkyBox()
+{
+
+	float skyboxVertices[] =
+	{
+		//   Coordinates
+		-1.0f, -1.0f,  1.0f,//        7--------6
+		 1.0f, -1.0f,  1.0f,//       /|       /|
+		 1.0f, -1.0f, -1.0f,//      4--------5 |
+		-1.0f, -1.0f, -1.0f,//      | |      | |
+		-1.0f,  1.0f,  1.0f,//      | 3------|-2
+		 1.0f,  1.0f,  1.0f,//      |/       |/
+		 1.0f,  1.0f, -1.0f,//      0--------1
+		-1.0f,  1.0f, -1.0f
+	};
+
+	unsigned int skyboxIndices[] =
+	{
+		// Right
+		1, 2, 6,
+		6, 5, 1,
+		// Left
+		0, 4, 7,
+		7, 3, 0,
+		// Top
+		4, 5, 6,
+		6, 7, 4,
+		// Bottom
+		0, 3, 2,
+		2, 1, 0,
+		// Back
+		0, 1, 5,
+		5, 4, 0,
+		// Front
+		3, 7, 6,
+		6, 2, 3
+	};
+
+	unsigned int skyboxVBO, skyboxEBO;
+	glGenVertexArrays(1, &skyboxVAO);
+	glGenBuffers(1, &skyboxVBO);
+	glGenBuffers(1, &skyboxEBO);
+	glBindVertexArray(skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, skyboxEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(skyboxIndices), &skyboxIndices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+
+	vector<std::string> faces
+	{
+		"textures/skybox/right.jpg","textures/skybox/left.jpg",
+		"textures/skybox/top.jpg","textures/skybox/bottom.jpg",
+		"textures/skybox/front.jpg","textures/skybox/back.jpg"
+	};
+	skyTexture = CubeTexture(faces);
+}
+
+void Scene::drawSkyBox()
+{
+	glDepthFunc(GL_LEQUAL);
+	glUseProgram(skyBoxProgramID);
+	
+	mat4 view_matrix = cameras.at(activeCamera)->cTransform;
+	view_matrix[0][3] = 0; view_matrix[1][3] = 0; view_matrix[2][3] = 0; view_matrix[3][3] = 1;
+	view_matrix[3][0] = 0; view_matrix[3][1] = 0; view_matrix[3][2] = 0;
+	GLfloat view[16];
+	matToArray(view, view_matrix);
+	GLuint modelViewMatrix_loc = glGetUniformLocation(skyBoxProgramID, "view");
+	glUniformMatrix4fv(modelViewMatrix_loc, 1, GL_FALSE, view);
+	GLfloat projection[16];
+	matToArray(projection, cameras.at(activeCamera)->projection);
+	GLuint projectionMat_loc = glGetUniformLocation(skyBoxProgramID, "projection");
+	glUniformMatrix4fv(projectionMat_loc, 1, GL_FALSE, projection);
+	skyTexture.bind(11);
+	glUniform1i(glGetUniformLocation(skyBoxProgramID, "skybox"), 11);
+	glBindVertexArray(skyboxVAO);
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
+	glUseProgram(ActiveProgramID);
+	glDepthFunc(GL_LESS);
 }
 
 void Camera::Zoom(GLfloat scale) {

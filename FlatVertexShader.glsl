@@ -66,13 +66,7 @@ void main()
         face_view_normal = face_view_normal * 2.0 - 1.0; 
     }
 
-    //face_view_normal = normalize((normalMat * vec4(vFaceNormal, 0.0)).xyz);
     vec4 face_view_pos = modelview * vec4(vFacePosition, 1.0);
-    if (use_normal_mapping == 1)
-    {
-        face_view_pos = vec4( TBN * face_view_pos.xyz, 1.0);
-    }
-
 
     vTexCoord = vTextureCoord;
 
@@ -91,11 +85,6 @@ void main()
         {
             vec4 lightdir = (cameraMat * lights[i].direction);
             l = normalize(lightdir.xyz);
-        }
-        
-        if (use_normal_mapping == 1)
-        {
-            l = TBN * l;
         }
         color += calcColor(l, face_view_normal, face_view_pos.xyz, lights[i].intensity, lights[i].color,vDiffuse_color,vSpecular_color,vShininess_coefficient);
     }

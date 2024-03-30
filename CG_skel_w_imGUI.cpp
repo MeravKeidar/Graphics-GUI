@@ -54,10 +54,13 @@ int my_main() {
 	}
 
 	scene = new Scene();
-	GLuint NormalProgram = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
-	scene->NormalProgramID = NormalProgram;
 	GLuint PhongProgram = InitShader("PhongVertexshader.glsl", "PhongFragShader.glsl");
 	scene->PhongProgramID = PhongProgram;
+	GLuint skyBoxProgram = InitShader("skyboxVertexShader.glsl", "skyboxFragShader.glsl");
+	scene->skyBoxProgramID = skyBoxProgram;
+	GLuint NormalProgram = InitShader("minimal_vshader.glsl", "minimal_fshader.glsl");
+	scene->NormalProgramID = NormalProgram;
+	
 	GLuint GouraudProgram = InitShader("GouraudVertexshader.glsl", "GouraudFragShader.glsl");
 	scene->GouraudProgramID = GouraudProgram;
 	GLuint FlatProgram = InitShader("FlatVertexshader.glsl", "FlatFragShader.glsl");
@@ -65,6 +68,10 @@ int my_main() {
 	glUseProgram(FlatProgram);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+	glFrontFace(GL_CCW);
+	scene->genSkyBox();
 	scene->ActiveProgramID = FlatProgram;
 	ImguiInit(window);
 	glfwSetKeyCallback(window, keyboardCallback);

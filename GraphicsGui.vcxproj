@@ -237,6 +237,8 @@
     <None Include="noise3D.glsl" />
     <None Include="PhongFragShader.glsl" />
     <None Include="PhongVertexShader.glsl" />
+    <None Include="skyboxFragShader.glsl" />
+    <None Include="skyboxVertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="textures\cow_tex.jpg" />
