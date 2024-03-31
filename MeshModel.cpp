@@ -259,7 +259,7 @@ void MeshModel::loadFile(string fileName, bool default_projection_tex)
 			vertices_and_normals.push_back(minimalVertex(vertices.at(i).position, vertices.at(i).normal));  // for drawing normal dest
 		}
 	}
-
+	size_scale = max_x - min_x + max_y - min_y;
 	calculateTangent();
 	boundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
 

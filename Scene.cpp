@@ -24,6 +24,12 @@ void Model::Translate(const GLfloat x, const GLfloat y, const GLfloat z)
 
 void Model::Scale(const GLfloat x, const GLfloat y, const GLfloat z)
 {
+	if (x != 0)
+		size_scale *= pow(abs(x), 1/3);
+	if (y != 0)
+		size_scale *= pow(abs(y), 1 / 3);
+	if (z != 0)
+		size_scale *= pow(abs(z), 1 / 3);
 	mat4 s = ScalingMat(x, y, z);
 	_model_transform = s * _model_transform;
 	mat4 n = ScalingMat(1 / x, 1 / y, 1 / z);
@@ -128,7 +134,6 @@ void Scene::loadOBJModel(string fileName)
 	model->shading_type = shading_type;
 	model->normal_programID = NormalProgramID;
 	models.push_back(model);
-
 	nModels++;
 	activeModel++;
 }
@@ -951,5 +956,47 @@ void Scene::addLight(const vec4 location, const vec4 direction, LIGHT_TYPE light
 	lights.push_back(new_light);
 	activeLight++;
 	nLights++;
+}
+
+void Scene::toggleCurrentModelVibrate()
+{
+	if (models.size() == 0)
+		return;
+
+	MeshModel* model = (MeshModel*)(models.at(activeModel));
+
+	if (!model->animation_vibrate)
+	{
+		model->repeat_animation_vibrate = true;
+		model->animation_vibrate = true;
+		std::thread* my_thread = new std::thread(&MeshModel::vibrate, model);
+		my_thread->detach();
+	}
+	else
+	{
+		model->repeat_animation_vibrate = false;
+		model->animation_vibrate = false;
+	}
+}
+
+void Scene::toggleCurrentModelPulse()
+{
+	if (models.size() == 0)
+		return;
+
+	MeshModel* model = (MeshModel*)(models.at(activeModel));
+
+	if (!model->animation_pulse)
+	{
+		model->repeat_animation_pulse = true;
+		model->animation_pulse = true;
+		std::thread* my_thread = new std::thread(&MeshModel::pulse, model);
+		my_thread->detach();
+	}
+	else
+	{
+		model->repeat_animation_pulse = false;
+		model->animation_pulse = false;
+	}
 }
 

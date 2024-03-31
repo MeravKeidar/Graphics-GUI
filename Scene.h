@@ -9,6 +9,7 @@
 #include "Camera.h"
 #include "Light.h"
 #include "Texture.h"
+#include <thread>
 
 
 using namespace std;
@@ -36,6 +37,7 @@ public:
 	vector<minimalVertex> faces;
 	vector<minimalVertex> vertices_and_normals;
 	vector<minimalVertex> bounding_box;
+	float size_scale;
 	unsigned int vao; 
 	unsigned int vbo;
 	GLuint programID = 0;
@@ -52,7 +54,9 @@ public:
 	bool marble_texture = false;
 	bool use_normal_mapping = false;
 	bool enviromental_mapping = false;
-
+	bool animation_vibrate = false;
+	bool animation_pulse = false;
+	std::thread myThread;
 	virtual ~Model() {}
 	mat4 _model_transform;
 	vec4 _center_of_mass; 
@@ -60,8 +64,8 @@ public:
 	mat4 _normal_world_transform;
 	mat4 _normal_model_transform;
 	bool calculate_vertex_textures;
-	
-
+	bool repeat_animation_pulse = false;
+	bool repeat_animation_vibrate = false;
 	SHADING shading_type;
 	void virtual draw() = 0; 
 	void virtual setVertexAttributes() = 0;
@@ -82,6 +86,42 @@ public:
 	void colorByPosition();
 	void updateModel(Camera active_camera);
 	bool inViewVolume(Camera active_camera);
+
+	void pulse( )
+	{
+		for (size_t i = 0; i < 10; i++)
+		{
+			Scale(1.02, 1.02, 1.02);
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
+		for (size_t i = 0; i < 10; i++)
+		{
+			Scale(1 / 1.02, 1 / 1.02, 1 / 1.02);
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		}
+		if (repeat_animation_pulse)
+			pulse();
+	}
+
+	void vibrate()
+	{
+		float scale = size_scale / 400;
+		for (size_t i = 0; i < 10; i++)
+		{
+			int random_num = rand() % 27;
+			int x_dir, y_dir, z_dir;
+			x_dir = random_num % 3 - 1;
+			y_dir = (random_num / 3) % 3 - 1;
+			z_dir = (random_num / 9) % 3 - 1;
+			Translate(x_dir* scale, y_dir * scale, z_dir * scale);
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			Translate(-x_dir * scale, -y_dir * scale, -z_dir * scale);
+			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+		}
+		if (repeat_animation_vibrate)
+			vibrate();
+	}
 };
 
 class Scene {
@@ -125,6 +165,8 @@ public:
 	void addModel(Model* model);
 	void Reset();
 	void changeShading(SHADING shading_type);
+	void toggleCurrentModelVibrate();
+	void toggleCurrentModelPulse();
 	mat4 getCurrentModelTrasform();
 	mat4 getCurrentWorldTrasform();
 	mat4 getCurrentCameraTrasform();

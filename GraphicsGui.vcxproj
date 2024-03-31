@@ -196,6 +196,7 @@
     <ClInclude Include="InitShader.h" />
     <ClInclude Include="mat.h" />
     <ClInclude Include="MeshModel.h" />
+    <ClInclude Include="Animation.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Texture.h" />

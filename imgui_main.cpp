@@ -355,6 +355,14 @@ void MainMenuBar(Scene* scene)
 					scene->models.at(scene->activeModel)->enviromental_mapping = false;
 			}
 
+			if (ImGui::MenuItem("Vibrate")) {
+				scene->toggleCurrentModelVibrate();
+			}
+
+			if (ImGui::MenuItem("Pulse")) {
+				scene->toggleCurrentModelPulse();
+			}
+
 			ImGui::EndMenu();
 			
 		}
@@ -813,7 +821,7 @@ void changeTexture(Scene* scene)
 	if (change_coords)
 	{
 		static int idx = 0;
-		const char* texture_type[] = { "Planar", "Parallel" };
+		const char* texture_type[] = { "Planar", "Spherical" };
 		ImGui::Combo("Texture coordinates type", &idx, texture_type, 2);
 		scene->models.at(scene->activeModel)->calculateTextureCoordinates(idx);
 	}
