@@ -56,6 +56,7 @@ public:
 	bool enviromental_mapping = false;
 	bool animation_vibrate = false;
 	bool animation_pulse = false;
+	bool animation_flash = false;
 	std::thread myThread;
 	virtual ~Model() {}
 	mat4 _model_transform;
@@ -66,6 +67,7 @@ public:
 	bool calculate_vertex_textures;
 	bool repeat_animation_pulse = false;
 	bool repeat_animation_vibrate = false;
+	bool repeat_animation_color_flash = false;
 	SHADING shading_type;
 	void virtual draw() = 0; 
 	void virtual setVertexAttributes() = 0;
@@ -89,38 +91,82 @@ public:
 
 	void pulse( )
 	{
-		for (size_t i = 0; i < 10; i++)
+		while (repeat_animation_pulse)
 		{
-			Scale(1.02, 1.02, 1.02);
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			for (size_t i = 0; i < 10; i++)
+			{
+				Scale(1.02, 1.02, 1.02);
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			}
+			for (size_t i = 0; i < 10; i++)
+			{
+				Scale(1 / 1.02, 1 / 1.02, 1 / 1.02);
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			}
 		}
-		for (size_t i = 0; i < 10; i++)
-		{
-			Scale(1 / 1.02, 1 / 1.02, 1 / 1.02);
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		}
-		if (repeat_animation_pulse)
-			pulse();
 	}
 
 	void vibrate()
 	{
 		float scale = size_scale / 400;
-		for (size_t i = 0; i < 10; i++)
+		while (repeat_animation_vibrate)
 		{
-			int random_num = rand() % 27;
-			int x_dir, y_dir, z_dir;
-			x_dir = random_num % 3 - 1;
-			y_dir = (random_num / 3) % 3 - 1;
-			z_dir = (random_num / 9) % 3 - 1;
-			Translate(x_dir* scale, y_dir * scale, z_dir * scale);
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
-			Translate(-x_dir * scale, -y_dir * scale, -z_dir * scale);
-			std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			for (size_t i = 0; i < 10; i++)
+			{
+				int random_num = rand() % 27;
+				int x_dir, y_dir, z_dir;
+				x_dir = random_num % 3 - 1;
+				y_dir = (random_num / 3) % 3 - 1;
+				z_dir = (random_num / 9) % 3 - 1;
+				Translate(x_dir * scale, y_dir * scale, z_dir * scale);
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+				Translate(-x_dir * scale, -y_dir * scale, -z_dir * scale);
+				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
+			}
 		}
-		if (repeat_animation_vibrate)
-			vibrate();
+		
+
+	}
+
+	void color_flash()
+	{
+		//vec4 current_color(127, 127, 127, 1);
+		//std::vector <vec4> vertices_original_colors;
+		//for (auto it = vertices.begin(); it != vertices.end(); it++)
+		//{
+		//	vertices_original_colors.push_back((*it).emissive_color);
+		//}
+		//while (repeat_animation_color_flash)
+		//{
+		//	for (size_t i = 0; i < 10; i++)
+		//	{
+		//		int random_num = rand() % 27;
+		//		int x_dir, y_dir, z_dir;
+		//		//x_dir = random_num % 3 - 1;
+		//		//y_dir = (random_num / 3) % 3 - 1;
+		//		//z_dir = (random_num / 9) % 3 - 1;
+		//		x_dir = 1;
+		//		y_dir = 1;
+		//		z_dir = 1;
+		//		current_color += vec4(x_dir, y_dir, z_dir, 0);
+		//		current_color = vec4(std::max(std::min(current_color.x, 255.0f), 0.0f),
+		//			std::max(std::min(current_color.x, 255.0f), 0.0f),
+		//			std::max(std::min(current_color.x, 255.0f), 0.0f),
+		//			51);
+		//		if (current_color.x > 250)
+		//			std::cout << "reached bright" << std::endl;
+		//		//changeUniformEmissiveColor(vec4(1,1,1,1));
+		//		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		//	}
+		//	
+		//}
+
+		//for (int i = 0; i <  vertices.size(); i++)
+		//{
+		//	vertices.at(i).emissive_color = vertices_original_colors.at(i);
+		//}
+			
 	}
 };
 
@@ -167,6 +213,7 @@ public:
 	void changeShading(SHADING shading_type);
 	void toggleCurrentModelVibrate();
 	void toggleCurrentModelPulse();
+	void toggleCurrentModelFlash();
 	mat4 getCurrentModelTrasform();
 	mat4 getCurrentWorldTrasform();
 	mat4 getCurrentCameraTrasform();

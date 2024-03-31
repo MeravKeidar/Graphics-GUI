@@ -1000,3 +1000,25 @@ void Scene::toggleCurrentModelPulse()
 	}
 }
 
+void Scene::toggleCurrentModelFlash()
+{
+	if (models.size() == 0)
+		return;
+
+	MeshModel* model = (MeshModel*)(models.at(activeModel));
+	if (!model->animation_flash)
+	{
+		model->repeat_animation_color_flash = true;
+		model->animation_flash = true;
+		
+		std::thread* my_thread = new std::thread(&MeshModel::color_flash, model);
+
+		my_thread->detach();
+	}
+	else
+	{
+		model->repeat_animation_color_flash = false;
+		model->animation_flash = false;
+	}
+}
+

@@ -363,6 +363,10 @@ void MainMenuBar(Scene* scene)
 				scene->toggleCurrentModelPulse();
 			}
 
+			if (ImGui::MenuItem("Flash")) {
+				scene->toggleCurrentModelFlash();
+			}
+
 			ImGui::EndMenu();
 			
 		}
