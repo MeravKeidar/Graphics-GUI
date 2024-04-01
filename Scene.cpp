@@ -180,6 +180,11 @@ void Scene::draw()
 	if (error != GL_NO_ERROR) {
 		std::cerr << "OpenGL error setting scene uniforms: " << error << std::endl;
 	}
+
+	GLfloat time = glfwGetTime();
+	GLuint time_loc = glGetUniformLocation(ActiveProgramID, "time");
+	glUniform1f(time_loc, time);
+
 	GLfloat projection[16];
 	matToArray(projection, cameras.at(activeCamera)->projection);
 	GLuint projectionMat_loc = glGetUniformLocation(ActiveProgramID, "projection");
@@ -347,26 +352,46 @@ void Scene::drawModel(Model* model)
 	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_Texture"), 0);
 	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_NormalMap"), 1);
 	glUniform1i(glGetUniformLocation(ActiveProgramID, "u_skybox"), 2);
-	if (model->use_texture == true)
+	if (model->use_texture)
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_texture"), 1);
 	else
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_texture"), 0);
 
-	if (model->use_normal_mapping == true)
+	if (model->use_normal_mapping)
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_normal_mapping"), 1);
 	else
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "use_normal_mapping"), 0);
 
-	if (model->marble_texture == true)
+	if (model->marble_texture)
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "marble_texture"), 1);
 	else
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "marble_texture"), 0);
-	if (model->enviromental_mapping == true)
+	if (model->enviromental_mapping)
 	{
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "enviromental_mapping"), 1);
 	}
 	else
 		glUniform1i(glGetUniformLocation(ActiveProgramID, "enviromental_mapping"), 0);
+	if (model->color_animation)
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "color_animation"), 1);
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "color_animation"), 0);
+	if (model->stretch_animation_x)
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "stretch_animation_x"), 1);
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "stretch_animation_x"), 0);\
+	if (model->stretch_animation_y)
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "stretch_animation_y"), 1);
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "stretch_animation_y"), 0);
+	if (model->stretch_animation_z)
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "stretch_animation_z"), 1);
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "stretch_animation_z"), 0);
+	if (model->noisy_animation)
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "noisy_animation"), 1);
+	else
+		glUniform1i(glGetUniformLocation(ActiveProgramID, "noisy_animation"), 0);
 
 	model->draw();
 

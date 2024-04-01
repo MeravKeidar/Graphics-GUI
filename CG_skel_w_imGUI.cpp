@@ -76,6 +76,7 @@ int my_main() {
 	ImguiInit(window);
 	glfwSetKeyCallback(window, keyboardCallback);
 	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glfwSetTime(0.0);
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 

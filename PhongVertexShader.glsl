@@ -10,9 +10,13 @@ layout(location = 6) in vec4 vDiffuse_color;
 layout(location = 7) in vec4 vSpecular_color;
 layout(location = 8) in float vShininess_coefficient;
 layout(location = 9) in vec3 vTangent;
-layout(location = 10) in vec3 vBitangent;
 
 
+uniform float time;
+uniform int stretch_animation_x;
+uniform int stretch_animation_y;
+uniform int stretch_animation_z;
+uniform int noisy_animation;
 uniform mat4 projection;
 uniform mat4 modelview;
 uniform mat4 normalMat;
@@ -28,22 +32,43 @@ out vec4 specular_color;
 out float shininess_coefficient;
 
 
+
 void main()
 {
-    view_pos = modelview * vec4(vPosition, 1.0);
+    vec3 pos = vPosition;
+    if (stretch_animation_x == 1)
+    {
+        pos.x = pos.x * 1.2 * sin(time);
+    }
+    if (stretch_animation_y == 1)
+    {
+        
+        pos.y = pos.y * 1.2 * cos(time); 
+    }
+    if (stretch_animation_z == 1)
+    {
+        pos.y = pos.y * 1.2 * (cos(time) * sin(time)); 
+    }
+    if (noisy_animation == 1)
+    {
+       pos.x = pos.x + 0.5 * sin((pos.x + pos.y + pos.z) * sin(time));
+       pos.y = pos.y + 0.5 * sin((pos.z) * sin(time));
+    }
+   
+    view_pos = modelview * vec4(pos , 1.0);
     gl_Position = projection * view_pos;
     view_normal = normalize((normalMat * vec4(vNormal, 0.0)).xyz);
 
+    
     emissive_color = vEmissive_color; 
     diffuse_color = vDiffuse_color;
     specular_color = vSpecular_color;
     shininess_coefficient = vShininess_coefficient;
 
-    vec3 T = normalize(vec3(modelview * vec4(vTangent,   0.0)));
-    vec3 B = normalize(vec3(modelview * vec4(vBitangent, 0.0)));
-    vec3 N = normalize(vec3(modelview * vec4(vNormal,    0.0)));
-    TBN = mat3(T, B, N); 
+    vec3 T = normalize((normalMat * vec4(vTangent,0.0)).xyz);
+    vec3 B = normalize(cross(view_normal, T));
+    TBN = mat3(T, B, view_normal); 
 
-
+   
     vTexCoord = vTextureCoord;
 }

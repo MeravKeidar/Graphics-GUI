@@ -267,6 +267,7 @@ void MeshModel::loadFile(string fileName, bool default_projection_tex)
 
 void MeshModel::calculateTextureCoordinates(int mod)
 {
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);
 	if (calculate_vertex_textures == false)
 	{
 		return;
@@ -287,10 +288,12 @@ void MeshModel::calculateTextureCoordinates(int mod)
 			vertices.at(i).texture = vec2(texCoordinatesSphericalXZ(temp_x,temp_z),texCoordinatesSphericalYZ(temp_y,temp_z));
 		}
 	}
-	genBuffers();
+	//genBuffers();
 	calculateTangent();
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), &vertices[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	setVertexAttributes();
+	//setVertexAttributes();
 }
 
 void MeshModel::calculateTangent()
@@ -307,15 +310,8 @@ void MeshModel::calculateTangent()
 		vertices.at(i).aTangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
 		vertices.at(i).aTangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
 		vertices.at(i).aTangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
-
-		vertices.at(i).aBitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
-		vertices.at(i).aBitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
-		vertices.at(i).aBitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-
 		vertices.at(i + 1).aTangent = vertices.at(i).aTangent;
-		vertices.at(i + 1).aBitangent = vertices.at(i).aBitangent;
 		vertices.at(i + 2).aTangent = vertices.at(i).aTangent;
-		vertices.at(i + 2).aBitangent = vertices.at(i).aBitangent;
 	}
 }
 
@@ -386,9 +382,6 @@ void MeshModel::setVertexAttributes()
 	// tengent
 	glEnableVertexAttribArray(9);
 	glVertexAttribPointer(9, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, aTangent));
-	// Bitengent
-	glEnableVertexAttribArray(9);
-	glVertexAttribPointer(9, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, aBitangent));
 	glBindVertexArray(0);
 
 }

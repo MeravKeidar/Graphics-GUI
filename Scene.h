@@ -65,6 +65,11 @@ public:
 	mat4 _normal_world_transform;
 	mat4 _normal_model_transform;
 	bool calculate_vertex_textures;
+	bool color_animation = false;
+	bool stretch_animation_x = false;
+	bool stretch_animation_y = false;
+	bool stretch_animation_z = false;
+	bool noisy_animation = false;
 	bool repeat_animation_pulse = false;
 	bool repeat_animation_vibrate = false;
 	bool repeat_animation_color_flash = false;

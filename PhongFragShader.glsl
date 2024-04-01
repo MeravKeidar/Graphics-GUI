@@ -31,6 +31,9 @@ uniform sampler2D u_NormalMap;
 uniform int use_normal_mapping;
 uniform samplerCube u_skybox; 
 uniform int enviromental_mapping; 
+uniform float time;
+uniform int color_animation;
+
 
 out vec4 FragColor;
 
@@ -174,9 +177,8 @@ void main()
     vec3 normal = view_normal;
     if (use_normal_mapping == 1)
     {
-        normal = texture(u_NormalMap, vTexCoord).rgb;
-        normal = view_normal * 2.0 - 1.0;
-        //normal = normalize(TBN * view_normal); 
+        normal = TBN * (texture(u_NormalMap, vTexCoord).rgb * 2.0 -1.0);
+
     }
 
     for (int i = 0; i < nLights; i++)
@@ -220,4 +222,10 @@ void main()
      vec3 R = reflect(normalize(view_pos.xyz), normalize(view_normal));
      FragColor = vec4(texture(u_skybox, R).rgb, 1.0);
    }
+
+    if (color_animation == 1)
+    {
+        FragColor = FragColor + 0.5* vec4(sin(time) * 0.5 , cos(time ) * 0.5, sin(time * 0.3) * cos(time * 0.7) * 0.5 + 0.5, 0);
+    }
+
 } 

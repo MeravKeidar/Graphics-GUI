@@ -9,6 +9,9 @@ out vec4 FragColor;
 uniform sampler2D u_Texture; 
 uniform int use_texture;
 uniform int marble_texture;
+uniform float time;
+uniform int color_animation;
+
 
 vec3 mod289(vec3 x) {
   return x - floor(x * (1.0 / 289.0)) * 289.0;
@@ -151,5 +154,8 @@ void main()
     {
         FragColor  = vfragColor;
     }
-
+    if (color_animation == 1)
+    {
+        FragColor = FragColor + 0.5* vec4(sin(time) * 0.5 , cos(time ) * 0.5, sin(time * 0.3) * cos(time * 0.7) * 0.5 + 0.5, 0);
+    }
 }

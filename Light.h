@@ -70,7 +70,6 @@ struct Vertex
 	vec4 specular_color = (1, 1, 1, 0.2);
 	GLfloat shininess_coefficient = 10; 
 	vec3 aTangent;
-	vec3 aBitangent;
 
 	Vertex(vec3 new_position) :position(new_position), normal(0, 0, 0) {
 	};

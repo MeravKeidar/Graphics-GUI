@@ -167,9 +167,7 @@ void MainMenuBar(Scene* scene)
 			if (ImGui::MenuItem("Pawn")) {
 				scene->loadOBJModel("obj_files/pawn.obj");
 			}
-			if (ImGui::MenuItem("sphere")) {
-				scene->loadOBJModel("obj_files/sphere.obj");
-			}
+			
 			if (ImGui::MenuItem("Cube")) {
 				scene->loadOBJModel("obj_files/cube.obj");
 			}
@@ -224,6 +222,13 @@ void MainMenuBar(Scene* scene)
 				}
 				
 				ImGui::EndMenu();
+			}
+			if (ImGui::MenuItem("Display Bounding box")) {
+				if (scene->displayBoundingBox)
+					scene->displayBoundingBox = false;
+				else
+					scene->displayBoundingBox = true;
+
 			}
 			if (ImGui::MenuItem("SkyBox")) {
 				if (scene->draw_sky_box)
@@ -329,13 +334,7 @@ void MainMenuBar(Scene* scene)
 					scene->activeModel = 0;
 				}
 			}
-			if (ImGui::MenuItem("Display Bounding box")) {
-				if (scene->displayBoundingBox)
-					scene->displayBoundingBox = false;
-				else
-					scene->displayBoundingBox = true;
-				
-			}
+			
 			if (ImGui::MenuItem("Look at active model")) {
 				scene->LookAtModel();
 			}
@@ -355,6 +354,21 @@ void MainMenuBar(Scene* scene)
 					scene->models.at(scene->activeModel)->enviromental_mapping = false;
 			}
 
+			
+
+			ImGui::EndMenu();
+			
+		}
+		if (ImGui::BeginMenu("Animation"))
+		{
+			if (ImGui::MenuItem("Color")) {
+				if (scene->models.at(scene->activeModel)->color_animation)
+					scene->models.at(scene->activeModel)->color_animation = false;
+				else
+					scene->models.at(scene->activeModel)->color_animation = true;
+			}
+
+
 			if (ImGui::MenuItem("Vibrate")) {
 				scene->toggleCurrentModelVibrate();
 			}
@@ -363,18 +377,37 @@ void MainMenuBar(Scene* scene)
 				scene->toggleCurrentModelPulse();
 			}
 
-			if (ImGui::MenuItem("Flash")) {
-				scene->toggleCurrentModelFlash();
+			if (ImGui::MenuItem("Stretch x")) {
+				if (scene->models.at(scene->activeModel)->stretch_animation_x)
+					scene->models.at(scene->activeModel)->stretch_animation_x = false;
+				else
+					scene->models.at(scene->activeModel)->stretch_animation_x = true;
 			}
-
+			if (ImGui::MenuItem("Stretch y")) {
+				if (scene->models.at(scene->activeModel)->stretch_animation_y)
+					scene->models.at(scene->activeModel)->stretch_animation_y = false;
+				else
+					scene->models.at(scene->activeModel)->stretch_animation_y = true;
+			}
+			if (ImGui::MenuItem("Stretch z")) {
+				if (scene->models.at(scene->activeModel)->stretch_animation_z)
+					scene->models.at(scene->activeModel)->stretch_animation_z = false;
+				else
+					scene->models.at(scene->activeModel)->stretch_animation_z = true;
+			}
+			if (ImGui::MenuItem("Random")) {
+				if (scene->models.at(scene->activeModel)->noisy_animation)
+					scene->models.at(scene->activeModel)->noisy_animation = false;
+				else
+					scene->models.at(scene->activeModel)->noisy_animation = true;
+			}
 			ImGui::EndMenu();
-			
 		}
-		if (ImGui::BeginMenu("Show Mat Values"))
+		/*if (ImGui::BeginMenu("Show Mat Values"))
 		{
 			show_matrices = true;
 			ImGui::EndMenu();
-		}
+		}*/
 
 		if (ImGui::BeginMenu("Keyboard Shortcuts"))
 		{

@@ -10,7 +10,7 @@ layout(location = 6) in vec4 vDiffuse_color;
 layout(location = 7) in vec4 vSpecular_color;
 layout(location = 8) in float vShininess_coefficient;
 layout(location = 9) in vec3 vTangent;
-layout(location = 10) in vec3 vBitangent;
+
 
 out vec4 vfragColor;
 out vec2 vTexCoord;
@@ -27,6 +27,11 @@ uniform sampler2D u_NormalMap;
 uniform int use_normal_mapping; 
 uniform samplerCube u_skybox; 
 uniform int enviromental_mapping; 
+uniform float time;
+uniform int stretch_animation_x;
+uniform int stretch_animation_y;
+uniform int stretch_animation_z;
+uniform int noisy_animation;
 
 struct Light {
     vec4 color;
@@ -54,18 +59,43 @@ vec4 calcColor(vec3 lightDir, vec3 normal, vec3 pos, float light_intensity, vec4
 
 void main()
 {
-    view_pos = modelview * vec4(vPosition, 1.0);
+    vec3 pos = vPosition;
+    if (stretch_animation_x == 1)
+    {
+        pos.x = pos.x * 1.2 * sin(time);
+    }
+    if (stretch_animation_y == 1)
+    {
+        
+        pos.y = pos.y * 1.2 * cos(time); 
+    }
+    if (stretch_animation_z == 1)
+    {
+        pos.y = pos.y * 1.2 * (cos(time) * sin(time)); 
+    }
+    if (noisy_animation == 1)
+    {
+      pos.x = pos.x + 0.5 * sin((pos.x + pos.y + pos.z) * sin(time));
+      pos.y = pos.y + 0.5 * sin((pos.z) * sin(time));
+
+    }
+     
+    
+    
+
+
+    view_pos = modelview * vec4(pos , 1.0);
+
     gl_Position = projection * view_pos;
     vec3 face_view_normal = normalize((normalMat * vec4(vFaceNormal, 0.0)).xyz);
     mat3 TBN;
     if (use_normal_mapping == 1)
     {
-        vec3 T = normalize(vec3(modelview * vec4(vTangent,   0.0)));
-        vec3 B = normalize(vec3(modelview * vec4(vBitangent, 0.0)));
-        vec3 N = normalize(vec3(modelview * vec4(vFaceNormal,    0.0)));
-        TBN = transpose(mat3(T, B, N));
-        face_view_normal = texture(u_NormalMap, vTexCoord).rgb;
-        face_view_normal = face_view_normal * 2.0 - 1.0; 
+        vec3 view_normal = normalize((normalMat * vec4(vNormal, 0.0)).xyz);
+        vec3 T = normalize((normalMat * vec4(vTangent,0.0)).xyz);
+        vec3 B = normalize(cross(view_normal, T));
+        TBN = mat3(T, B, view_normal); 
+        face_view_normal = TBN * (texture(u_NormalMap, vTexCoord).rgb * 2.0 -1.0);
     }
 
     vec4 face_view_pos = modelview * vec4(vFacePosition, 1.0);
