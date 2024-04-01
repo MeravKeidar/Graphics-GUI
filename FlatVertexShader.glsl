@@ -75,8 +75,8 @@ void main()
     }
     if (noisy_animation == 1)
     {
-      pos.x = pos.x + 0.25 * sin((2*pos.x + 3 * pos.y + pos.z) * sin(time));
-      pos.y = pos.y + 0.25 * sin((pos.x + pos.y + 3* pos.z) * sin(time));
+      pos.x = pos.x + 0.25 * sin((2*pos.x + 3 * pos.y + pos.z) + time);
+      pos.y = pos.y + 0.25 * sin((pos.x + pos.y + 3* pos.z) + time);
 
     }
      

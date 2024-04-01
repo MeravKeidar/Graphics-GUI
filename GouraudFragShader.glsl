@@ -150,9 +150,11 @@ void main()
   else{
    FragColor  = vfragColor;
   }
-  if (color_animation == 1)
-  {
-  FragColor = FragColor + 0.5* vec4(sin(time) * 0.5 , cos(time ) * 0.5, sin(time * 0.3) * cos(time * 0.7) * 0.5 + 0.5, 0);
-  }
-   
+  float factor;
+   if (color_animation == 1)
+   {
+        factor = time + view_pos.x + view_pos.y + view_pos.z;
+        FragColor = FragColor + 0.5* vec4(sin(factor) * 0.5 , cos(factor) * 0.5, sin(factor * 0.3) * cos(factor * 0.7) * 0.5 + 0.5, 0);
+        
+   }
 }
