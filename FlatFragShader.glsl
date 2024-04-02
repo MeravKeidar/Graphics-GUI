@@ -3,7 +3,7 @@
 in vec4 vfragColor;
 in vec2 vTexCoord; 
 in vec4 view_pos;
-
+in vec3 oPosition;
 out vec4 FragColor;
 
 uniform sampler2D u_Texture; 
@@ -144,8 +144,8 @@ void main()
     {
         float amplitude = 8.0;
         const int roughness = 4; 
-	    float t = 6.28 * view_pos.x / 0.5;
-        t += amplitude * turbulence (view_pos.xyz, roughness);
+	    float t = 6.28 * oPosition.x / 0.5;
+        t += amplitude * turbulence (oPosition, roughness);
         t = sin(t);
         vec4 marbleColor = marble_color(t);
 	    FragColor  = marbleColor * vfragColor;
@@ -157,7 +157,7 @@ void main()
     float factor;
     if (color_animation == 1)
     {
-        factor = time + view_pos.x + view_pos.y + view_pos.z;
+        factor = time + oPosition.x + oPosition.y + oPosition.z;
         FragColor = FragColor + 0.5* vec4(sin(factor) * 0.5 , cos(factor) * 0.5, sin(factor * 0.3) * cos(factor * 0.7) * 0.5 + 0.5, 0);
     }
 }
