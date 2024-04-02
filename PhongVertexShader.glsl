@@ -25,6 +25,7 @@ out vec4 view_pos;
 out vec3 view_normal;
 out vec2 vTexCoord;
 out mat3 TBN;
+out vec3 oPosition;
 
 out vec4 emissive_color;
 out vec4 diffuse_color;
@@ -36,6 +37,7 @@ out float shininess_coefficient;
 void main()
 {
     vec3 pos = vPosition;
+    oPosition = vPosition;
     if (stretch_animation_x == 1)
     {
         pos.x = pos.x * 1.2 * sin(time);
