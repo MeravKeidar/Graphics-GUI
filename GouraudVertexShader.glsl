@@ -15,6 +15,7 @@ layout(location = 10) in vec3 vBitangent;
 out vec4 vfragColor;
 out vec2 vTexCoord;
 out vec4 view_pos;
+out vec3 oPosition;
 
 
 uniform mat4 projection;
@@ -61,6 +62,7 @@ vec4 calcColor(vec3 lightDir, vec3 normal, vec3 pos, float light_intensity, vec4
 void main()
 {
     vec3 pos = vPosition;
+    oPosition = vPosition;
     if (stretch_animation_x == 1)
     {
         pos.x = pos.x * 1.2 * sin(time);
